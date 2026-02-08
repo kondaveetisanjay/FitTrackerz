@@ -1,0 +1,12 @@
+[   48832ms] [ERROR] %c📡 [error] GenServer #PID<0.4828.0> terminating
+** (stop) :econnaborted
+Process Label: {:thousand_island, :connection, {Bandit.DelegatingHandler, {{127, 0, 0, 1}, 61670}}}
+Last message: {:tcp_error, #Port<0.596>, :econnaborted}
+State: {%ThousandIsland.Socket{socket: #Port<0.596>, transport_module: ThousandIsland.Transports.TCP, read_timeout: 60000, silent_terminate_on_error: false, span: %ThousandIsland.Telemetry{span_name: :connection, telemetry_span_context: #Reference<0.3159611893.3787456513.178040>, start_time: -5764585854908309, start_metadata: %{handler: Bandit.DelegatingHandler, remote_port: 61670, remote_address: {127, 0, 0, 1}, telemetry_span_context: #Reference<0.3159611893.3787456513.178040>, parent_telemetry_span_context: #Reference<0.3159611893.3787456513.88808>}, handler: Bandit.DelegatingHandler, span_metadata: %{handler: Bandit.DelegatingHandler, telemetry_span_context: #Reference<0.3159611893.3787456513.178040>}}}, %{opts: %{http: [], websocket: [], http_1: [], http_2: []}, plug: {Phoenix.Endpoint.SyncCodeReloadPlug, {FitconnexWeb.Endpoint, []}}, handler_module: Bandit.HTTP1.Handler, http_1_enabled: true, http_2_enabled: true, requests_processed: 13}}
+ color: inherit; @ http://localhost:4000/phoenix/live_reload/frame:1821
+[   54928ms] [ERROR] %c📡 [error] GenServer #PID<0.5174.0> terminating
+** (stop) :econnaborted
+Process Label: {:thousand_island, :connection, {Bandit.DelegatingHandler, {{127, 0, 0, 1}, 59314}}}
+Last message: {:tcp_error, #Port<0.660>, :econnaborted}
+State: {%ThousandIsland.Socket{socket: #Port<0.660>, transport_module: ThousandIsland.Transports.TCP, read_timeout: 60000, silent_terminate_on_error: false, span: %ThousandIsland.Telemetry{span_name: :connection, telemetry_span_context: #Reference<0.3159611893.3787456513.188793>, start_time: -5764584725862979, start_metadata: %{handler: Bandit.DelegatingHandler, remote_port: 59314, remote_address: {127, 0, 0, 1}, telemetry_span_context: #Reference<0.3159611893.3787456513.188793>, parent_telemetry_span_context: #Reference<0.3159611893.3787456515.88986>}, handler: Bandit.DelegatingHandler, span_metadata: %{handler: Bandit.DelegatingHandler, telemetry_span_context: #Reference<0.3159611893.3787456513.188793>}}}, %{opts: %{http: [], websocket: [], http_1: [], http_2: []}, plug: {Phoenix.Endpoint.SyncCodeReloadPlug, {FitconnexWeb.Endpoint, []}}, handler_module: Bandit.HTTP1.Handler, http_1_enabled: true, http_2_enabled: true, requests_processed: 2}}
+ color: inherit; @ http://localhost:4000/phoenix/live_reload/frame:1821

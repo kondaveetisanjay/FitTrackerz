@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mix run:*)",
+      "Bash(mix compile:*)",
+      "Bash(findstr:*)",
+      "Bash(mix format:*)",
+      "Bash(mix precommit:*)",
+      "WebFetch(domain:nominatim.openstreetmap.org)",
+      "WebFetch(domain:api.bigdatacloud.net)",
+      "WebFetch(domain:maps.googleapis.com)",
+      "mcp__plugin_playwright_playwright__browser_click",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "mcp__plugin_playwright_playwright__browser_take_screenshot",
+      "Bash(gh auth status:*)",
+      "Bash(gh repo edit:*)"
+    ]
+  }
+}

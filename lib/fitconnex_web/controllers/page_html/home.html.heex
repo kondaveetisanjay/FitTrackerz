@@ -1,0 +1,311 @@
+<%!-- Navigation Bar --%>
+<nav class="navbar bg-base-100/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 border-b border-base-300/50 px-4 sm:px-6 lg:px-8">
+  <div class="flex-1">
+    <a href="/" class="text-2xl font-extrabold tracking-tight">
+      Fit<span class="text-primary">Connex</span>
+    </a>
+  </div>
+  <div class="flex-none flex items-center gap-3">
+    <a href="/explore" class="btn btn-ghost btn-sm font-semibold">Explore Gyms</a>
+    <a href="/sign-in" class="btn btn-ghost btn-sm font-semibold">Sign In</a>
+    <a href="/register" class="btn btn-primary btn-sm font-semibold">Get Started</a>
+  </div>
+</nav>
+
+<%!-- Hero Section --%>
+<section class="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
+  <%!-- Background gradient --%>
+  <div class="absolute inset-0 bg-gradient-to-br from-base-300 via-base-100 to-base-200"></div>
+  <div class="absolute top-1/4 -left-32 w-96 h-96 bg-primary/10 rounded-full blur-3xl"></div>
+  <div class="absolute bottom-1/4 -right-32 w-96 h-96 bg-secondary/10 rounded-full blur-3xl">
+  </div>
+
+  <div class="relative z-10 text-center max-w-4xl mx-auto px-4 sm:px-6 py-20">
+    <div class="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full text-sm font-semibold mb-8">
+      <.icon name="hero-bolt-solid" class="size-4" />
+      <span>The Future of Fitness Management</span>
+    </div>
+
+    <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-tight">
+      Transform Your <span class="text-primary">Fitness</span>
+      <br />Business
+    </h1>
+
+    <p class="mt-6 text-lg sm:text-xl text-base-content/60 max-w-2xl mx-auto leading-relaxed">
+      The all-in-one platform connecting gyms, trainers, and members.
+      Manage memberships, schedule classes, track workouts, and grow your fitness empire.
+    </p>
+
+    <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+      <a
+        href="/register"
+        class="btn btn-primary btn-lg gap-2 shadow-lg shadow-primary/25 font-bold px-8"
+      >
+        <.icon name="hero-rocket-launch-solid" class="size-5" /> Start Free Today
+      </a>
+      <a href="/explore" class="btn btn-ghost btn-lg gap-2 font-semibold">
+        <.icon name="hero-magnifying-glass" class="size-5" /> Explore Gyms Near You
+      </a>
+    </div>
+
+    <%!-- Stats Row --%>
+    <div class="mt-20 grid grid-cols-3 gap-8 max-w-lg mx-auto">
+      <div>
+        <p class="text-3xl sm:text-4xl font-black text-primary">100+</p>
+        <p class="text-sm text-base-content/50 mt-1">Active Gyms</p>
+      </div>
+      <div>
+        <p class="text-3xl sm:text-4xl font-black text-primary">500+</p>
+        <p class="text-sm text-base-content/50 mt-1">Trainers</p>
+      </div>
+      <div>
+        <p class="text-3xl sm:text-4xl font-black text-primary">10K+</p>
+        <p class="text-sm text-base-content/50 mt-1">Members</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%!-- Features Section --%>
+<section id="features" class="py-24 px-4 sm:px-6 lg:px-8 bg-base-200/50">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl sm:text-4xl font-black tracking-tight">
+        Everything You Need to <span class="text-primary">Succeed</span>
+      </h2>
+      <p class="mt-4 text-base-content/60 text-lg max-w-2xl mx-auto">
+        Powerful tools for every role in your fitness ecosystem.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <%!-- Feature 1 --%>
+      <div class="card bg-base-100 shadow-sm hover:shadow-lg hover:-translate-y-1 group border border-base-300/50">
+        <div class="card-body">
+          <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20">
+            <.icon name="hero-building-office-2-solid" class="size-6 text-primary" />
+          </div>
+          <h3 class="card-title text-lg">Gym Management</h3>
+          <p class="text-base-content/60 text-sm leading-relaxed">
+            Manage multiple branches, track member counts, handle trainer assignments, and monitor gym performance from one dashboard.
+          </p>
+        </div>
+      </div>
+
+      <%!-- Feature 2 --%>
+      <div class="card bg-base-100 shadow-sm hover:shadow-lg hover:-translate-y-1 group border border-base-300/50">
+        <div class="card-body">
+          <div class="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center mb-3 group-hover:bg-secondary/20">
+            <.icon name="hero-calendar-days-solid" class="size-6 text-secondary" />
+          </div>
+          <h3 class="card-title text-lg">Class Scheduling</h3>
+          <p class="text-base-content/60 text-sm leading-relaxed">
+            Define class types, schedule sessions, assign trainers, and let members book their spots with real-time availability.
+          </p>
+        </div>
+      </div>
+
+      <%!-- Feature 3 --%>
+      <div class="card bg-base-100 shadow-sm hover:shadow-lg hover:-translate-y-1 group border border-base-300/50">
+        <div class="card-body">
+          <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-3 group-hover:bg-accent/20">
+            <.icon name="hero-fire-solid" class="size-6 text-accent" />
+          </div>
+          <h3 class="card-title text-lg">Workout Plans</h3>
+          <p class="text-base-content/60 text-sm leading-relaxed">
+            Create personalized workout plans or use templates. Track exercises, sets, reps, and rest periods for each member.
+          </p>
+        </div>
+      </div>
+
+      <%!-- Feature 4 --%>
+      <div class="card bg-base-100 shadow-sm hover:shadow-lg hover:-translate-y-1 group border border-base-300/50">
+        <div class="card-body">
+          <div class="w-12 h-12 rounded-xl bg-success/10 flex items-center justify-center mb-3 group-hover:bg-success/20">
+            <.icon name="hero-heart-solid" class="size-6 text-success" />
+          </div>
+          <h3 class="card-title text-lg">Diet & Nutrition</h3>
+          <p class="text-base-content/60 text-sm leading-relaxed">
+            Build meal plans with calorie targets, macros tracking, and dietary preferences including vegetarian, vegan, and more.
+          </p>
+        </div>
+      </div>
+
+      <%!-- Feature 5 --%>
+      <div class="card bg-base-100 shadow-sm hover:shadow-lg hover:-translate-y-1 group border border-base-300/50">
+        <div class="card-body">
+          <div class="w-12 h-12 rounded-xl bg-warning/10 flex items-center justify-center mb-3 group-hover:bg-warning/20">
+            <.icon name="hero-credit-card-solid" class="size-6 text-warning" />
+          </div>
+          <h3 class="card-title text-lg">Billing & Subscriptions</h3>
+          <p class="text-base-content/60 text-sm leading-relaxed">
+            Flexible subscription plans from day passes to annual memberships. Track payments and manage renewals effortlessly.
+          </p>
+        </div>
+      </div>
+
+      <%!-- Feature 6 --%>
+      <div class="card bg-base-100 shadow-sm hover:shadow-lg hover:-translate-y-1 group border border-base-300/50">
+        <div class="card-body">
+          <div class="w-12 h-12 rounded-xl bg-info/10 flex items-center justify-center mb-3 group-hover:bg-info/20">
+            <.icon name="hero-chart-bar-solid" class="size-6 text-info" />
+          </div>
+          <h3 class="card-title text-lg">Attendance Tracking</h3>
+          <p class="text-base-content/60 text-sm leading-relaxed">
+            Track member check-ins, monitor attendance patterns, and keep a complete record of gym visits with notes.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%!-- Role Cards Section --%>
+<section class="py-24 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl sm:text-4xl font-black tracking-tight">
+        Built for <span class="text-primary">Everyone</span>
+      </h2>
+      <p class="mt-4 text-base-content/60 text-lg max-w-2xl mx-auto">
+        Whether you own a gym, train clients, or just want to get fit, FitConnex has you covered.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <%!-- Gym Operator Card --%>
+      <div class="card bg-gradient-to-br from-primary/5 to-primary/15 border border-primary/20 hover:border-primary/40 shadow-sm hover:shadow-xl hover:-translate-y-2">
+        <div class="card-body items-center text-center py-10">
+          <div class="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center mb-4">
+            <.icon name="hero-building-office-2-solid" class="size-8 text-primary" />
+          </div>
+          <h3 class="card-title text-xl">Gym Operators</h3>
+          <ul class="text-sm text-base-content/60 space-y-2 mt-4 text-left">
+            <li class="flex items-start gap-2">
+              <.icon name="hero-check-circle-solid" class="size-4 text-primary mt-0.5 shrink-0" />
+              <span>Multi-branch management</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <.icon name="hero-check-circle-solid" class="size-4 text-primary mt-0.5 shrink-0" />
+              <span>Invite and manage trainers</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <.icon name="hero-check-circle-solid" class="size-4 text-primary mt-0.5 shrink-0" />
+              <span>Subscription plan creation</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <.icon name="hero-check-circle-solid" class="size-4 text-primary mt-0.5 shrink-0" />
+              <span>Revenue and analytics</span>
+            </li>
+          </ul>
+          <div class="card-actions mt-6">
+            <a href="/register" class="btn btn-primary btn-sm font-semibold">
+              Register as Operator
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <%!-- Trainer Card --%>
+      <div class="card bg-gradient-to-br from-secondary/5 to-secondary/15 border border-secondary/20 hover:border-secondary/40 shadow-sm hover:shadow-xl hover:-translate-y-2">
+        <div class="card-body items-center text-center py-10">
+          <div class="w-16 h-16 rounded-2xl bg-secondary/20 flex items-center justify-center mb-4">
+            <.icon name="hero-academic-cap-solid" class="size-8 text-secondary" />
+          </div>
+          <h3 class="card-title text-xl">Trainers</h3>
+          <ul class="text-sm text-base-content/60 space-y-2 mt-4 text-left">
+            <li class="flex items-start gap-2">
+              <.icon name="hero-check-circle-solid" class="size-4 text-secondary mt-0.5 shrink-0" />
+              <span>Client management tools</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <.icon name="hero-check-circle-solid" class="size-4 text-secondary mt-0.5 shrink-0" />
+              <span>Workout plan builder</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <.icon name="hero-check-circle-solid" class="size-4 text-secondary mt-0.5 shrink-0" />
+              <span>Diet plan creation</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <.icon name="hero-check-circle-solid" class="size-4 text-secondary mt-0.5 shrink-0" />
+              <span>Class scheduling</span>
+            </li>
+          </ul>
+          <div class="card-actions mt-6">
+            <a href="/register" class="btn btn-secondary btn-sm font-semibold">
+              Register as Trainer
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <%!-- Member Card --%>
+      <div class="card bg-gradient-to-br from-accent/5 to-accent/15 border border-accent/20 hover:border-accent/40 shadow-sm hover:shadow-xl hover:-translate-y-2">
+        <div class="card-body items-center text-center py-10">
+          <div class="w-16 h-16 rounded-2xl bg-accent/20 flex items-center justify-center mb-4">
+            <.icon name="hero-user-solid" class="size-8 text-accent" />
+          </div>
+          <h3 class="card-title text-xl">Members</h3>
+          <ul class="text-sm text-base-content/60 space-y-2 mt-4 text-left">
+            <li class="flex items-start gap-2">
+              <.icon name="hero-check-circle-solid" class="size-4 text-accent mt-0.5 shrink-0" />
+              <span>Book classes instantly</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <.icon name="hero-check-circle-solid" class="size-4 text-accent mt-0.5 shrink-0" />
+              <span>View workout plans</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <.icon name="hero-check-circle-solid" class="size-4 text-accent mt-0.5 shrink-0" />
+              <span>Track diet and nutrition</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <.icon name="hero-check-circle-solid" class="size-4 text-accent mt-0.5 shrink-0" />
+              <span>Attendance history</span>
+            </li>
+          </ul>
+          <div class="card-actions mt-6">
+            <a href="/register" class="btn btn-accent btn-sm font-semibold">Join as Member</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%!-- CTA Section --%>
+<section class="py-24 px-4 sm:px-6 lg:px-8 bg-base-200/50">
+  <div class="max-w-3xl mx-auto text-center">
+    <div class="card bg-gradient-to-r from-primary/10 via-base-100 to-secondary/10 border border-base-300 shadow-xl p-8 sm:p-12">
+      <h2 class="text-3xl sm:text-4xl font-black tracking-tight">
+        Ready to Get Started?
+      </h2>
+      <p class="mt-4 text-base-content/60 text-lg">
+        Join FitConnex today and take your fitness business to the next level.
+      </p>
+      <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a
+          href="/register"
+          class="btn btn-primary btn-lg gap-2 shadow-lg shadow-primary/25 font-bold px-8"
+        >
+          <.icon name="hero-rocket-launch-solid" class="size-5" /> Create Free Account
+        </a>
+        <a href="/sign-in" class="btn btn-ghost btn-lg font-semibold">
+          Already have an account?
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%!-- Footer --%>
+<footer class="py-12 px-4 sm:px-6 lg:px-8 border-t border-base-300">
+  <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="text-xl font-extrabold tracking-tight">
+      Fit<span class="text-primary">Connex</span>
+    </div>
+    <p class="text-sm text-base-content/40">
+      Built with Phoenix, Ash Framework, and LiveView
+    </p>
+  </div>
+</footer>
