@@ -162,11 +162,70 @@ const PlacesAutocomplete = {
   }
 }
 
+// Password visibility toggle hook
+const PasswordVisibilityToggle = {
+  mounted() {
+    this.addToggleButton()
+  },
+  updated() {
+    // Re-add toggle button if the form re-renders
+    if (!this.el.parentElement.querySelector('.password-toggle-btn')) {
+      this.addToggleButton()
+    }
+  },
+  addToggleButton() {
+    const input = this.el
+    const parent = input.parentElement
+
+    // Check if parent is relative positioned
+    if (!parent.classList.contains('relative')) {
+      parent.classList.add('relative')
+    }
+
+    // Create toggle button
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.className = 'password-toggle-btn absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer'
+    button.innerHTML = `
+      <svg class="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+      </svg>
+    `
+
+    // Add click handler
+    button.addEventListener('click', () => {
+      const type = input.getAttribute('type')
+      if (type === 'password') {
+        input.setAttribute('type', 'text')
+        // Change icon to "eye-off"
+        button.innerHTML = `
+          <svg class="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
+          </svg>
+        `
+      } else {
+        input.setAttribute('type', 'password')
+        // Change icon back to "eye"
+        button.innerHTML = `
+          <svg class="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+          </svg>
+        `
+      }
+    })
+
+    // Append button to parent
+    parent.appendChild(button)
+  }
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks, Geolocation, BranchGeolocation, PlacesAutocomplete},
+  hooks: {...colocatedHooks, Geolocation, BranchGeolocation, PlacesAutocomplete, PasswordVisibilityToggle},
 })
 
 // Show progress bar on live navigation and form submits
@@ -182,6 +241,162 @@ liveSocket.connect()
 // >> liveSocket.enableLatencySim(1000)  // enabled for duration of browser session
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket
+
+// Add password visibility toggle to all password fields
+function addPasswordVisibilityToggles() {
+  console.log('🔍 Searching for password fields...')
+
+  // Find all password inputs
+  const passwordInputs = document.querySelectorAll('input[type="password"]')
+  console.log(`Found ${passwordInputs.length} password fields`)
+
+  passwordInputs.forEach((input, index) => {
+    // Skip if already has a toggle button
+    if (input.dataset.passwordToggleAdded === 'true') {
+      console.log(`Password field ${index} already has toggle`)
+      return
+    }
+
+    console.log(`Adding toggle to password field ${index}`)
+
+    // Mark as processed
+    input.dataset.passwordToggleAdded = 'true'
+
+    let parent = input.parentElement
+    if (!parent) {
+      console.log('No parent element found')
+      return
+    }
+
+    // Check if we need to wrap the input
+    if (!parent.classList.contains('relative') && window.getComputedStyle(parent).position === 'static') {
+      // Create a wrapper div
+      const wrapper = document.createElement('div')
+      wrapper.className = 'relative'
+      input.parentNode.insertBefore(wrapper, input)
+      wrapper.appendChild(input)
+      parent = wrapper
+    } else if (window.getComputedStyle(parent).position === 'static') {
+      parent.style.position = 'relative'
+    }
+
+    // Add padding to input to make room for icon
+    input.style.paddingRight = '2.5rem'
+
+    // Create toggle button
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.className = 'password-toggle-btn'
+    button.style.cssText = `
+      position: absolute;
+      top: 50%;
+      right: 0;
+      transform: translateY(-50%);
+      padding-right: 0.75rem;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      z-index: 10;
+      background: none;
+      border: none;
+      outline: none;
+    `
+    button.setAttribute('tabindex', '-1')
+    button.setAttribute('aria-label', 'Toggle password visibility')
+
+    const eyeIcon = `
+      <svg style="width: 1.25rem; height: 1.25rem; color: #9ca3af;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+      </svg>
+    `
+
+    const eyeOffIcon = `
+      <svg style="width: 1.25rem; height: 1.25rem; color: #9ca3af;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
+      </svg>
+    `
+
+    button.innerHTML = eyeIcon
+
+    // Add click handler
+    button.addEventListener('click', (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      const currentType = input.getAttribute('type')
+      if (currentType === 'password') {
+        input.setAttribute('type', 'text')
+        button.innerHTML = eyeOffIcon
+      } else {
+        input.setAttribute('type', 'password')
+        button.innerHTML = eyeIcon
+      }
+    })
+
+    // Add hover effect
+    button.addEventListener('mouseenter', () => {
+      button.style.opacity = '0.7'
+    })
+    button.addEventListener('mouseleave', () => {
+      button.style.opacity = '1'
+    })
+
+    parent.appendChild(button)
+    console.log(`✅ Toggle added to password field ${index}`)
+  })
+}
+
+// Run immediately if DOM is already loaded
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', addPasswordVisibilityToggles)
+} else {
+  addPasswordVisibilityToggles()
+}
+
+// Run after LiveView updates
+window.addEventListener('phx:page-loading-stop', () => {
+  console.log('LiveView page loading stopped, checking for password fields')
+  setTimeout(addPasswordVisibilityToggles, 100)
+})
+
+// Use MutationObserver to detect password fields added dynamically
+let observerStarted = false
+function startObserver() {
+  if (observerStarted) return
+  observerStarted = true
+
+  const observer = new MutationObserver((mutations) => {
+    let shouldCheck = false
+    mutations.forEach((mutation) => {
+      if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+        mutation.addedNodes.forEach((node) => {
+          if (node.nodeType === 1) {
+            if ((node.matches && node.matches('input[type="password"]')) ||
+                (node.querySelector && node.querySelector('input[type="password"]'))) {
+              shouldCheck = true
+            }
+          }
+        })
+      }
+    })
+    if (shouldCheck) {
+      console.log('MutationObserver detected new password field')
+      setTimeout(addPasswordVisibilityToggles, 50)
+    }
+  })
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  })
+  console.log('MutationObserver started')
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startObserver)
+} else {
+  startObserver()
+}
 
 // The lines below enable quality of life phoenix_live_reload
 // development features:

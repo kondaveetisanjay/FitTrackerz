@@ -15,7 +15,7 @@ defmodule FitconnexWeb.GymOperator.SetupLive do
 
     case gyms do
       [gym | _] ->
-        form = to_form(%{"name" => gym.name, "description" => gym.description || ""}, as: "gym")
+        form = to_form(%{"name" => gym.name, "slug" => gym.slug, "description" => gym.description || ""}, as: "gym")
 
         {:ok,
          assign(socket,
@@ -88,6 +88,7 @@ defmodule FitconnexWeb.GymOperator.SetupLive do
     case gym
          |> Ash.Changeset.for_update(:update, %{
            name: params["name"],
+           slug: params["slug"],
            description: params["description"]
          })
          |> Ash.update() do
@@ -96,7 +97,7 @@ defmodule FitconnexWeb.GymOperator.SetupLive do
 
         form =
           to_form(
-            %{"name" => updated_gym.name, "description" => updated_gym.description || ""},
+            %{"name" => updated_gym.name, "slug" => updated_gym.slug, "description" => updated_gym.description || ""},
             as: "gym"
           )
 
@@ -176,20 +177,12 @@ defmodule FitconnexWeb.GymOperator.SetupLive do
                       placeholder="Enter gym name"
                       required
                     />
-                    <div class="fieldset mb-2">
-                      <label>
-                        <span class="label mb-1">Slug</span>
-                        <input
-                          type="text"
-                          value={@gym.slug}
-                          class="w-full input input-disabled"
-                          disabled
-                        />
-                      </label>
-                      <p class="text-xs text-base-content/40 mt-1">
-                        Slug cannot be changed after creation
-                      </p>
-                    </div>
+                    <.input
+                      field={@form[:slug]}
+                      label="Slug (URL-friendly)"
+                      placeholder="e.g. iron-paradise"
+                      required
+                    />
                   </div>
                   <.input
                     field={@form[:description]}

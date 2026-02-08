@@ -16,7 +16,7 @@ defmodule Fitconnex.Gym.Gym do
     end
 
     update :update do
-      accept([:name, :description, :status, :is_promoted])
+      accept([:name, :slug, :description, :status, :is_promoted])
     end
   end
 

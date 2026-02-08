@@ -11,6 +11,18 @@ defmodule FitconnexWeb.AuthOverrides do
   override Components.Password do
     set(:register_extra_component, &FitconnexWeb.AuthComponents.register_extra/1)
   end
+
+  override Components.Password.Input do
+    set(:field_class, "mb-4")
+  end
+
+  override Components.Password.RegisterForm do
+    set(:root_class, "w-full max-w-md mx-auto" <> " " <> "password-form-container")
+  end
+
+  override Components.Password.SignInForm do
+    set(:root_class, "w-full max-w-md mx-auto" <> " " <> "password-form-container")
+  end
 end
 
 defmodule FitconnexWeb.AuthComponents do
@@ -22,7 +34,8 @@ defmodule FitconnexWeb.AuthComponents do
   def register_extra(assigns) do
     ~H"""
     <div>
-      <label for="user_name" class="block text-sm font-medium mb-1">Name</label> {text_input(
+      <label for="user_name" class="block text-sm font-medium mb-1">Name</label>
+      {text_input(
         @form,
         :name,
         placeholder: "Your full name",
