@@ -6,13 +6,54 @@
     </a>
   </div>
   <div class="flex-none flex items-center gap-3">
+    <%!-- Solutions Dropdown --%>
+    <div class="dropdown dropdown-hover">
+      <label tabindex="0" class="btn btn-ghost btn-sm font-semibold">
+        Solutions
+        <.icon name="hero-chevron-down" class="size-4 ml-1" />
+      </label>
+      <ul
+        tabindex="0"
+        class="dropdown-content menu p-2 shadow-lg bg-base-100 rounded-box w-56 mt-1 border border-base-300/50"
+      >
+        <li>
+          <a href="/solutions/members" class="flex items-center gap-3 py-3">
+            <.icon name="hero-user-solid" class="size-5 text-accent" />
+            <div>
+              <div class="font-semibold">For Members</div>
+              <div class="text-xs text-base-content/60">Find your perfect gym</div>
+            </div>
+          </a>
+        </li>
+        <li>
+          <a href="/solutions/trainers" class="flex items-center gap-3 py-3">
+            <.icon name="hero-academic-cap-solid" class="size-5 text-secondary" />
+            <div>
+              <div class="font-semibold">For Trainers</div>
+              <div class="text-xs text-base-content/60">Grow your training business</div>
+            </div>
+          </a>
+        </li>
+        <li>
+          <a href="/solutions/operators" class="flex items-center gap-3 py-3">
+            <.icon name="hero-building-office-2-solid" class="size-5 text-primary" />
+            <div>
+              <div class="font-semibold">For Gym Operators</div>
+              <div class="text-xs text-base-content/60">Manage your gym efficiently</div>
+            </div>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <a href="/about" class="btn btn-ghost btn-sm font-semibold">About Us</a>
     <a href="/explore" class="btn btn-ghost btn-sm font-semibold">Explore Gyms</a>
     <a href="/sign-in" class="btn btn-ghost btn-sm font-semibold">Sign In</a>
     <a href="/register" class="btn btn-primary btn-sm font-semibold">Get Started</a>
   </div>
 </nav>
 
-<%!-- Hero Section --%>
+<%!-- Hero Carousel Section --%>
 <section class="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
   <%!-- Background gradient --%>
   <div class="absolute inset-0 bg-gradient-to-br from-base-300 via-base-100 to-base-200"></div>
@@ -20,36 +61,136 @@
   <div class="absolute bottom-1/4 -right-32 w-96 h-96 bg-secondary/10 rounded-full blur-3xl">
   </div>
 
-  <div class="relative z-10 text-center max-w-4xl mx-auto px-4 sm:px-6 py-20">
-    <div class="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full text-sm font-semibold mb-8">
-      <.icon name="hero-bolt-solid" class="size-4" />
-      <span>The Future of Fitness Management</span>
-    </div>
+  <div class="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 py-20">
+    <%!-- Carousel Container --%>
+    <div class="relative" id="hero-carousel">
+      <%!-- Slide 1: Gym Discovery --%>
+      <div class="carousel-slide active text-center">
+        <div class="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full text-sm font-semibold mb-8">
+          <.icon name="hero-map-pin-solid" class="size-4" />
+          <span>For Members</span>
+        </div>
 
-    <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-tight">
-      Transform Your <span class="text-primary">Fitness</span>
-      <br />Business
-    </h1>
+        <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-tight">
+          Discover Top-Rated <span class="text-primary">Gyms</span>
+          <br />Near You
+        </h1>
 
-    <p class="mt-6 text-lg sm:text-xl text-base-content/60 max-w-2xl mx-auto leading-relaxed">
-      The all-in-one platform connecting gyms, trainers, and members.
-      Manage memberships, schedule classes, track workouts, and grow your fitness empire.
-    </p>
+        <p class="mt-6 text-lg sm:text-xl text-base-content/60 max-w-2xl mx-auto leading-relaxed">
+          Find the perfect fitness partner with verified reviews, proximity, premium facilities, and budget-friendly options.
+        </p>
 
-    <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-      <a
-        href="/register"
-        class="btn btn-primary btn-lg gap-2 shadow-lg shadow-primary/25 font-bold px-8"
-      >
-        <.icon name="hero-rocket-launch-solid" class="size-5" /> Start Free Today
-      </a>
-      <a href="/explore" class="btn btn-ghost btn-lg gap-2 font-semibold">
-        <.icon name="hero-magnifying-glass" class="size-5" /> Explore Gyms Near You
-      </a>
+        <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a
+            href="/explore"
+            class="btn btn-primary btn-lg gap-2 shadow-lg shadow-primary/25 font-bold px-8"
+          >
+            <.icon name="hero-magnifying-glass" class="size-5" /> Explore Gyms
+          </a>
+          <a href="/register" class="btn btn-ghost btn-lg gap-2 font-semibold">
+            <.icon name="hero-user-plus-solid" class="size-5" /> Join as Member
+          </a>
+        </div>
+      </div>
+
+      <%!-- Slide 2: Gym Operators --%>
+      <div class="carousel-slide text-center">
+        <div class="inline-flex items-center gap-2 bg-secondary/10 text-secondary px-4 py-1.5 rounded-full text-sm font-semibold mb-8">
+          <.icon name="hero-building-office-2-solid" class="size-4" />
+          <span>For Gym Operators</span>
+        </div>
+
+        <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-tight">
+          Transform Your <span class="text-primary">Gym</span>
+          <br />Business
+        </h1>
+
+        <p class="mt-6 text-lg sm:text-xl text-base-content/60 max-w-2xl mx-auto leading-relaxed">
+          Manage multiple branches, trainers, and members with powerful automation tools and real-time analytics.
+        </p>
+
+        <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a
+            href="/register"
+            class="btn btn-primary btn-lg gap-2 shadow-lg shadow-primary/25 font-bold px-8"
+          >
+            <.icon name="hero-rocket-launch-solid" class="size-5" /> Start Free Trial
+          </a>
+          <a href="#features" class="btn btn-ghost btn-lg gap-2 font-semibold">
+            <.icon name="hero-sparkles-solid" class="size-5" /> See Features
+          </a>
+        </div>
+      </div>
+
+      <%!-- Slide 3: Trainers --%>
+      <div class="carousel-slide text-center">
+        <div class="inline-flex items-center gap-2 bg-accent/10 text-accent px-4 py-1.5 rounded-full text-sm font-semibold mb-8">
+          <.icon name="hero-academic-cap-solid" class="size-4" />
+          <span>For Trainers</span>
+        </div>
+
+        <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-tight">
+          Elevate Your <span class="text-primary">Training</span>
+          <br />Career
+        </h1>
+
+        <p class="mt-6 text-lg sm:text-xl text-base-content/60 max-w-2xl mx-auto leading-relaxed">
+          Create personalized workout plans, diet charts, and grow your client base with professional tools.
+        </p>
+
+        <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a
+            href="/register"
+            class="btn btn-primary btn-lg gap-2 shadow-lg shadow-primary/25 font-bold px-8"
+          >
+            <.icon name="hero-fire-solid" class="size-5" /> Join as Trainer
+          </a>
+          <a href="#features" class="btn btn-ghost btn-lg gap-2 font-semibold">
+            <.icon name="hero-chart-bar-solid" class="size-5" /> View Benefits
+          </a>
+        </div>
+      </div>
+
+      <%!-- Slide 4: Platform Benefits --%>
+      <div class="carousel-slide text-center">
+        <div class="inline-flex items-center gap-2 bg-success/10 text-success px-4 py-1.5 rounded-full text-sm font-semibold mb-8">
+          <.icon name="hero-bolt-solid" class="size-4" />
+          <span>The Future of Fitness Management</span>
+        </div>
+
+        <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-tight">
+          All-in-One <span class="text-primary">Fitness</span>
+          <br />Ecosystem
+        </h1>
+
+        <p class="mt-6 text-lg sm:text-xl text-base-content/60 max-w-2xl mx-auto leading-relaxed">
+          Class scheduling, attendance tracking, billing, analytics, and member management in one powerful platform.
+        </p>
+
+        <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a
+            href="/register"
+            class="btn btn-primary btn-lg gap-2 shadow-lg shadow-primary/25 font-bold px-8"
+          >
+            <.icon name="hero-rocket-launch-solid" class="size-5" /> Get Started Free
+          </a>
+          <a href="#features" class="btn btn-ghost btn-lg gap-2 font-semibold">
+            <.icon name="hero-arrow-down-circle" class="size-5" /> Explore Features
+          </a>
+        </div>
+      </div>
+
+      <%!-- Slide Indicators --%>
+      <div class="mt-16 flex justify-center gap-2 z-20">
+        <button class="indicator-dot active" data-slide="0" aria-label="Go to slide 1"></button>
+        <button class="indicator-dot" data-slide="1" aria-label="Go to slide 2"></button>
+        <button class="indicator-dot" data-slide="2" aria-label="Go to slide 3"></button>
+        <button class="indicator-dot" data-slide="3" aria-label="Go to slide 4"></button>
+      </div>
     </div>
 
     <%!-- Stats Row --%>
-    <div class="mt-20 grid grid-cols-3 gap-8 max-w-lg mx-auto">
+    <div class="mt-12 grid grid-cols-3 gap-8 max-w-lg mx-auto">
       <div>
         <p class="text-3xl sm:text-4xl font-black text-primary">100+</p>
         <p class="text-sm text-base-content/50 mt-1">Active Gyms</p>
@@ -65,6 +206,119 @@
     </div>
   </div>
 </section>
+
+<%!-- About Us Preview Section --%>
+<section class="py-20 px-4 sm:px-6 lg:px-8 bg-base-100">
+  <div class="max-w-4xl mx-auto text-center">
+    <div class="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full text-sm font-semibold mb-6">
+      <.icon name="hero-information-circle-solid" class="size-4" />
+      <span>Our Story</span>
+    </div>
+
+    <h2 class="text-3xl sm:text-4xl font-black tracking-tight mb-6">
+      Revolutionizing the <span class="text-primary">Fitness Industry</span>
+    </h2>
+
+    <p class="text-base-content/70 text-lg leading-relaxed max-w-2xl mx-auto mb-8">
+      FitConnex is more than just a platform—it's a complete ecosystem designed to connect gyms, trainers, and members seamlessly.
+      We believe in empowering fitness professionals with cutting-edge tools while making fitness accessible and personalized for everyone.
+    </p>
+
+    <a href="/about" class="btn btn-primary btn-lg gap-2 shadow-lg shadow-primary/25 font-bold">
+      <.icon name="hero-arrow-right" class="size-5" /> Learn More About Us
+    </a>
+  </div>
+</section>
+
+<style>
+  .carousel-slide {
+    display: none;
+    animation: fadeIn 0.5s ease-in;
+  }
+
+  .carousel-slide.active {
+    display: block;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .indicator-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.3);
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .indicator-dot.active {
+    background-color: oklch(var(--p));
+    width: 32px;
+    border-radius: 6px;
+  }
+
+  .indicator-dot:hover {
+    background-color: rgba(255, 255, 255, 0.5);
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const slides = document.querySelectorAll('.carousel-slide');
+    const indicators = document.querySelectorAll('.indicator-dot');
+    let currentSlide = 0;
+    let autoPlayInterval;
+
+    function showSlide(index) {
+      slides.forEach(slide => slide.classList.remove('active'));
+      indicators.forEach(indicator => indicator.classList.remove('active'));
+
+      slides[index].classList.add('active');
+      indicators[index].classList.add('active');
+      currentSlide = index;
+    }
+
+    function nextSlide() {
+      const next = (currentSlide + 1) % slides.length;
+      showSlide(next);
+    }
+
+    function startAutoPlay() {
+      autoPlayInterval = setInterval(nextSlide, 4000);
+    }
+
+    function stopAutoPlay() {
+      clearInterval(autoPlayInterval);
+    }
+
+    // Event listeners for indicator dots
+    indicators.forEach((indicator, index) => {
+      indicator.addEventListener('click', () => {
+        stopAutoPlay();
+        showSlide(index);
+        startAutoPlay();
+      });
+    });
+
+    // Pause on hover
+    const carousel = document.getElementById('hero-carousel');
+    carousel.addEventListener('mouseenter', stopAutoPlay);
+    carousel.addEventListener('mouseleave', startAutoPlay);
+
+    // Start auto-play
+    startAutoPlay();
+  });
+</script>
 
 <%!-- Features Section --%>
 <section id="features" class="py-24 px-4 sm:px-6 lg:px-8 bg-base-200/50">

@@ -1,0 +1,282 @@
+<%!-- Navigation Bar --%>
+<nav class="navbar bg-base-100/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 border-b border-base-300/50 px-4 sm:px-6 lg:px-8">
+  <div class="flex-1">
+    <a href="/" class="text-2xl font-extrabold tracking-tight">
+      Fit<span class="text-primary">Connex</span>
+    </a>
+  </div>
+  <div class="flex-none flex items-center gap-3">
+    <%!-- Solutions Dropdown --%>
+    <div class="dropdown dropdown-hover">
+      <label tabindex="0" class="btn btn-ghost btn-sm font-semibold">
+        Solutions
+        <.icon name="hero-chevron-down" class="size-4 ml-1" />
+      </label>
+      <ul
+        tabindex="0"
+        class="dropdown-content menu p-2 shadow-lg bg-base-100 rounded-box w-56 mt-1 border border-base-300/50"
+      >
+        <li>
+          <a href="/solutions/members" class="flex items-center gap-3 py-3">
+            <.icon name="hero-user-solid" class="size-5 text-accent" />
+            <div>
+              <div class="font-semibold">For Members</div>
+              <div class="text-xs text-base-content/60">Find your perfect gym</div>
+            </div>
+          </a>
+        </li>
+        <li>
+          <a href="/solutions/trainers" class="flex items-center gap-3 py-3">
+            <.icon name="hero-academic-cap-solid" class="size-5 text-secondary" />
+            <div>
+              <div class="font-semibold">For Trainers</div>
+              <div class="text-xs text-base-content/60">Grow your training business</div>
+            </div>
+          </a>
+        </li>
+        <li>
+          <a href="/solutions/operators" class="flex items-center gap-3 py-3">
+            <.icon name="hero-building-office-2-solid" class="size-5 text-primary" />
+            <div>
+              <div class="font-semibold">For Gym Operators</div>
+              <div class="text-xs text-base-content/60">Manage your gym efficiently</div>
+            </div>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <a href="/about" class="btn btn-ghost btn-sm font-semibold">About Us</a>
+    <a href="/explore" class="btn btn-ghost btn-sm font-semibold">Explore Gyms</a>
+    <a href="/sign-in" class="btn btn-ghost btn-sm font-semibold">Sign In</a>
+    <a href="/register" class="btn btn-primary btn-sm font-semibold">Get Started</a>
+  </div>
+</nav>
+
+<%!-- Hero Section --%>
+<section class="relative min-h-[60vh] flex items-center justify-center overflow-hidden pt-16">
+  <%!-- Background gradient --%>
+  <div class="absolute inset-0 bg-gradient-to-br from-base-300 via-base-100 to-base-200"></div>
+  <div class="absolute top-1/4 -left-32 w-96 h-96 bg-primary/10 rounded-full blur-3xl"></div>
+  <div class="absolute bottom-1/4 -right-32 w-96 h-96 bg-secondary/10 rounded-full blur-3xl"></div>
+
+  <div class="relative z-10 text-center max-w-4xl mx-auto px-4 sm:px-6 py-20">
+    <div class="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full text-sm font-semibold mb-8">
+      <.icon name="hero-information-circle-solid" class="size-4" />
+      <span>Our Story</span>
+    </div>
+
+    <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-tight">
+      About <span class="text-primary">FitConnex</span>
+    </h1>
+
+    <p class="mt-6 text-lg sm:text-xl text-base-content/60 max-w-2xl mx-auto leading-relaxed">
+      Revolutionizing the fitness industry by connecting gyms, trainers, and members in one seamless platform.
+    </p>
+  </div>
+</section>
+
+<%!-- Mission & Vision Section --%>
+<section class="py-24 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-6xl mx-auto">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+      <%!-- Mission --%>
+      <div class="card bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 p-8">
+        <div class="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center mb-6">
+          <.icon name="hero-rocket-launch-solid" class="size-8 text-primary" />
+        </div>
+        <h2 class="text-3xl font-black mb-4">Our Mission</h2>
+        <p class="text-base-content/70 text-lg leading-relaxed">
+          To empower fitness professionals and gym operators with innovative technology that streamlines operations,
+          enhances member experiences, and drives business growth while making fitness accessible to everyone.
+        </p>
+      </div>
+
+      <%!-- Vision --%>
+      <div class="card bg-gradient-to-br from-secondary/5 to-secondary/10 border border-secondary/20 p-8">
+        <div class="w-16 h-16 rounded-2xl bg-secondary/20 flex items-center justify-center mb-6">
+          <.icon name="hero-eye-solid" class="size-8 text-secondary" />
+        </div>
+        <h2 class="text-3xl font-black mb-4">Our Vision</h2>
+        <p class="text-base-content/70 text-lg leading-relaxed">
+          To become the world's leading fitness ecosystem, creating a connected community where gyms thrive,
+          trainers excel, and members achieve their health and wellness goals through personalized experiences.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%!-- Our Story Section --%>
+<section class="py-24 px-4 sm:px-6 lg:px-8 bg-base-200/50">
+  <div class="max-w-4xl mx-auto">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl sm:text-4xl font-black tracking-tight mb-6">
+        How It All <span class="text-primary">Started</span>
+      </h2>
+      <p class="text-base-content/70 text-lg leading-relaxed">
+        FitConnex was born from a simple observation: the fitness industry needed a unified platform that could
+        bring together gym operators, trainers, and members in a meaningful way. We saw gym owners struggling with
+        outdated management systems, trainers juggling multiple tools, and members searching for the right fitness
+        partner without proper guidance.
+      </p>
+    </div>
+
+    <div class="space-y-6 text-base-content/70 text-lg leading-relaxed">
+      <p>
+        In 2024, our founding team—a group of fitness enthusiasts, gym operators, and technology experts—came
+        together with a shared vision: to build a comprehensive ecosystem that addresses every pain point in the
+        fitness journey.
+      </p>
+      <p>
+        Today, FitConnex serves hundreds of gyms, thousands of trainers, and tens of thousands of members across
+        the region. We've automated gym management, simplified trainer-client relationships, and made discovering
+        the perfect gym as easy as a few clicks.
+      </p>
+      <p>
+        But we're just getting started. Our platform continues to evolve with new features, integrations, and
+        innovations that keep us at the forefront of fitness technology.
+      </p>
+    </div>
+  </div>
+</section>
+
+<%!-- Core Values Section --%>
+<section class="py-24 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl sm:text-4xl font-black tracking-tight">
+        Our Core <span class="text-primary">Values</span>
+      </h2>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <%!-- Value 1 --%>
+      <div class="card bg-base-100 border border-base-300/50 p-6 hover:shadow-lg transition-shadow">
+        <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+          <.icon name="hero-heart-solid" class="size-6 text-primary" />
+        </div>
+        <h3 class="text-xl font-bold mb-3">Member-Centric</h3>
+        <p class="text-base-content/60 leading-relaxed">
+          Every decision we make prioritizes the needs and experiences of our users—from gym operators to members.
+        </p>
+      </div>
+
+      <%!-- Value 2 --%>
+      <div class="card bg-base-100 border border-base-300/50 p-6 hover:shadow-lg transition-shadow">
+        <div class="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center mb-4">
+          <.icon name="hero-light-bulb-solid" class="size-6 text-secondary" />
+        </div>
+        <h3 class="text-xl font-bold mb-3">Innovation</h3>
+        <p class="text-base-content/60 leading-relaxed">
+          We continuously push boundaries with cutting-edge technology to solve real fitness industry challenges.
+        </p>
+      </div>
+
+      <%!-- Value 3 --%>
+      <div class="card bg-base-100 border border-base-300/50 p-6 hover:shadow-lg transition-shadow">
+        <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-4">
+          <.icon name="hero-shield-check-solid" class="size-6 text-accent" />
+        </div>
+        <h3 class="text-xl font-bold mb-3">Integrity</h3>
+        <p class="text-base-content/60 leading-relaxed">
+          We operate with transparency, honesty, and reliability in everything we do for our community.
+        </p>
+      </div>
+
+      <%!-- Value 4 --%>
+      <div class="card bg-base-100 border border-base-300/50 p-6 hover:shadow-lg transition-shadow">
+        <div class="w-12 h-12 rounded-xl bg-success/10 flex items-center justify-center mb-4">
+          <.icon name="hero-users-solid" class="size-6 text-success" />
+        </div>
+        <h3 class="text-xl font-bold mb-3">Community</h3>
+        <p class="text-base-content/60 leading-relaxed">
+          We believe in building strong connections and fostering a supportive fitness ecosystem for all.
+        </p>
+      </div>
+
+      <%!-- Value 5 --%>
+      <div class="card bg-base-100 border border-base-300/50 p-6 hover:shadow-lg transition-shadow">
+        <div class="w-12 h-12 rounded-xl bg-warning/10 flex items-center justify-center mb-4">
+          <.icon name="hero-chart-bar-square-solid" class="size-6 text-warning" />
+        </div>
+        <h3 class="text-xl font-bold mb-3">Excellence</h3>
+        <p class="text-base-content/60 leading-relaxed">
+          We strive for the highest quality in our platform, support, and service delivery every single day.
+        </p>
+      </div>
+
+      <%!-- Value 6 --%>
+      <div class="card bg-base-100 border border-base-300/50 p-6 hover:shadow-lg transition-shadow">
+        <div class="w-12 h-12 rounded-xl bg-info/10 flex items-center justify-center mb-4">
+          <.icon name="hero-bolt-solid" class="size-6 text-info" />
+        </div>
+        <h3 class="text-xl font-bold mb-3">Agility</h3>
+        <p class="text-base-content/60 leading-relaxed">
+          We adapt quickly to industry changes and user feedback, continuously evolving our platform.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%!-- Team Section --%>
+<section class="py-24 px-4 sm:px-6 lg:px-8 bg-base-200/50">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl sm:text-4xl font-black tracking-tight mb-4">
+        Meet Our <span class="text-primary">Team</span>
+      </h2>
+      <p class="text-base-content/60 text-lg max-w-2xl mx-auto">
+        A diverse group of passionate individuals dedicated to transforming the fitness industry.
+      </p>
+    </div>
+
+    <div class="text-center">
+      <p class="text-base-content/70 text-lg leading-relaxed mb-8">
+        Our team combines decades of experience in fitness management, software development, and user experience
+        design. We're gym enthusiasts, former trainers, competitive athletes, and tech innovators united by a
+        common goal: making fitness better for everyone.
+      </p>
+      <div class="inline-flex items-center gap-2 text-primary">
+        <.icon name="hero-user-group-solid" class="size-6" />
+        <span class="font-semibold text-lg">50+ Team Members Worldwide</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%!-- CTA Section --%>
+<section class="py-24 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-3xl mx-auto text-center">
+    <div class="card bg-gradient-to-r from-primary/10 via-base-100 to-secondary/10 border border-base-300 shadow-xl p-8 sm:p-12">
+      <h2 class="text-3xl sm:text-4xl font-black tracking-tight mb-4">
+        Join the FitConnex <span class="text-primary">Community</span>
+      </h2>
+      <p class="text-base-content/60 text-lg mb-8">
+        Whether you're a gym operator, trainer, or fitness enthusiast, we have the perfect solution for you.
+      </p>
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a
+          href="/register"
+          class="btn btn-primary btn-lg gap-2 shadow-lg shadow-primary/25 font-bold px-8"
+        >
+          <.icon name="hero-rocket-launch-solid" class="size-5" /> Get Started Today
+        </a>
+        <a href="/explore" class="btn btn-ghost btn-lg font-semibold">Explore Gyms</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%!-- Footer --%>
+<footer class="py-12 px-4 sm:px-6 lg:px-8 border-t border-base-300">
+  <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="text-xl font-extrabold tracking-tight">
+      Fit<span class="text-primary">Connex</span>
+    </div>
+    <p class="text-sm text-base-content/40">
+      Built with Phoenix, Ash Framework, and LiveView
+    </p>
+  </div>
+</footer>

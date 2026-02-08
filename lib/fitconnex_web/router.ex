@@ -22,6 +22,10 @@ defmodule FitconnexWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    get "/about", PageController, :about
+    get "/solutions/members", PageController, :solutions_members
+    get "/solutions/trainers", PageController, :solutions_trainers
+    get "/solutions/operators", PageController, :solutions_operators
   end
 
   # Auth routes
