@@ -343,20 +343,22 @@
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background-color: rgba(255, 255, 255, 0.3);
-    border: none;
+    background-color: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     cursor: pointer;
     transition: all 0.3s ease;
+    flex-shrink: 0;
   }
 
   .indicator-dot.active {
-    background-color: oklch(var(--p));
-    width: 32px;
+    background-color: rgba(255, 255, 255, 0.5);
+    border-color: rgba(255, 255, 255, 0.3);
+    width: 28px;
     border-radius: 6px;
   }
 
   .indicator-dot:hover {
-    background-color: rgba(255, 255, 255, 0.5);
+    background-color: rgba(255, 255, 255, 0.7);
   }
 </style>
 
