@@ -12,11 +12,17 @@ defmodule Fitconnex.Gym.GymBranch do
     defaults([:read, :destroy])
 
     create :create do
-      accept([:address, :city, :state, :postal_code, :latitude, :longitude, :is_primary, :gym_id])
+      accept([
+        :address, :city, :state, :postal_code, :latitude, :longitude,
+        :is_primary, :gym_id, :logo_url, :gallery_urls
+      ])
     end
 
     update :update do
-      accept([:address, :city, :state, :postal_code, :latitude, :longitude, :is_primary])
+      accept([
+        :address, :city, :state, :postal_code, :latitude, :longitude,
+        :is_primary, :logo_url, :gallery_urls
+      ])
     end
   end
 
@@ -41,6 +47,15 @@ defmodule Fitconnex.Gym.GymBranch do
 
     attribute(:latitude, :float)
     attribute(:longitude, :float)
+
+    attribute :logo_url, :string do
+      allow_nil?(true)
+    end
+
+    attribute :gallery_urls, {:array, :string} do
+      allow_nil?(false)
+      default([])
+    end
 
     attribute :is_primary, :boolean do
       allow_nil?(false)

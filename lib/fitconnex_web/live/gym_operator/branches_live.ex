@@ -31,26 +31,52 @@ defmodule FitconnexWeb.GymOperator.BranchesLive do
           )
 
         {:ok,
-         assign(socket,
+         socket
+         |> assign(
            page_title: "Branches",
            gym: gym,
            branches: branches,
            form: form,
            show_form: false,
            editing_branch_id: nil,
-           edit_form: nil
+           edit_form: nil,
+           editing_branch_logo: nil,
+           editing_branch_gallery: []
+         )
+         |> allow_upload(:logo,
+           accept: ~w(.jpg .jpeg .png .webp),
+           max_entries: 1,
+           max_file_size: 5_000_000
+         )
+         |> allow_upload(:gallery,
+           accept: ~w(.jpg .jpeg .png .webp),
+           max_entries: 6,
+           max_file_size: 5_000_000
          )}
 
       :no_gym ->
         {:ok,
-         assign(socket,
+         socket
+         |> assign(
            page_title: "Branches",
            gym: nil,
            branches: [],
            form: nil,
            show_form: false,
            editing_branch_id: nil,
-           edit_form: nil
+           edit_form: nil,
+           editing_branch_logo: nil,
+           editing_branch_gallery: []
+         )
+         |> allow_upload(:logo,
+           accept: ~w(.jpg .jpeg .png .webp),
+           max_entries: 1,
+           max_file_size: 5_000_000
+         )
+         |> allow_upload(:gallery,
+           accept: ~w(.jpg .jpeg .png .webp),
+           max_entries: 6,
+           max_file_size: 5_000_000
          )}
     end
   end
@@ -96,6 +122,16 @@ defmodule FitconnexWeb.GymOperator.BranchesLive do
     lat = parse_float(params["latitude"])
     lng = parse_float(params["longitude"])
 
+    # Consume uploaded logo
+    logo_url =
+      case consume_uploaded_entries(socket, :logo, &save_upload/2) do
+        [url] -> url
+        [] -> nil
+      end
+
+    # Consume uploaded gallery images
+    gallery_urls = consume_uploaded_entries(socket, :gallery, &save_upload/2)
+
     create_params = %{
       address: params["address"],
       city: params["city"],
@@ -104,7 +140,9 @@ defmodule FitconnexWeb.GymOperator.BranchesLive do
       latitude: lat,
       longitude: lng,
       is_primary: params["is_primary"] == "true",
-      gym_id: gym.id
+      gym_id: gym.id,
+      logo_url: logo_url,
+      gallery_urls: gallery_urls
     }
 
     case Fitconnex.Gym.GymBranch
@@ -197,14 +235,40 @@ defmodule FitconnexWeb.GymOperator.BranchesLive do
           as: "branch"
         )
 
-      {:noreply, assign(socket, editing_branch_id: id, edit_form: edit_form, show_form: false)}
+      {:noreply,
+       assign(socket,
+         editing_branch_id: id,
+         edit_form: edit_form,
+         show_form: false,
+         editing_branch_logo: branch.logo_url,
+         editing_branch_gallery: branch.gallery_urls || []
+       )}
     else
       {:noreply, put_flash(socket, :error, "Branch not found.")}
     end
   end
 
   def handle_event("cancel_edit", _params, socket) do
-    {:noreply, assign(socket, editing_branch_id: nil, edit_form: nil)}
+    {:noreply,
+     assign(socket,
+       editing_branch_id: nil,
+       edit_form: nil,
+       editing_branch_logo: nil,
+       editing_branch_gallery: []
+     )}
+  end
+
+  def handle_event("cancel_upload", %{"ref" => ref, "upload" => upload_name}, socket) do
+    {:noreply, cancel_upload(socket, String.to_existing_atom(upload_name), ref)}
+  end
+
+  def handle_event("remove_existing_logo", _params, socket) do
+    {:noreply, assign(socket, editing_branch_logo: nil)}
+  end
+
+  def handle_event("remove_gallery_image", %{"url" => url}, socket) do
+    updated = Enum.reject(socket.assigns.editing_branch_gallery, &(&1 == url))
+    {:noreply, assign(socket, editing_branch_gallery: updated)}
   end
 
   def handle_event("update_branch", %{"branch" => params}, socket) do
@@ -219,6 +283,30 @@ defmodule FitconnexWeb.GymOperator.BranchesLive do
       |> List.first()
 
     if branch do
+      # Handle logo: new upload takes priority, otherwise keep/remove existing
+      new_logo =
+        case consume_uploaded_entries(socket, :logo, &save_upload/2) do
+          [url] ->
+            if branch.logo_url, do: delete_upload_file(branch.logo_url)
+            url
+
+          [] ->
+            # Use the tracked value from assigns (nil if removed)
+            socket.assigns.editing_branch_logo
+        end
+
+      # Handle gallery: merge kept existing + new uploads
+      kept_gallery = socket.assigns.editing_branch_gallery
+      new_gallery_urls = consume_uploaded_entries(socket, :gallery, &save_upload/2)
+
+      # Delete removed gallery files from disk
+      removed =
+        (branch.gallery_urls || []) -- kept_gallery
+
+      Enum.each(removed, &delete_upload_file/1)
+
+      final_gallery = Enum.take(kept_gallery ++ new_gallery_urls, 6)
+
       update_params = %{
         address: params["address"],
         city: params["city"],
@@ -226,7 +314,9 @@ defmodule FitconnexWeb.GymOperator.BranchesLive do
         postal_code: params["postal_code"],
         latitude: parse_float(params["latitude"]),
         longitude: parse_float(params["longitude"]),
-        is_primary: params["is_primary"] == "true"
+        is_primary: params["is_primary"] == "true",
+        logo_url: new_logo,
+        gallery_urls: final_gallery
       }
 
       case branch
@@ -241,7 +331,13 @@ defmodule FitconnexWeb.GymOperator.BranchesLive do
           {:noreply,
            socket
            |> put_flash(:info, "Branch updated successfully!")
-           |> assign(branches: branches, editing_branch_id: nil, edit_form: nil)}
+           |> assign(
+             branches: branches,
+             editing_branch_id: nil,
+             edit_form: nil,
+             editing_branch_logo: nil,
+             editing_branch_gallery: []
+           )}
 
         {:error, _changeset} ->
           {:noreply, put_flash(socket, :error, "Failed to update branch. Please check your input.")}
@@ -269,6 +365,28 @@ defmodule FitconnexWeb.GymOperator.BranchesLive do
       :error -> nil
     end
   end
+
+  defp save_upload(%{path: path}, entry) do
+    upload_dir = Path.join(["priv/static/uploads/branches"])
+    File.mkdir_p!(upload_dir)
+    filename = "#{Ecto.UUID.generate()}#{Path.extname(entry.client_name)}"
+    dest = Path.join(upload_dir, filename)
+    File.cp!(path, dest)
+    {:ok, "/uploads/branches/#{filename}"}
+  end
+
+  defp delete_upload_file(nil), do: :ok
+
+  defp delete_upload_file(url) do
+    path = Path.join("priv/static", url)
+    File.rm(path)
+    :ok
+  end
+
+  defp upload_error_to_string(:too_large), do: "File is too large (max 5MB)"
+  defp upload_error_to_string(:too_many_files), do: "Too many files"
+  defp upload_error_to_string(:not_accepted), do: "Invalid file type (use JPG, PNG, or WebP)"
+  defp upload_error_to_string(err), do: inspect(err)
 
   @impl true
   def render(assigns) do
@@ -382,6 +500,48 @@ defmodule FitconnexWeb.GymOperator.BranchesLive do
                     </div>
                   </div>
                   <.input field={@form[:is_primary]} type="checkbox" label="Primary Branch" />
+
+                  <%!-- Logo Upload --%>
+                  <div class="mt-4">
+                    <label class="label">
+                      <span class="label-text font-medium">Branch Logo</span>
+                    </label>
+                    <.live_file_input upload={@uploads.logo} class="file-input file-input-bordered file-input-sm w-full max-w-xs" />
+                    <%= for entry <- @uploads.logo.entries do %>
+                      <div class="flex items-center gap-3 mt-2">
+                        <.live_img_preview entry={entry} class="w-16 h-16 rounded-lg object-cover" />
+                        <span class="text-sm truncate flex-1">{entry.client_name}</span>
+                        <button type="button" phx-click="cancel_upload" phx-value-ref={entry.ref} phx-value-upload="logo" class="btn btn-ghost btn-xs text-error">
+                          <.icon name="hero-x-mark-mini" class="size-4" />
+                        </button>
+                      </div>
+                      <%= for err <- upload_errors(@uploads.logo, entry) do %>
+                        <p class="text-xs text-error mt-1">{upload_error_to_string(err)}</p>
+                      <% end %>
+                    <% end %>
+                  </div>
+
+                  <%!-- Gallery Upload --%>
+                  <div class="mt-4">
+                    <label class="label">
+                      <span class="label-text font-medium">Gallery Images <span class="text-base-content/40">(up to 6)</span></span>
+                    </label>
+                    <.live_file_input upload={@uploads.gallery} class="file-input file-input-bordered file-input-sm w-full max-w-xs" />
+                    <div class="flex flex-wrap gap-3 mt-2">
+                      <%= for entry <- @uploads.gallery.entries do %>
+                        <div class="relative">
+                          <.live_img_preview entry={entry} class="w-20 h-20 rounded-lg object-cover" />
+                          <button type="button" phx-click="cancel_upload" phx-value-ref={entry.ref} phx-value-upload="gallery" class="btn btn-circle btn-xs btn-error absolute -top-2 -right-2">
+                            <.icon name="hero-x-mark-mini" class="size-3" />
+                          </button>
+                        </div>
+                      <% end %>
+                    </div>
+                    <%= for err <- upload_errors(@uploads.gallery) do %>
+                      <p class="text-xs text-error mt-1">{upload_error_to_string(err)}</p>
+                    <% end %>
+                  </div>
+
                   <div class="flex gap-2 mt-4">
                     <button type="submit" class="btn btn-primary btn-sm gap-2" id="save-branch-btn">
                       <.icon name="hero-check-mini" class="size-4" /> Save Branch
@@ -489,6 +649,71 @@ defmodule FitconnexWeb.GymOperator.BranchesLive do
                     </div>
                   </div>
                   <.input field={@edit_form[:is_primary]} type="checkbox" label="Primary Branch" />
+
+                  <%!-- Logo Upload --%>
+                  <div class="mt-4">
+                    <label class="label">
+                      <span class="label-text font-medium">Branch Logo</span>
+                    </label>
+                    <%!-- Existing logo --%>
+                    <%= if @editing_branch_logo do %>
+                      <div class="flex items-center gap-3 mb-2 p-2 rounded-lg bg-base-300/20">
+                        <img src={@editing_branch_logo} class="w-16 h-16 rounded-lg object-cover" />
+                        <span class="text-sm text-base-content/60">Current logo</span>
+                        <button type="button" phx-click="remove_existing_logo" class="btn btn-ghost btn-xs text-error ml-auto">
+                          <.icon name="hero-trash-mini" class="size-4" /> Remove
+                        </button>
+                      </div>
+                    <% end %>
+                    <.live_file_input upload={@uploads.logo} class="file-input file-input-bordered file-input-sm w-full max-w-xs" />
+                    <%= for entry <- @uploads.logo.entries do %>
+                      <div class="flex items-center gap-3 mt-2">
+                        <.live_img_preview entry={entry} class="w-16 h-16 rounded-lg object-cover" />
+                        <span class="text-sm truncate flex-1">{entry.client_name}</span>
+                        <button type="button" phx-click="cancel_upload" phx-value-ref={entry.ref} phx-value-upload="logo" class="btn btn-ghost btn-xs text-error">
+                          <.icon name="hero-x-mark-mini" class="size-4" />
+                        </button>
+                      </div>
+                      <%= for err <- upload_errors(@uploads.logo, entry) do %>
+                        <p class="text-xs text-error mt-1">{upload_error_to_string(err)}</p>
+                      <% end %>
+                    <% end %>
+                  </div>
+
+                  <%!-- Gallery Upload --%>
+                  <div class="mt-4">
+                    <label class="label">
+                      <span class="label-text font-medium">Gallery Images <span class="text-base-content/40">(up to 6)</span></span>
+                    </label>
+                    <%!-- Existing gallery images --%>
+                    <%= if @editing_branch_gallery != [] do %>
+                      <div class="flex flex-wrap gap-3 mb-2">
+                        <%= for url <- @editing_branch_gallery do %>
+                          <div class="relative">
+                            <img src={url} class="w-20 h-20 rounded-lg object-cover" />
+                            <button type="button" phx-click="remove_gallery_image" phx-value-url={url} class="btn btn-circle btn-xs btn-error absolute -top-2 -right-2">
+                              <.icon name="hero-x-mark-mini" class="size-3" />
+                            </button>
+                          </div>
+                        <% end %>
+                      </div>
+                    <% end %>
+                    <.live_file_input upload={@uploads.gallery} class="file-input file-input-bordered file-input-sm w-full max-w-xs" />
+                    <div class="flex flex-wrap gap-3 mt-2">
+                      <%= for entry <- @uploads.gallery.entries do %>
+                        <div class="relative">
+                          <.live_img_preview entry={entry} class="w-20 h-20 rounded-lg object-cover" />
+                          <button type="button" phx-click="cancel_upload" phx-value-ref={entry.ref} phx-value-upload="gallery" class="btn btn-circle btn-xs btn-error absolute -top-2 -right-2">
+                            <.icon name="hero-x-mark-mini" class="size-3" />
+                          </button>
+                        </div>
+                      <% end %>
+                    </div>
+                    <%= for err <- upload_errors(@uploads.gallery) do %>
+                      <p class="text-xs text-error mt-1">{upload_error_to_string(err)}</p>
+                    <% end %>
+                  </div>
+
                   <div class="flex gap-2 mt-4">
                     <button type="submit" class="btn btn-primary btn-sm gap-2" id="update-branch-btn">
                       <.icon name="hero-check-mini" class="size-4" /> Update Branch
@@ -526,6 +751,7 @@ defmodule FitconnexWeb.GymOperator.BranchesLive do
                   <table class="table table-sm" id="branches-table">
                     <thead>
                       <tr class="text-base-content/40">
+                        <th>Logo</th>
                         <th>Address</th>
                         <th>City</th>
                         <th>State</th>
@@ -537,6 +763,15 @@ defmodule FitconnexWeb.GymOperator.BranchesLive do
                     <tbody>
                       <%= for branch <- @branches do %>
                         <tr id={"branch-#{branch.id}"}>
+                          <td>
+                            <%= if branch.logo_url do %>
+                              <img src={branch.logo_url} class="w-10 h-10 rounded-lg object-cover" />
+                            <% else %>
+                              <div class="w-10 h-10 rounded-lg bg-base-300/30 flex items-center justify-center">
+                                <.icon name="hero-photo" class="size-5 text-base-content/20" />
+                              </div>
+                            <% end %>
+                          </td>
                           <td class="font-medium">{branch.address}</td>
                           <td>{branch.city}</td>
                           <td>{branch.state}</td>

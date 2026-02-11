@@ -49,7 +49,24 @@ defmodule FitconnexWeb.Explore.GymListLive do
   def handle_event("clear_filters", _params, socket) do
     {:noreply,
      socket
-     |> assign(search_query: "", city_filter: "")
+     |> assign(search_query: "", city_filter: "", user_lat: nil, user_lng: nil, place_name: nil)
+     |> apply_filters()}
+  end
+
+  def handle_event("place_selected", %{"latitude" => lat, "longitude" => lng} = params, socket) do
+    place_name = params["place_name"] || ""
+    city = params["city"] || ""
+
+    city_filter =
+      if city != "" and city in socket.assigns.cities do
+        city
+      else
+        socket.assigns.city_filter
+      end
+
+    {:noreply,
+     socket
+     |> assign(user_lat: lat, user_lng: lng, place_name: place_name, city_filter: city_filter)
      |> apply_filters()}
   end
 
@@ -174,6 +191,12 @@ defmodule FitconnexWeb.Explore.GymListLive do
     end
   end
 
+  defp branch_logo(entry) do
+    branches = entry.gym.branches
+    primary = Enum.find(branches, &(&1.is_primary)) || List.first(branches)
+    if primary, do: primary.logo_url, else: nil
+  end
+
   defp format_price(nil), do: nil
 
   defp format_price(paise) when is_integer(paise) do
@@ -207,6 +230,16 @@ defmodule FitconnexWeb.Explore.GymListLive do
           </p>
         </div>
 
+        <%!-- Location Hint --%>
+        <%= unless @user_lat do %>
+          <div class="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-info/10 border border-info/20">
+            <.icon name="hero-map-pin-mini" class="size-4 text-info shrink-0" />
+            <p class="text-sm text-base-content/70">
+              Tap <span class="font-semibold text-info">"Detect my location"</span> to find the nearest and best gyms around you.
+            </p>
+          </div>
+        <% end %>
+
         <%!-- Search & Filters Bar --%>
         <div class="card bg-base-200/50 border border-base-300/50">
           <div class="card-body p-4">
@@ -232,7 +265,7 @@ defmodule FitconnexWeb.Explore.GymListLive do
               <div class="w-full sm:w-48">
                 <form phx-change="filter_city">
                   <select name="city" class="select select-bordered select-sm w-full">
-                    <option value="">All Cities</option>
+                    <option value="">All Locations</option>
                     <%= for city <- @cities do %>
                       <option value={city} selected={@city_filter == city}>{city}</option>
                     <% end %>
@@ -240,6 +273,30 @@ defmodule FitconnexWeb.Explore.GymListLive do
                 </form>
               </div>
 
+              <%!-- Clear Filters --%>
+              <%= if @search_query != "" or @city_filter != "" or @user_lat do %>
+                <button phx-click="clear_filters" class="btn btn-ghost btn-sm gap-1">
+                  <.icon name="hero-x-mark-mini" class="size-4" /> Clear
+                </button>
+              <% end %>
+            </div>
+
+            <%!-- Location Search with Google Places Autocomplete --%>
+            <div class="flex flex-col sm:flex-row gap-3 mt-3 pt-3 border-t border-base-300/30">
+              <div class="flex-1" id="explore-place-wrapper" phx-update="ignore">
+                <label class="input input-bordered input-sm flex items-center gap-2 w-full">
+                  <.icon name="hero-map-pin-mini" class="size-4 text-primary opacity-70" />
+                  <input
+                    type="text"
+                    id="explore-place-search"
+                    phx-hook="ExplorePlacesAutocomplete"
+                    placeholder="Type a location to find nearby gyms..."
+                    class="grow"
+                    autocomplete="off"
+                  />
+                </label>
+              </div>
+              <span class="text-xs text-base-content/40 self-center hidden sm:block">or</span>
               <%!-- Location Button --%>
               <button
                 id="detect-location-btn"
@@ -253,13 +310,6 @@ defmodule FitconnexWeb.Explore.GymListLive do
                   Detect my location
                 <% end %>
               </button>
-
-              <%!-- Clear Filters --%>
-              <%= if @search_query != "" or @city_filter != "" do %>
-                <button phx-click="clear_filters" class="btn btn-ghost btn-sm gap-1">
-                  <.icon name="hero-x-mark-mini" class="size-4" /> Clear
-                </button>
-              <% end %>
             </div>
 
             <%!-- Location Info --%>
@@ -305,29 +355,42 @@ defmodule FitconnexWeb.Explore.GymListLive do
             </div>
           </div>
         <% else %>
-          <div class="flex flex-col gap-3" id="gym-list">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="gym-list">
             <%= for {entry, distance} <- @sorted_entries do %>
               <a
                 href={"/explore/#{entry.gym.slug}"}
-                class="flex items-center gap-4 p-4 rounded-lg bg-base-200/50 border border-base-300/50 hover:border-primary/30 hover:shadow-lg transition-all cursor-pointer"
+                class="card bg-base-200/50 border border-base-300/50 hover:border-primary/30 hover:shadow-xl hover:-translate-y-0.5 transition-all cursor-pointer overflow-hidden group"
                 id={"gym-card-#{entry.gym.id}"}
               >
-                <%!-- Gym Icon --%>
-                <div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <.icon name="hero-building-office-2-solid" class="size-6 text-primary" />
-                </div>
+                <%!-- Image --%>
+                <figure class="h-40 bg-base-300/30 overflow-hidden">
+                  <%= if branch_logo(entry) do %>
+                    <img
+                      src={branch_logo(entry)}
+                      alt={entry.gym.name}
+                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  <% else %>
+                    <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-base-300/50">
+                      <.icon name="hero-building-office-2-solid" class="size-12 text-base-content/15" />
+                    </div>
+                  <% end %>
+                </figure>
 
-                <%!-- Name & City --%>
-                <div class="min-w-0 flex-1">
-                  <div class="flex items-center gap-2">
-                    <h3 class="text-base font-bold truncate">{entry.gym.name}</h3>
+                <%!-- Content --%>
+                <div class="card-body p-4 gap-2">
+                  <%!-- Name + Badges --%>
+                  <div class="flex items-start justify-between gap-2">
+                    <h3 class="card-title text-base truncate">{entry.gym.name}</h3>
                     <%= if entry.gym.is_promoted do %>
-                      <span class="badge badge-xs badge-warning gap-1">
+                      <span class="badge badge-xs badge-warning gap-1 shrink-0">
                         <.icon name="hero-star-mini" class="size-2.5" /> Featured
                       </span>
                     <% end %>
                   </div>
-                  <div class="flex items-center gap-3 mt-0.5 text-sm text-base-content/50">
+
+                  <%!-- Location & Stats --%>
+                  <div class="flex items-center gap-2 text-sm text-base-content/50 flex-wrap">
                     <%= if entry.primary_city do %>
                       <span class="flex items-center gap-1">
                         <.icon name="hero-map-pin-mini" class="size-3.5" />
@@ -335,7 +398,7 @@ defmodule FitconnexWeb.Explore.GymListLive do
                       </span>
                     <% end %>
                     <span class="flex items-center gap-1">
-                      <.icon name="hero-map-pin-mini" class="size-3.5" />
+                      <.icon name="hero-building-office-2-mini" class="size-3.5" />
                       {length(entry.gym.branches)} branch(es)
                     </span>
                     <span class="flex items-center gap-1">
@@ -343,27 +406,27 @@ defmodule FitconnexWeb.Explore.GymListLive do
                       {entry.trainer_count} trainer(s)
                     </span>
                   </div>
+
+                  <%!-- Price + Distance --%>
+                  <div class="flex items-center justify-between mt-1 pt-2 border-t border-base-300/30">
+                    <div>
+                      <%= if format_price(entry.cheapest_monthly) do %>
+                        <span class="text-lg font-black text-primary">
+                          Rs {format_price(entry.cheapest_monthly)}
+                        </span>
+                        <span class="text-xs text-base-content/40">/mo</span>
+                      <% else %>
+                        <span class="text-sm text-base-content/40">Contact for pricing</span>
+                      <% end %>
+                    </div>
+                    <%= if distance do %>
+                      <span class="badge badge-sm badge-info gap-1">
+                        <.icon name="hero-map-pin-mini" class="size-3" />
+                        {format_distance(distance)}
+                      </span>
+                    <% end %>
+                  </div>
                 </div>
-
-                <%!-- Distance Badge --%>
-                <%= if distance do %>
-                  <span class="badge badge-sm badge-info shrink-0">{format_distance(distance)}</span>
-                <% end %>
-
-                <%!-- Price --%>
-                <div class="text-right shrink-0">
-                  <%= if format_price(entry.cheapest_monthly) do %>
-                    <span class="text-lg font-black text-primary">
-                      Rs {format_price(entry.cheapest_monthly)}
-                    </span>
-                    <span class="text-xs text-base-content/50">/mo</span>
-                  <% else %>
-                    <span class="text-sm text-base-content/40">Contact for pricing</span>
-                  <% end %>
-                </div>
-
-                <%!-- Arrow --%>
-                <.icon name="hero-chevron-right-mini" class="size-5 text-base-content/30 shrink-0" />
               </a>
             <% end %>
           </div>

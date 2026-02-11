@@ -162,6 +162,57 @@ const PlacesAutocomplete = {
   }
 }
 
+// Google Places Autocomplete for Explore page location search
+const ExplorePlacesAutocomplete = {
+  mounted() {
+    this._initAttempts = 0
+    this._tryInit()
+  },
+  _tryInit() {
+    if (window.google && window.google.maps && window.google.maps.places) {
+      this._setup()
+    } else if (this._initAttempts < 50) {
+      this._initAttempts++
+      setTimeout(() => this._tryInit(), 200)
+    }
+  },
+  _setup() {
+    const input = this.el
+    const autocomplete = new google.maps.places.Autocomplete(input, {
+      types: ["establishment", "geocode"],
+      fields: ["address_components", "geometry", "name"]
+    })
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault()
+      }
+    })
+
+    autocomplete.addListener("place_changed", () => {
+      const place = autocomplete.getPlace()
+      if (!place.geometry) return
+
+      const displayText = input.value
+      const components = place.address_components || []
+      const get = (type) => {
+        const comp = components.find(c => c.types.includes(type))
+        return comp ? comp.long_name : ""
+      }
+
+      const data = {
+        city: get("locality") || get("administrative_area_level_2"),
+        latitude: place.geometry.location.lat(),
+        longitude: place.geometry.location.lng(),
+        place_name: displayText
+      }
+
+      this.pushEvent("place_selected", data)
+      requestAnimationFrame(() => { input.value = displayText })
+    })
+  }
+}
+
 // Password visibility toggle hook
 const PasswordVisibilityToggle = {
   mounted() {
@@ -225,7 +276,7 @@ const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks, Geolocation, BranchGeolocation, PlacesAutocomplete, PasswordVisibilityToggle},
+  hooks: {...colocatedHooks, Geolocation, BranchGeolocation, PlacesAutocomplete, ExplorePlacesAutocomplete, PasswordVisibilityToggle},
 })
 
 // Show progress bar on live navigation and form submits

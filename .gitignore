@@ -35,6 +35,10 @@ fitconnex-*.tar
 npm-debug.log
 /assets/node_modules/
 
+# Uploaded files (keep directory structure, ignore actual uploads)
+/priv/static/uploads/branches/*
+!/priv/static/uploads/branches/.gitkeep
+
 # Environment variables (API keys, secrets)
 .env
 

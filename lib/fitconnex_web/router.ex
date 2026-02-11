@@ -28,16 +28,20 @@ defmodule FitconnexWeb.Router do
     get "/solutions/operators", PageController, :solutions_operators
   end
 
-  # Auth routes
+  # Auth routes - custom sign in / register pages
+  ash_authentication_live_session :auth_pages,
+    otp_app: :fitconnex,
+    on_mount: [{FitconnexWeb.LiveUserAuth, :live_no_user}] do
+    scope "/", FitconnexWeb do
+      pipe_through :browser
+
+      live "/sign-in", Auth.SignInLive
+      live "/register", Auth.RegisterLive
+    end
+  end
+
   scope "/", FitconnexWeb do
     pipe_through :browser
-
-    sign_in_route(
-      register_path: "/register",
-      auth_routes_prefix: "/auth",
-      overrides: [FitconnexWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
-    )
-
     reset_route([])
   end
 

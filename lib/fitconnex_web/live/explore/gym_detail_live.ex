@@ -128,6 +128,32 @@ defmodule FitconnexWeb.Explore.GymDetailLive do
             </ul>
           </div>
 
+          <%!-- Hero Image / Gallery --%>
+          <% primary_branch = Enum.find(@gym_data.gym.branches, & &1.is_primary) || List.first(@gym_data.gym.branches) %>
+          <% all_gallery = Enum.flat_map(@gym_data.gym.branches, fn b -> b.gallery_urls || [] end) %>
+          <%= if primary_branch && (primary_branch.logo_url || all_gallery != []) do %>
+            <div class="rounded-lg overflow-hidden">
+              <%= if primary_branch.logo_url do %>
+                <img
+                  src={primary_branch.logo_url}
+                  alt={@gym_data.gym.name}
+                  class="w-full h-48 sm:h-64 object-cover rounded-lg"
+                />
+              <% end %>
+              <%= if all_gallery != [] do %>
+                <div class="flex gap-2 mt-2 overflow-x-auto pb-2">
+                  <%= for url <- Enum.take(all_gallery, 10) do %>
+                    <img
+                      src={url}
+                      alt="Gallery"
+                      class="w-24 h-24 sm:w-32 sm:h-32 rounded-lg object-cover shrink-0"
+                    />
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+
           <%!-- Header --%>
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div class="flex items-center gap-3">
@@ -212,8 +238,12 @@ defmodule FitconnexWeb.Explore.GymDetailLive do
                 </h2>
                 <div class="space-y-3">
                   <%= for branch <- @gym_data.gym.branches do %>
-                    <div class="flex items-center justify-between p-3 rounded-lg bg-base-300/20">
-                      <div>
+                    <div class="flex items-start gap-4 p-3 rounded-lg bg-base-300/20">
+                      <%!-- Branch logo thumbnail --%>
+                      <%= if branch.logo_url do %>
+                        <img src={branch.logo_url} class="w-14 h-14 rounded-lg object-cover shrink-0" />
+                      <% end %>
+                      <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2">
                           <p class="font-semibold">{branch.city}, {branch.state}</p>
                           <%= if branch.is_primary do %>
@@ -223,15 +253,23 @@ defmodule FitconnexWeb.Explore.GymDetailLive do
                         <p class="text-sm text-base-content/60 mt-0.5">
                           {branch.address} — {branch.postal_code}
                         </p>
+                        <%!-- Branch gallery thumbnails --%>
+                        <%= if branch.gallery_urls && branch.gallery_urls != [] do %>
+                          <div class="flex gap-1.5 mt-2">
+                            <%= for url <- branch.gallery_urls do %>
+                              <img src={url} alt="Gallery" class="w-10 h-10 rounded object-cover" />
+                            <% end %>
+                          </div>
+                        <% end %>
                       </div>
                       <%= if maps_url(branch.latitude, branch.longitude) do %>
                         <a
                           href={maps_url(branch.latitude, branch.longitude)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          class="btn btn-outline btn-xs gap-1 shrink-0"
+                          class="btn btn-outline btn-xs gap-1 shrink-0 self-center"
                         >
-                          <.icon name="hero-map-pin-mini" class="size-3" /> Find exact location
+                          <.icon name="hero-map-pin-mini" class="size-3" /> Map
                         </a>
                       <% end %>
                     </div>

@@ -14,7 +14,8 @@
       "mcp__plugin_playwright_playwright__browser_take_screenshot",
       "Bash(gh auth status:*)",
       "Bash(gh repo edit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(mix ecto.migrate:*)"
     ]
   }
 }
