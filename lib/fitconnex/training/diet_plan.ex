@@ -64,7 +64,7 @@ defmodule Fitconnex.Training.DietPlan do
       allow_nil?(false)
     end
 
-    belongs_to :trainer, Fitconnex.Accounts.User
+    belongs_to :trainer, Fitconnex.Gym.GymTrainer
 
     belongs_to :template, Fitconnex.Training.DietPlanTemplate
   end

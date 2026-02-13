@@ -12,11 +12,11 @@ defmodule Fitconnex.Gym.GymTrainer do
     defaults([:read, :destroy])
 
     create :create do
-      accept([:user_id, :gym_id, :specializations])
+      accept([:user_id, :gym_id, :specializations, :branch_id])
     end
 
     update :update do
-      accept([:specializations, :is_active])
+      accept([:specializations, :is_active, :branch_id])
     end
   end
 
@@ -42,6 +42,16 @@ defmodule Fitconnex.Gym.GymTrainer do
 
     belongs_to :gym, Fitconnex.Gym.Gym do
       allow_nil?(false)
+    end
+
+    belongs_to :branch, Fitconnex.Gym.GymBranch
+
+    has_many :scheduled_classes, Fitconnex.Scheduling.ScheduledClass
+    has_many :workout_plans, Fitconnex.Training.WorkoutPlan
+    has_many :diet_plans, Fitconnex.Training.DietPlan
+
+    has_many :assigned_members, Fitconnex.Gym.GymMember do
+      destination_attribute(:assigned_trainer_id)
     end
   end
 

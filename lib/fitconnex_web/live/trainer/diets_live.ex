@@ -18,19 +18,20 @@ defmodule FitconnexWeb.Trainer.DietsLive do
       {:ok,
        socket
        |> assign(page_title: "Diet Plans")
-       |> assign(no_gym: true, diets: [], clients: [], gyms: [], form: nil, show_form: false)}
+       |> assign(no_gym: true, diets: [], clients: [], gyms: [], gym_trainers: [], form: nil, show_form: false)}
     else
       gyms = Enum.map(gym_trainers, & &1.gym)
+      trainer_ids = Enum.map(gym_trainers, & &1.id)
 
       diets =
         Fitconnex.Training.DietPlan
-        |> Ash.Query.filter(trainer_id == ^uid)
+        |> Ash.Query.filter(trainer_id in ^trainer_ids)
         |> Ash.Query.load([:member, :gym])
         |> Ash.read!()
 
       clients =
         Fitconnex.Gym.GymMember
-        |> Ash.Query.filter(assigned_trainer_id == ^uid)
+        |> Ash.Query.filter(assigned_trainer_id in ^trainer_ids)
         |> Ash.Query.load([:user])
         |> Ash.read!()
 
@@ -54,6 +55,7 @@ defmodule FitconnexWeb.Trainer.DietsLive do
          diets: diets,
          clients: clients,
          gyms: gyms,
+         gym_trainers: gym_trainers,
          form: form,
          show_form: false
        )}

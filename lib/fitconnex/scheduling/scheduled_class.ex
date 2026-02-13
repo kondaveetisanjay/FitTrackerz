@@ -59,7 +59,7 @@ defmodule Fitconnex.Scheduling.ScheduledClass do
       allow_nil?(false)
     end
 
-    belongs_to :trainer, Fitconnex.Accounts.User
+    belongs_to :trainer, Fitconnex.Gym.GymTrainer
 
     has_many :bookings, Fitconnex.Scheduling.ClassBooking
   end

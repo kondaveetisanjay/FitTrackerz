@@ -15,7 +15,8 @@
       "Bash(gh auth status:*)",
       "Bash(gh repo edit:*)",
       "Bash(git push:*)",
-      "Bash(mix ecto.migrate:*)"
+      "Bash(mix ecto.migrate:*)",
+      "Bash(dir:*)"
     ]
   }
 }

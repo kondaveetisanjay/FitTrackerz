@@ -23,22 +23,24 @@ defmodule FitconnexWeb.Trainer.WorkoutsLive do
          workouts: [],
          clients: [],
          gyms: [],
+         gym_trainers: [],
          form: nil,
          show_form: false,
          exercises: []
        )}
     else
       gyms = Enum.map(gym_trainers, & &1.gym)
+      trainer_ids = Enum.map(gym_trainers, & &1.id)
 
       workouts =
         Fitconnex.Training.WorkoutPlan
-        |> Ash.Query.filter(trainer_id == ^uid)
+        |> Ash.Query.filter(trainer_id in ^trainer_ids)
         |> Ash.Query.load([:member, :gym])
         |> Ash.read!()
 
       clients =
         Fitconnex.Gym.GymMember
-        |> Ash.Query.filter(assigned_trainer_id == ^uid)
+        |> Ash.Query.filter(assigned_trainer_id in ^trainer_ids)
         |> Ash.Query.load([:user])
         |> Ash.read!()
 
@@ -52,6 +54,7 @@ defmodule FitconnexWeb.Trainer.WorkoutsLive do
          workouts: workouts,
          clients: clients,
          gyms: gyms,
+         gym_trainers: gym_trainers,
          form: form,
          show_form: false,
          exercises: [blank_exercise(1)]
@@ -117,8 +120,9 @@ defmodule FitconnexWeb.Trainer.WorkoutsLive do
 
   @impl true
   def handle_event("save_workout", %{"workout" => params}, socket) do
-    user = socket.assigns.current_user
-    uid = user.id
+    gym_trainers = socket.assigns.gym_trainers
+    trainer_ids = Enum.map(gym_trainers, & &1.id)
+    gym_trainer = Enum.find(gym_trainers, &(&1.gym_id == params["gym_id"]))
 
     exercises =
       socket.assigns.exercises
@@ -140,13 +144,13 @@ defmodule FitconnexWeb.Trainer.WorkoutsLive do
            exercises: exercises,
            member_id: params["member_id"],
            gym_id: params["gym_id"],
-           trainer_id: uid
+           trainer_id: gym_trainer && gym_trainer.id
          })
          |> Ash.create() do
       {:ok, _plan} ->
         workouts =
           Fitconnex.Training.WorkoutPlan
-          |> Ash.Query.filter(trainer_id == ^uid)
+          |> Ash.Query.filter(trainer_id in ^trainer_ids)
           |> Ash.Query.load([:member, :gym])
           |> Ash.read!()
 
@@ -171,12 +175,12 @@ defmodule FitconnexWeb.Trainer.WorkoutsLive do
 
   @impl true
   def handle_event("delete_workout", %{"id" => id}, socket) do
-    uid = socket.assigns.current_user.id
+    trainer_ids = Enum.map(socket.assigns.gym_trainers, & &1.id)
 
     workout =
       Fitconnex.Training.WorkoutPlan
       |> Ash.Query.filter(id == ^id)
-      |> Ash.Query.filter(trainer_id == ^uid)
+      |> Ash.Query.filter(trainer_id in ^trainer_ids)
       |> Ash.read!()
       |> List.first()
 
@@ -185,7 +189,7 @@ defmodule FitconnexWeb.Trainer.WorkoutsLive do
 
       workouts =
         Fitconnex.Training.WorkoutPlan
-        |> Ash.Query.filter(trainer_id == ^uid)
+        |> Ash.Query.filter(trainer_id in ^trainer_ids)
         |> Ash.Query.load([:member, :gym])
         |> Ash.read!()
 

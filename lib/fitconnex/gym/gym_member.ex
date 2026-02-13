@@ -12,11 +12,11 @@ defmodule Fitconnex.Gym.GymMember do
     defaults([:read, :destroy])
 
     create :create do
-      accept([:user_id, :gym_id, :assigned_trainer_id])
+      accept([:user_id, :gym_id, :assigned_trainer_id, :branch_id])
     end
 
     update :update do
-      accept([:assigned_trainer_id, :is_active])
+      accept([:assigned_trainer_id, :is_active, :branch_id])
     end
   end
 
@@ -40,7 +40,9 @@ defmodule Fitconnex.Gym.GymMember do
       allow_nil?(false)
     end
 
-    belongs_to :assigned_trainer, Fitconnex.Accounts.User
+    belongs_to :assigned_trainer, Fitconnex.Gym.GymTrainer
+
+    belongs_to :branch, Fitconnex.Gym.GymBranch
   end
 
   identities do

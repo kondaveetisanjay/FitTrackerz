@@ -13,6 +13,14 @@ defmodule Fitconnex.Gym.Changes.CreateGymTrainerOnAccept do
           })
           |> Ash.create()
 
+          # Upgrade user role to :trainer if currently :member
+          # Never downgrade higher roles (gym_operator, platform_admin)
+          if user.role == :member do
+            user
+            |> Ash.Changeset.for_update(:update, %{role: :trainer})
+            |> Ash.update()
+          end
+
           {:ok, invitation}
 
         _ ->

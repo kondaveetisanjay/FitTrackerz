@@ -69,5 +69,8 @@ defmodule Fitconnex.Gym.GymBranch do
     belongs_to :gym, Fitconnex.Gym.Gym do
       allow_nil?(false)
     end
+
+    has_many :gym_members, Fitconnex.Gym.GymMember
+    has_many :gym_trainers, Fitconnex.Gym.GymTrainer
   end
 end
