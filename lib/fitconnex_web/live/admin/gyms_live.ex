@@ -23,31 +23,50 @@ defmodule FitconnexWeb.Admin.GymsLive do
 
   @impl true
   def handle_event("verify_gym", %{"id" => gym_id}, socket) do
-    Ash.get!(Fitconnex.Gym.Gym, gym_id)
-    |> Ash.Changeset.for_update(:update, %{status: :verified})
-    |> Ash.update!()
+    case Ash.get(Fitconnex.Gym.Gym, gym_id) do
+      {:ok, gym} ->
+        case gym
+             |> Ash.Changeset.for_update(:update, %{status: :verified})
+             |> Ash.update() do
+          {:ok, _} -> {:noreply, reload_gyms(socket)}
+          {:error, _} -> {:noreply, put_flash(socket, :error, "Failed to verify gym.")}
+        end
 
-    {:noreply, reload_gyms(socket)}
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Gym not found.")}
+    end
   end
 
   @impl true
   def handle_event("suspend_gym", %{"id" => gym_id}, socket) do
-    Ash.get!(Fitconnex.Gym.Gym, gym_id)
-    |> Ash.Changeset.for_update(:update, %{status: :suspended})
-    |> Ash.update!()
+    case Ash.get(Fitconnex.Gym.Gym, gym_id) do
+      {:ok, gym} ->
+        case gym
+             |> Ash.Changeset.for_update(:update, %{status: :suspended})
+             |> Ash.update() do
+          {:ok, _} -> {:noreply, reload_gyms(socket)}
+          {:error, _} -> {:noreply, put_flash(socket, :error, "Failed to suspend gym.")}
+        end
 
-    {:noreply, reload_gyms(socket)}
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Gym not found.")}
+    end
   end
 
   @impl true
   def handle_event("toggle_promoted", %{"id" => gym_id}, socket) do
-    gym = Ash.get!(Fitconnex.Gym.Gym, gym_id)
+    case Ash.get(Fitconnex.Gym.Gym, gym_id) do
+      {:ok, gym} ->
+        case gym
+             |> Ash.Changeset.for_update(:update, %{is_promoted: !gym.is_promoted})
+             |> Ash.update() do
+          {:ok, _} -> {:noreply, reload_gyms(socket)}
+          {:error, _} -> {:noreply, put_flash(socket, :error, "Failed to update promotion status.")}
+        end
 
-    gym
-    |> Ash.Changeset.for_update(:update, %{is_promoted: !gym.is_promoted})
-    |> Ash.update!()
-
-    {:noreply, reload_gyms(socket)}
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Gym not found.")}
+    end
   end
 
   defp reload_gyms(socket) do

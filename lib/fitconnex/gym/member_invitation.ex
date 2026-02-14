@@ -13,6 +13,9 @@ defmodule Fitconnex.Gym.MemberInvitation do
 
     create :create do
       accept([:invited_email, :gym_id, :invited_by_id, :branch_id])
+
+      validate match(:invited_email, ~r/^[^\s]+@[^\s]+\.[^\s]+$/),
+        message: "must be a valid email address"
     end
 
     update :accept do
@@ -48,6 +51,11 @@ defmodule Fitconnex.Gym.MemberInvitation do
     end
 
     timestamps()
+  end
+
+  identities do
+    identity :unique_pending_invitation, [:gym_id, :invited_email],
+      where: expr(status == :pending)
   end
 
   relationships do

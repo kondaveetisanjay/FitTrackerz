@@ -194,17 +194,21 @@ defmodule FitconnexWeb.Trainer.TemplatesLive do
       |> List.first()
 
     if template do
-      Ash.destroy!(template)
+      case Ash.destroy(template) do
+        :ok ->
+          workout_templates =
+            Fitconnex.Training.WorkoutPlanTemplate
+            |> Ash.Query.filter(created_by_id == ^uid)
+            |> Ash.read!()
 
-      workout_templates =
-        Fitconnex.Training.WorkoutPlanTemplate
-        |> Ash.Query.filter(created_by_id == ^uid)
-        |> Ash.read!()
+          {:noreply,
+           socket
+           |> assign(workout_templates: workout_templates)
+           |> put_flash(:info, "Workout template deleted.")}
 
-      {:noreply,
-       socket
-       |> assign(workout_templates: workout_templates)
-       |> put_flash(:info, "Workout template deleted.")}
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Failed to delete template.")}
+      end
     else
       {:noreply, put_flash(socket, :error, "Template not found.")}
     end
@@ -222,17 +226,21 @@ defmodule FitconnexWeb.Trainer.TemplatesLive do
       |> List.first()
 
     if template do
-      Ash.destroy!(template)
+      case Ash.destroy(template) do
+        :ok ->
+          diet_templates =
+            Fitconnex.Training.DietPlanTemplate
+            |> Ash.Query.filter(created_by_id == ^uid)
+            |> Ash.read!()
 
-      diet_templates =
-        Fitconnex.Training.DietPlanTemplate
-        |> Ash.Query.filter(created_by_id == ^uid)
-        |> Ash.read!()
+          {:noreply,
+           socket
+           |> assign(diet_templates: diet_templates)
+           |> put_flash(:info, "Diet template deleted.")}
 
-      {:noreply,
-       socket
-       |> assign(diet_templates: diet_templates)
-       |> put_flash(:info, "Diet template deleted.")}
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Failed to delete template.")}
+      end
     else
       {:noreply, put_flash(socket, :error, "Template not found.")}
     end

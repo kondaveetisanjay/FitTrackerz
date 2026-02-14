@@ -18,7 +18,11 @@
       "Bash(mix ecto.migrate:*)",
       "Bash(dir:*)",
       "Bash(mix ash_postgres.migrate:*)",
-      "Bash(mix ash_postgres.generate_migrations:*)"
+      "Bash(mix ash_postgres.generate_migrations:*)",
+      "Bash(wc:*)",
+      "Bash(ls:*)",
+      "Bash(mix test --help:*)",
+      "WebSearch"
     ]
   }
 }

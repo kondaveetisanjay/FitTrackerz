@@ -97,71 +97,87 @@ defmodule FitconnexWeb.Trainer.DashboardLive do
 
   @impl true
   def handle_event("accept-invitation", %{"id" => id}, socket) do
-    invitation = Ash.get!(Fitconnex.Gym.TrainerInvitation, id, load: [:gym])
+    case Ash.get(Fitconnex.Gym.TrainerInvitation, id, load: [:gym]) do
+      {:ok, invitation} ->
+        case invitation
+             |> Ash.Changeset.for_update(:accept, %{})
+             |> Ash.update() do
+          {:ok, _} ->
+            {:noreply,
+             socket
+             |> put_flash(:info, "Invitation accepted! You've been added to #{invitation.gym.name}.")
+             |> load_dashboard(socket.assigns.current_user)}
 
-    case invitation
-         |> Ash.Changeset.for_update(:accept, %{})
-         |> Ash.update() do
-      {:ok, _} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, "Invitation accepted! You've been added to #{invitation.gym.name}.")
-         |> load_dashboard(socket.assigns.current_user)}
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to accept invitation. Please try again.")}
+        end
 
       {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Failed to accept invitation. Please try again.")}
+        {:noreply, put_flash(socket, :error, "Invitation not found.")}
     end
   end
 
   def handle_event("accept-client-request", %{"id" => id}, socket) do
-    request = Ash.get!(Fitconnex.Gym.ClientAssignmentRequest, id, load: [:gym, member: [:user]])
+    case Ash.get(Fitconnex.Gym.ClientAssignmentRequest, id, load: [:gym, member: [:user]]) do
+      {:ok, request} ->
+        case request
+             |> Ash.Changeset.for_update(:accept, %{})
+             |> Ash.update() do
+          {:ok, _} ->
+            {:noreply,
+             socket
+             |> put_flash(:info, "Client assignment accepted! #{request.member.user.name} is now your client.")
+             |> load_dashboard(socket.assigns.current_user)}
 
-    case request
-         |> Ash.Changeset.for_update(:accept, %{})
-         |> Ash.update() do
-      {:ok, _} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, "Client assignment accepted! #{request.member.user.name} is now your client.")
-         |> load_dashboard(socket.assigns.current_user)}
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to accept client assignment. Please try again.")}
+        end
 
       {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Failed to accept client assignment. Please try again.")}
+        {:noreply, put_flash(socket, :error, "Client assignment request not found.")}
     end
   end
 
   def handle_event("reject-client-request", %{"id" => id}, socket) do
-    request = Ash.get!(Fitconnex.Gym.ClientAssignmentRequest, id)
+    case Ash.get(Fitconnex.Gym.ClientAssignmentRequest, id) do
+      {:ok, request} ->
+        case request
+             |> Ash.Changeset.for_update(:reject, %{})
+             |> Ash.update() do
+          {:ok, _} ->
+            {:noreply,
+             socket
+             |> put_flash(:info, "Client assignment declined.")
+             |> load_dashboard(socket.assigns.current_user)}
 
-    case request
-         |> Ash.Changeset.for_update(:reject, %{})
-         |> Ash.update() do
-      {:ok, _} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, "Client assignment declined.")
-         |> load_dashboard(socket.assigns.current_user)}
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to decline client assignment. Please try again.")}
+        end
 
       {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Failed to decline client assignment. Please try again.")}
+        {:noreply, put_flash(socket, :error, "Client assignment request not found.")}
     end
   end
 
   @impl true
   def handle_event("reject-invitation", %{"id" => id}, socket) do
-    invitation = Ash.get!(Fitconnex.Gym.TrainerInvitation, id)
+    case Ash.get(Fitconnex.Gym.TrainerInvitation, id) do
+      {:ok, invitation} ->
+        case invitation
+             |> Ash.Changeset.for_update(:reject, %{})
+             |> Ash.update() do
+          {:ok, _} ->
+            {:noreply,
+             socket
+             |> put_flash(:info, "Invitation declined.")
+             |> load_dashboard(socket.assigns.current_user)}
 
-    case invitation
-         |> Ash.Changeset.for_update(:reject, %{})
-         |> Ash.update() do
-      {:ok, _} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, "Invitation declined.")
-         |> load_dashboard(socket.assigns.current_user)}
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to decline invitation. Please try again.")}
+        end
 
       {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Failed to decline invitation. Please try again.")}
+        {:noreply, put_flash(socket, :error, "Invitation not found.")}
     end
   end
 

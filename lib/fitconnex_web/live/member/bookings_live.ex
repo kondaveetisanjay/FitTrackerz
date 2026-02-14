@@ -8,14 +8,13 @@ defmodule FitconnexWeb.Member.BookingsLive do
     uid = user.id
 
     memberships =
-      try do
-        Fitconnex.Gym.GymMember
-        |> Ash.Query.filter(user_id == ^uid)
-        |> Ash.Query.filter(is_active == true)
-        |> Ash.Query.load([:gym, :assigned_trainer])
-        |> Ash.read!()
-      rescue
-        _ -> []
+      case Fitconnex.Gym.GymMember
+           |> Ash.Query.filter(user_id == ^uid)
+           |> Ash.Query.filter(is_active == true)
+           |> Ash.Query.load([:gym, :assigned_trainer])
+           |> Ash.read() do
+        {:ok, results} -> results
+        {:error, _} -> []
       end
 
     case memberships do
@@ -32,14 +31,12 @@ defmodule FitconnexWeb.Member.BookingsLive do
         mids = Enum.map(memberships, & &1.id)
 
         bookings =
-          try do
-            Fitconnex.Scheduling.ClassBooking
-            |> Ash.Query.filter(member_id in ^mids)
-            |> Ash.Query.load(scheduled_class: [:class_definition, :trainer, :branch])
-            |> Ash.read!()
-            |> Enum.sort_by(& &1.inserted_at, {:desc, DateTime})
-          rescue
-            _ -> []
+          case Fitconnex.Scheduling.ClassBooking
+               |> Ash.Query.filter(member_id in ^mids)
+               |> Ash.Query.load(scheduled_class: [:class_definition, :trainer, :branch])
+               |> Ash.read() do
+            {:ok, results} -> Enum.sort_by(results, & &1.inserted_at, {:desc, DateTime})
+            {:error, _} -> []
           end
 
         {:ok,
@@ -86,14 +83,12 @@ defmodule FitconnexWeb.Member.BookingsLive do
             mids = Enum.map(socket.assigns.memberships, & &1.id)
 
             bookings =
-              try do
-                Fitconnex.Scheduling.ClassBooking
-                |> Ash.Query.filter(member_id in ^mids)
-                |> Ash.Query.load(scheduled_class: [:class_definition, :trainer, :branch])
-                |> Ash.read!()
-                |> Enum.sort_by(& &1.inserted_at, {:desc, DateTime})
-              rescue
-                _ -> []
+              case Fitconnex.Scheduling.ClassBooking
+                   |> Ash.Query.filter(member_id in ^mids)
+                   |> Ash.Query.load(scheduled_class: [:class_definition, :trainer, :branch])
+                   |> Ash.read() do
+                {:ok, results} -> Enum.sort_by(results, & &1.inserted_at, {:desc, DateTime})
+                {:error, _} -> []
               end
 
             {:noreply,

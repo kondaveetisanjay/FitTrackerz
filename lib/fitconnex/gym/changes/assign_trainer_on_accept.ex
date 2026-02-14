@@ -1,16 +1,26 @@
 defmodule Fitconnex.Gym.Changes.AssignTrainerOnAccept do
   use Ash.Resource.Change
 
+  require Ash.Query
+
   @impl true
   def change(changeset, _opts, _context) do
     Ash.Changeset.after_action(changeset, fn _changeset, request ->
-      member = Ash.get!(Fitconnex.Gym.GymMember, request.member_id)
+      case Ash.get(Fitconnex.Gym.GymMember, request.member_id) do
+        {:ok, member} ->
+          case member
+               |> Ash.Changeset.for_update(:update, %{assigned_trainer_id: request.trainer_id})
+               |> Ash.update() do
+            {:ok, _updated_member} ->
+              {:ok, request}
 
-      member
-      |> Ash.Changeset.for_update(:update, %{assigned_trainer_id: request.trainer_id})
-      |> Ash.update()
+            {:error, error} ->
+              {:error, error}
+          end
 
-      {:ok, request}
+        {:error, error} ->
+          {:error, error}
+      end
     end)
   end
 end

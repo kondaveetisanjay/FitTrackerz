@@ -185,18 +185,22 @@ defmodule FitconnexWeb.Trainer.WorkoutsLive do
       |> List.first()
 
     if workout do
-      Ash.destroy!(workout)
+      case Ash.destroy(workout) do
+        :ok ->
+          workouts =
+            Fitconnex.Training.WorkoutPlan
+            |> Ash.Query.filter(trainer_id in ^trainer_ids)
+            |> Ash.Query.load([:gym, member: [:user]])
+            |> Ash.read!()
 
-      workouts =
-        Fitconnex.Training.WorkoutPlan
-        |> Ash.Query.filter(trainer_id in ^trainer_ids)
-        |> Ash.Query.load([:gym, member: [:user]])
-        |> Ash.read!()
+          {:noreply,
+           socket
+           |> assign(workouts: workouts)
+           |> put_flash(:info, "Workout plan deleted.")}
 
-      {:noreply,
-       socket
-       |> assign(workouts: workouts)
-       |> put_flash(:info, "Workout plan deleted.")}
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Failed to delete workout plan.")}
+      end
     else
       {:noreply, put_flash(socket, :error, "Workout plan not found.")}
     end

@@ -20,10 +20,19 @@ defmodule FitconnexWeb.ChooseRoleLive do
     user_id = socket.assigns.current_user.id
     role_atom = String.to_existing_atom(role)
 
-    user = Ash.get!(Fitconnex.Accounts.User, user_id)
-    Ash.update!(Ash.Changeset.for_update(user, :update, %{role: role_atom}))
+    case Ash.get(Fitconnex.Accounts.User, user_id) do
+      {:ok, user} ->
+        case Ash.update(Ash.Changeset.for_update(user, :update, %{role: role_atom})) do
+          {:ok, _} ->
+            {:noreply, redirect(socket, to: ~p"/role-selected")}
 
-    {:noreply, redirect(socket, to: ~p"/role-selected")}
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to set role. Please try again.")}
+        end
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "User not found.")}
+    end
   end
 
   def handle_event("select_role", _params, socket) do

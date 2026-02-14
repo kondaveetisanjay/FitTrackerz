@@ -23,14 +23,22 @@ defmodule FitconnexWeb.Admin.UsersLive do
 
   @impl true
   def handle_event("toggle_active", %{"id" => user_id}, socket) do
-    user = Ash.get!(Fitconnex.Accounts.User, user_id)
+    case Ash.get(Fitconnex.Accounts.User, user_id) do
+      {:ok, user} ->
+        case user
+             |> Ash.Changeset.for_update(:update, %{is_active: !user.is_active})
+             |> Ash.update() do
+          {:ok, _} ->
+            users = Fitconnex.Accounts.User |> Ash.read!()
+            {:noreply, assign(socket, users: users)}
 
-    user
-    |> Ash.Changeset.for_update(:update, %{is_active: !user.is_active})
-    |> Ash.update!()
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to update user status.")}
+        end
 
-    users = Fitconnex.Accounts.User |> Ash.read!()
-    {:noreply, assign(socket, users: users)}
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "User not found.")}
+    end
   end
 
   @impl true
@@ -38,14 +46,22 @@ defmodule FitconnexWeb.Admin.UsersLive do
     role_atom = String.to_existing_atom(role)
 
     if role_atom in @valid_roles do
-      user = Ash.get!(Fitconnex.Accounts.User, user_id)
+      case Ash.get(Fitconnex.Accounts.User, user_id) do
+        {:ok, user} ->
+          case user
+               |> Ash.Changeset.for_update(:update, %{role: role_atom})
+               |> Ash.update() do
+            {:ok, _} ->
+              users = Fitconnex.Accounts.User |> Ash.read!()
+              {:noreply, assign(socket, users: users)}
 
-      user
-      |> Ash.Changeset.for_update(:update, %{role: role_atom})
-      |> Ash.update!()
+            {:error, _} ->
+              {:noreply, put_flash(socket, :error, "Failed to update user role.")}
+          end
 
-      users = Fitconnex.Accounts.User |> Ash.read!()
-      {:noreply, assign(socket, users: users)}
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "User not found.")}
+      end
     else
       {:noreply, put_flash(socket, :error, "Invalid role selected.")}
     end

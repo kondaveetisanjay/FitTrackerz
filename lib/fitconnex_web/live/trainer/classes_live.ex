@@ -35,25 +35,29 @@ defmodule FitconnexWeb.Trainer.ClassesLive do
   def handle_event("complete_class", %{"id" => id}, socket) do
     trainer_ids = socket.assigns.gym_trainer_ids
 
-    scheduled_class = Ash.get!(Fitconnex.Scheduling.ScheduledClass, id)
+    case Ash.get(Fitconnex.Scheduling.ScheduledClass, id) do
+      {:ok, scheduled_class} ->
+        if scheduled_class.trainer_id in trainer_ids do
+          case scheduled_class
+               |> Ash.Changeset.for_update(:complete, %{})
+               |> Ash.update() do
+            {:ok, _updated} ->
+              {:noreply,
+               socket
+               |> assign(classes: load_trainer_classes(trainer_ids))
+               |> put_flash(:info, "Class marked as completed.")}
 
-    if scheduled_class && scheduled_class.trainer_id in trainer_ids do
-      case scheduled_class
-           |> Ash.Changeset.for_update(:complete, %{})
-           |> Ash.update() do
-        {:ok, _updated} ->
-          {:noreply,
-           socket
-           |> assign(classes: load_trainer_classes(trainer_ids))
-           |> put_flash(:info, "Class marked as completed.")}
+            {:error, changeset} ->
+              {:noreply,
+               socket
+               |> put_flash(:error, "Failed to complete class: #{inspect(changeset.errors)}")}
+          end
+        else
+          {:noreply, put_flash(socket, :error, "You are not authorized to manage this class.")}
+        end
 
-        {:error, changeset} ->
-          {:noreply,
-           socket
-           |> put_flash(:error, "Failed to complete class: #{inspect(changeset.errors)}")}
-      end
-    else
-      {:noreply, put_flash(socket, :error, "Class not found.")}
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Class not found.")}
     end
   end
 
@@ -61,25 +65,29 @@ defmodule FitconnexWeb.Trainer.ClassesLive do
   def handle_event("cancel_class", %{"id" => id}, socket) do
     trainer_ids = socket.assigns.gym_trainer_ids
 
-    scheduled_class = Ash.get!(Fitconnex.Scheduling.ScheduledClass, id)
+    case Ash.get(Fitconnex.Scheduling.ScheduledClass, id) do
+      {:ok, scheduled_class} ->
+        if scheduled_class.trainer_id in trainer_ids do
+          case scheduled_class
+               |> Ash.Changeset.for_update(:cancel, %{})
+               |> Ash.update() do
+            {:ok, _updated} ->
+              {:noreply,
+               socket
+               |> assign(classes: load_trainer_classes(trainer_ids))
+               |> put_flash(:info, "Class has been cancelled.")}
 
-    if scheduled_class && scheduled_class.trainer_id in trainer_ids do
-      case scheduled_class
-           |> Ash.Changeset.for_update(:cancel, %{})
-           |> Ash.update() do
-        {:ok, _updated} ->
-          {:noreply,
-           socket
-           |> assign(classes: load_trainer_classes(trainer_ids))
-           |> put_flash(:info, "Class has been cancelled.")}
+            {:error, changeset} ->
+              {:noreply,
+               socket
+               |> put_flash(:error, "Failed to cancel class: #{inspect(changeset.errors)}")}
+          end
+        else
+          {:noreply, put_flash(socket, :error, "You are not authorized to manage this class.")}
+        end
 
-        {:error, changeset} ->
-          {:noreply,
-           socket
-           |> put_flash(:error, "Failed to cancel class: #{inspect(changeset.errors)}")}
-      end
-    else
-      {:noreply, put_flash(socket, :error, "Class not found.")}
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Class not found.")}
     end
   end
 

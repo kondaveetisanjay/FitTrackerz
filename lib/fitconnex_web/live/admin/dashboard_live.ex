@@ -44,17 +44,21 @@ defmodule FitconnexWeb.Admin.DashboardLive do
 
   @impl true
   def handle_event("verify_gym", %{"id" => gym_id}, socket) do
-    gym = Ash.get!(Fitconnex.Gym.Gym, gym_id)
+    case Ash.get(Fitconnex.Gym.Gym, gym_id) do
+      {:ok, gym} ->
+        case gym |> Ash.Changeset.for_update(:update, %{status: :verified}) |> Ash.update() do
+          {:ok, _} ->
+            {:noreply,
+             socket
+             |> put_flash(:info, "Gym verified successfully!")
+             |> push_navigate(to: ~p"/admin/dashboard")}
 
-    case gym |> Ash.Changeset.for_update(:update, %{status: :verified}) |> Ash.update() do
-      {:ok, _} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, "Gym verified successfully!")
-         |> push_navigate(to: ~p"/admin/dashboard")}
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to verify gym.")}
+        end
 
       {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Failed to verify gym.")}
+        {:noreply, put_flash(socket, :error, "Gym not found.")}
     end
   end
 

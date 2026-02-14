@@ -144,18 +144,22 @@ defmodule FitconnexWeb.Trainer.DietsLive do
       |> List.first()
 
     if diet do
-      Ash.destroy!(diet)
+      case Ash.destroy(diet) do
+        :ok ->
+          diets =
+            Fitconnex.Training.DietPlan
+            |> Ash.Query.filter(trainer_id in ^trainer_ids)
+            |> Ash.Query.load([:gym, member: [:user]])
+            |> Ash.read!()
 
-      diets =
-        Fitconnex.Training.DietPlan
-        |> Ash.Query.filter(trainer_id in ^trainer_ids)
-        |> Ash.Query.load([:gym, member: [:user]])
-        |> Ash.read!()
+          {:noreply,
+           socket
+           |> assign(diets: diets)
+           |> put_flash(:info, "Diet plan deleted.")}
 
-      {:noreply,
-       socket
-       |> assign(diets: diets)
-       |> put_flash(:info, "Diet plan deleted.")}
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Failed to delete diet plan.")}
+      end
     else
       {:noreply, put_flash(socket, :error, "Diet plan not found.")}
     end
