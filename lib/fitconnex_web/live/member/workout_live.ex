@@ -8,15 +8,11 @@ defmodule FitconnexWeb.Member.WorkoutLive do
     uid = user.id
 
     memberships =
-      try do
-        Fitconnex.Gym.GymMember
-        |> Ash.Query.filter(user_id == ^uid)
-        |> Ash.Query.filter(is_active == true)
-        |> Ash.Query.load([:gym, :assigned_trainer])
-        |> Ash.read!()
-      rescue
-        _ -> []
-      end
+      Fitconnex.Gym.GymMember
+      |> Ash.Query.filter(user_id == ^uid)
+      |> Ash.Query.filter(is_active == true)
+      |> Ash.Query.load([:gym, :assigned_trainer])
+      |> Ash.read!()
 
     case memberships do
       [] ->
@@ -25,31 +21,192 @@ defmodule FitconnexWeb.Member.WorkoutLive do
            page_title: "My Workout",
            memberships: [],
            workout_plans: [],
-           no_gym: true
+           no_gym: true,
+           plan_type: :general,
+           show_form: false,
+           form: nil,
+           exercises: []
          )}
 
       memberships ->
         mids = Enum.map(memberships, & &1.id)
 
         workout_plans =
-          try do
-            Fitconnex.Training.WorkoutPlan
-            |> Ash.Query.filter(member_id in ^mids)
-            |> Ash.Query.load([:gym, :trainer])
-            |> Ash.read!()
-          rescue
-            _ -> []
-          end
+          Fitconnex.Training.WorkoutPlan
+          |> Ash.Query.filter(member_id in ^mids)
+          |> Ash.Query.load([:gym, trainer: [:user]])
+          |> Ash.read!()
+
+        plan_type = determine_plan_type(mids)
+
+        form = to_form(%{"name" => "", "gym_id" => ""}, as: "workout")
 
         {:ok,
          assign(socket,
            page_title: "My Workout",
            memberships: memberships,
            workout_plans: workout_plans,
-           no_gym: false
+           no_gym: false,
+           plan_type: plan_type,
+           show_form: false,
+           form: form,
+           exercises: [blank_exercise(1)]
          )}
     end
   end
+
+  defp determine_plan_type(member_ids) do
+    active_sub =
+      Fitconnex.Billing.MemberSubscription
+      |> Ash.Query.filter(member_id in ^member_ids)
+      |> Ash.Query.filter(status == :active)
+      |> Ash.Query.load([:subscription_plan])
+      |> Ash.read!()
+      |> List.first()
+
+    if active_sub && active_sub.subscription_plan,
+      do: active_sub.subscription_plan.plan_type,
+      else: :general
+  end
+
+  defp blank_exercise(order) do
+    %{
+      "name" => "",
+      "sets" => "",
+      "reps" => "",
+      "duration_seconds" => "",
+      "rest_seconds" => "",
+      "order" => order
+    }
+  end
+
+  @impl true
+  def handle_event("toggle_form", _params, socket) do
+    {:noreply, assign(socket, show_form: !socket.assigns.show_form)}
+  end
+
+  def handle_event("validate", %{"workout" => params}, socket) do
+    form = to_form(params, as: "workout")
+    {:noreply, assign(socket, form: form)}
+  end
+
+  def handle_event("add_exercise", _params, socket) do
+    exercises = socket.assigns.exercises
+    next_order = length(exercises) + 1
+    {:noreply, assign(socket, exercises: exercises ++ [blank_exercise(next_order)])}
+  end
+
+  def handle_event("remove_exercise", %{"index" => index}, socket) do
+    idx = String.to_integer(index)
+    exercises = List.delete_at(socket.assigns.exercises, idx)
+
+    exercises =
+      exercises
+      |> Enum.with_index(1)
+      |> Enum.map(fn {ex, order} -> Map.put(ex, "order", order) end)
+
+    {:noreply, assign(socket, exercises: exercises)}
+  end
+
+  def handle_event("update_exercise", %{"index" => index, "field" => field, "value" => value}, socket) do
+    idx = String.to_integer(index)
+
+    exercises =
+      List.update_at(socket.assigns.exercises, idx, fn ex -> Map.put(ex, field, value) end)
+
+    {:noreply, assign(socket, exercises: exercises)}
+  end
+
+  def handle_event("save_workout", %{"workout" => params}, socket) do
+    memberships = socket.assigns.memberships
+    membership = Enum.find(memberships, &(&1.gym_id == params["gym_id"])) || List.first(memberships)
+
+    exercises =
+      socket.assigns.exercises
+      |> Enum.map(fn ex ->
+        %{
+          name: ex["name"],
+          sets: parse_int(ex["sets"]),
+          reps: parse_int(ex["reps"]),
+          duration_seconds: parse_int(ex["duration_seconds"]),
+          rest_seconds: parse_int(ex["rest_seconds"]),
+          order: ex["order"]
+        }
+      end)
+      |> Enum.reject(fn ex -> ex.name == "" or ex.name == nil end)
+
+    gym_id = if params["gym_id"] != "", do: params["gym_id"], else: membership.gym_id
+
+    case Fitconnex.Training.WorkoutPlan
+         |> Ash.Changeset.for_create(:create, %{
+           name: params["name"],
+           exercises: exercises,
+           member_id: membership.id,
+           gym_id: gym_id
+         })
+         |> Ash.create() do
+      {:ok, _plan} ->
+        mids = Enum.map(memberships, & &1.id)
+
+        workout_plans =
+          Fitconnex.Training.WorkoutPlan
+          |> Ash.Query.filter(member_id in ^mids)
+          |> Ash.Query.load([:gym, trainer: [:user]])
+          |> Ash.read!()
+
+        form = to_form(%{"name" => "", "gym_id" => ""}, as: "workout")
+
+        {:noreply,
+         socket
+         |> assign(workout_plans: workout_plans, form: form, show_form: false, exercises: [blank_exercise(1)])
+         |> put_flash(:info, "Workout plan created successfully.")}
+
+      {:error, changeset} ->
+        {:noreply, put_flash(socket, :error, "Failed to create workout plan: #{inspect(changeset.errors)}")}
+    end
+  end
+
+  def handle_event("delete_workout", %{"id" => id}, socket) do
+    memberships = socket.assigns.memberships
+    mids = Enum.map(memberships, & &1.id)
+
+    workout =
+      Fitconnex.Training.WorkoutPlan
+      |> Ash.Query.filter(id == ^id)
+      |> Ash.Query.filter(member_id in ^mids)
+      |> Ash.Query.filter(is_nil(trainer_id))
+      |> Ash.read!()
+      |> List.first()
+
+    if workout do
+      Ash.destroy!(workout)
+
+      workout_plans =
+        Fitconnex.Training.WorkoutPlan
+        |> Ash.Query.filter(member_id in ^mids)
+        |> Ash.Query.load([:gym, trainer: [:user]])
+        |> Ash.read!()
+
+      {:noreply,
+       socket
+       |> assign(workout_plans: workout_plans)
+       |> put_flash(:info, "Workout plan deleted.")}
+    else
+      {:noreply, put_flash(socket, :error, "Workout plan not found.")}
+    end
+  end
+
+  defp parse_int(""), do: nil
+  defp parse_int(nil), do: nil
+
+  defp parse_int(val) when is_binary(val) do
+    case Integer.parse(val) do
+      {int, _} -> int
+      :error -> nil
+    end
+  end
+
+  defp parse_int(val) when is_integer(val), do: val
 
   defp format_duration(nil), do: nil
 
@@ -69,13 +226,27 @@ defmodule FitconnexWeb.Member.WorkoutLive do
             <Layouts.back_button />
             <div>
               <h1 class="text-2xl sm:text-3xl font-black tracking-tight">My Workout Plans</h1>
-              <p class="text-base-content/50 mt-1">View your personalized workout programs.</p>
+              <p class="text-base-content/50 mt-1">
+                <%= if @plan_type == :general do %>
+                  Create and manage your own workout programs.
+                <% else %>
+                  View your personalized workout programs.
+                <% end %>
+              </p>
             </div>
           </div>
+          <%= if @plan_type == :general and not @no_gym do %>
+            <button
+              class="btn btn-primary btn-sm gap-2 font-semibold"
+              phx-click="toggle_form"
+              id="toggle-workout-form-btn"
+            >
+              <.icon name="hero-plus-mini" class="size-4" /> New Workout Plan
+            </button>
+          <% end %>
         </div>
 
         <%= if @no_gym do %>
-          <%!-- No Gym Membership --%>
           <div class="card bg-base-200/50 border border-base-300/50" id="no-gym-card">
             <div class="card-body items-center text-center p-8">
               <div class="w-16 h-16 rounded-2xl bg-warning/10 flex items-center justify-center mb-4">
@@ -88,8 +259,161 @@ defmodule FitconnexWeb.Member.WorkoutLive do
             </div>
           </div>
         <% else %>
+          <%!-- Create Form (General only) --%>
+          <%= if @plan_type == :general and @show_form do %>
+            <div class="card bg-base-200/50 border border-base-300/50" id="workout-form-card">
+              <div class="card-body p-5">
+                <h2 class="text-lg font-bold flex items-center gap-2">
+                  <.icon name="hero-fire-solid" class="size-5 text-accent" /> New Workout Plan
+                </h2>
+                <.form
+                  for={@form}
+                  id="workout-form"
+                  phx-change="validate"
+                  phx-submit="save_workout"
+                  class="mt-4 space-y-4"
+                >
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <.input
+                      field={@form[:name]}
+                      label="Plan Name"
+                      placeholder="e.g., Full Body Strength"
+                      required
+                    />
+                    <div>
+                      <label class="label"><span class="label-text font-medium">Gym</span></label>
+                      <select
+                        name="workout[gym_id]"
+                        class="select select-bordered w-full"
+                        id="workout-gym-select"
+                        required
+                      >
+                        <option value="">Select a gym...</option>
+                        <option :for={m <- @memberships} value={m.gym_id}>
+                          {m.gym.name}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <%!-- Exercises --%>
+                  <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                      <h3 class="font-semibold text-sm">Exercises</h3>
+                      <button
+                        type="button"
+                        class="btn btn-ghost btn-xs gap-1"
+                        phx-click="add_exercise"
+                        id="add-exercise-btn"
+                      >
+                        <.icon name="hero-plus-mini" class="size-3" /> Add Exercise
+                      </button>
+                    </div>
+                    <div
+                      :for={{exercise, idx} <- Enum.with_index(@exercises)}
+                      class="p-4 rounded-lg bg-base-300/20 space-y-3"
+                      id={"exercise-row-#{idx}"}
+                    >
+                      <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-base-content/40 uppercase">
+                          Exercise #{idx + 1}
+                        </span>
+                        <%= if length(@exercises) > 1 do %>
+                          <button
+                            type="button"
+                            class="btn btn-ghost btn-xs text-error"
+                            phx-click="remove_exercise"
+                            phx-value-index={idx}
+                            id={"remove-exercise-#{idx}"}
+                          >
+                            <.icon name="hero-trash-mini" class="size-3" />
+                          </button>
+                        <% end %>
+                      </div>
+                      <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                        <div class="col-span-2 sm:col-span-1">
+                          <label class="label"><span class="label-text text-xs">Name</span></label>
+                          <input
+                            type="text"
+                            value={exercise["name"]}
+                            placeholder="e.g., Squats"
+                            class="input input-bordered input-sm w-full"
+                            phx-blur="update_exercise"
+                            phx-value-index={idx}
+                            phx-value-field="name"
+                            id={"exercise-name-#{idx}"}
+                          />
+                        </div>
+                        <div>
+                          <label class="label"><span class="label-text text-xs">Sets</span></label>
+                          <input
+                            type="number"
+                            value={exercise["sets"]}
+                            placeholder="3"
+                            class="input input-bordered input-sm w-full"
+                            phx-blur="update_exercise"
+                            phx-value-index={idx}
+                            phx-value-field="sets"
+                            id={"exercise-sets-#{idx}"}
+                          />
+                        </div>
+                        <div>
+                          <label class="label"><span class="label-text text-xs">Reps</span></label>
+                          <input
+                            type="number"
+                            value={exercise["reps"]}
+                            placeholder="12"
+                            class="input input-bordered input-sm w-full"
+                            phx-blur="update_exercise"
+                            phx-value-index={idx}
+                            phx-value-field="reps"
+                            id={"exercise-reps-#{idx}"}
+                          />
+                        </div>
+                        <div>
+                          <label class="label"><span class="label-text text-xs">Duration (s)</span></label>
+                          <input
+                            type="number"
+                            value={exercise["duration_seconds"]}
+                            placeholder="60"
+                            class="input input-bordered input-sm w-full"
+                            phx-blur="update_exercise"
+                            phx-value-index={idx}
+                            phx-value-field="duration_seconds"
+                            id={"exercise-duration-#{idx}"}
+                          />
+                        </div>
+                        <div>
+                          <label class="label"><span class="label-text text-xs">Rest (s)</span></label>
+                          <input
+                            type="number"
+                            value={exercise["rest_seconds"]}
+                            placeholder="30"
+                            class="input input-bordered input-sm w-full"
+                            phx-blur="update_exercise"
+                            phx-value-index={idx}
+                            phx-value-field="rest_seconds"
+                            id={"exercise-rest-#{idx}"}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" class="btn btn-ghost btn-sm" phx-click="toggle_form" id="cancel-workout-btn">
+                      Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary btn-sm gap-2" id="submit-workout-btn">
+                      <.icon name="hero-check-mini" class="size-4" /> Create Plan
+                    </button>
+                  </div>
+                </.form>
+              </div>
+            </div>
+          <% end %>
+
           <%= if @workout_plans == [] do %>
-            <%!-- Empty State --%>
             <div class="card bg-base-200/50 border border-base-300/50" id="no-workout-plans">
               <div class="card-body items-center text-center p-8">
                 <div class="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mb-4">
@@ -97,7 +421,11 @@ defmodule FitconnexWeb.Member.WorkoutLive do
                 </div>
                 <h2 class="text-lg font-bold">No Workout Plans Yet</h2>
                 <p class="text-sm text-base-content/50 max-w-md mt-2">
-                  Your trainer will assign a workout plan tailored for you. Check back soon!
+                  <%= if @plan_type == :general do %>
+                    Create your first workout plan to start your fitness journey!
+                  <% else %>
+                    Your trainer will assign a workout plan tailored for you. Check back soon!
+                  <% end %>
                 </p>
               </div>
             </div>
@@ -110,7 +438,6 @@ defmodule FitconnexWeb.Member.WorkoutLive do
                 id={"workout-plan-#{plan.id}"}
               >
                 <div class="card-body p-5">
-                  <%!-- Plan Header --%>
                   <div class="flex items-start justify-between gap-3">
                     <div>
                       <h2 class="text-lg font-bold flex items-center gap-2">
@@ -126,14 +453,29 @@ defmodule FitconnexWeb.Member.WorkoutLive do
                         <% end %>
                         <%= if plan.trainer do %>
                           <span class="flex items-center gap-1">
-                            <.icon name="hero-user-mini" class="size-3" />
-                            {plan.trainer.name}
+                            <.icon name="hero-academic-cap-mini" class="size-3" />
+                            Assigned by {plan.trainer.user.name}
                           </span>
+                        <% else %>
+                          <span class="badge badge-ghost badge-xs">Self-created</span>
                         <% end %>
                       </div>
                     </div>
-                    <div class="badge badge-accent badge-outline badge-sm">
-                      {length(plan.exercises || [])} exercises
+                    <div class="flex items-center gap-2">
+                      <div class="badge badge-accent badge-outline badge-sm">
+                        {length(plan.exercises || [])} exercises
+                      </div>
+                      <%= if @plan_type == :general and is_nil(plan.trainer_id) do %>
+                        <button
+                          class="btn btn-ghost btn-xs text-error"
+                          phx-click="delete_workout"
+                          phx-value-id={plan.id}
+                          data-confirm="Are you sure you want to delete this workout plan?"
+                          id={"delete-workout-#{plan.id}"}
+                        >
+                          <.icon name="hero-trash-mini" class="size-4" />
+                        </button>
+                      <% end %>
                     </div>
                   </div>
 

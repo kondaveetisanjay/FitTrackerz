@@ -35,7 +35,7 @@ defmodule FitconnexWeb.Trainer.WorkoutsLive do
       workouts =
         Fitconnex.Training.WorkoutPlan
         |> Ash.Query.filter(trainer_id in ^trainer_ids)
-        |> Ash.Query.load([:member, :gym])
+        |> Ash.Query.load([:gym, member: [:user]])
         |> Ash.read!()
 
       clients =
@@ -151,7 +151,7 @@ defmodule FitconnexWeb.Trainer.WorkoutsLive do
         workouts =
           Fitconnex.Training.WorkoutPlan
           |> Ash.Query.filter(trainer_id in ^trainer_ids)
-          |> Ash.Query.load([:member, :gym])
+          |> Ash.Query.load([:gym, member: [:user]])
           |> Ash.read!()
 
         form = to_form(%{"name" => "", "member_id" => "", "gym_id" => ""}, as: "workout")
@@ -190,7 +190,7 @@ defmodule FitconnexWeb.Trainer.WorkoutsLive do
       workouts =
         Fitconnex.Training.WorkoutPlan
         |> Ash.Query.filter(trainer_id in ^trainer_ids)
-        |> Ash.Query.load([:member, :gym])
+        |> Ash.Query.load([:gym, member: [:user]])
         |> Ash.read!()
 
       {:noreply,
@@ -465,7 +465,7 @@ defmodule FitconnexWeb.Trainer.WorkoutsLive do
                   <div class="space-y-2 mt-2">
                     <div class="flex items-center gap-2 text-sm text-base-content/60">
                       <.icon name="hero-user-mini" class="size-4" />
-                      <span>{if workout.member, do: workout.member.id, else: "Unassigned"}</span>
+                      <span>{if workout.member, do: workout.member.user.name, else: "Unassigned"}</span>
                     </div>
                     <div class="flex items-center gap-2 text-sm text-base-content/60">
                       <.icon name="hero-building-office-2-mini" class="size-4" />

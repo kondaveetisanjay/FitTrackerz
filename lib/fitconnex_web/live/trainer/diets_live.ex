@@ -26,7 +26,7 @@ defmodule FitconnexWeb.Trainer.DietsLive do
       diets =
         Fitconnex.Training.DietPlan
         |> Ash.Query.filter(trainer_id in ^trainer_ids)
-        |> Ash.Query.load([:member, :gym])
+        |> Ash.Query.load([:gym, member: [:user]])
         |> Ash.read!()
 
       clients =
@@ -75,8 +75,9 @@ defmodule FitconnexWeb.Trainer.DietsLive do
 
   @impl true
   def handle_event("save_diet", %{"diet" => params}, socket) do
-    user = socket.assigns.current_user
-    uid = user.id
+    gym_trainers = socket.assigns.gym_trainers
+    trainer_ids = Enum.map(gym_trainers, & &1.id)
+    gym_trainer = Enum.find(gym_trainers, &(&1.gym_id == params["gym_id"]))
 
     calorie_target =
       case Integer.parse(params["calorie_target"] || "") do
@@ -97,14 +98,14 @@ defmodule FitconnexWeb.Trainer.DietsLive do
            dietary_type: dietary_type,
            member_id: params["member_id"],
            gym_id: params["gym_id"],
-           trainer_id: uid
+           trainer_id: gym_trainer && gym_trainer.id
          })
          |> Ash.create() do
       {:ok, _plan} ->
         diets =
           Fitconnex.Training.DietPlan
-          |> Ash.Query.filter(trainer_id == ^uid)
-          |> Ash.Query.load([:member, :gym])
+          |> Ash.Query.filter(trainer_id in ^trainer_ids)
+          |> Ash.Query.load([:gym, member: [:user]])
           |> Ash.read!()
 
         form =
@@ -133,12 +134,12 @@ defmodule FitconnexWeb.Trainer.DietsLive do
 
   @impl true
   def handle_event("delete_diet", %{"id" => id}, socket) do
-    uid = socket.assigns.current_user.id
+    trainer_ids = Enum.map(socket.assigns.gym_trainers, & &1.id)
 
     diet =
       Fitconnex.Training.DietPlan
       |> Ash.Query.filter(id == ^id)
-      |> Ash.Query.filter(trainer_id == ^uid)
+      |> Ash.Query.filter(trainer_id in ^trainer_ids)
       |> Ash.read!()
       |> List.first()
 
@@ -147,8 +148,8 @@ defmodule FitconnexWeb.Trainer.DietsLive do
 
       diets =
         Fitconnex.Training.DietPlan
-        |> Ash.Query.filter(trainer_id == ^uid)
-        |> Ash.Query.load([:member, :gym])
+        |> Ash.Query.filter(trainer_id in ^trainer_ids)
+        |> Ash.Query.load([:gym, member: [:user]])
         |> Ash.read!()
 
       {:noreply,
@@ -346,7 +347,7 @@ defmodule FitconnexWeb.Trainer.DietsLive do
                   <div class="space-y-2 mt-2">
                     <div class="flex items-center gap-2 text-sm text-base-content/60">
                       <.icon name="hero-user-mini" class="size-4" />
-                      <span>{if diet.member, do: diet.member.id, else: "Unassigned"}</span>
+                      <span>{if diet.member, do: diet.member.user.name, else: "Unassigned"}</span>
                     </div>
                     <div class="flex items-center gap-2 text-sm text-base-content/60">
                       <.icon name="hero-building-office-2-mini" class="size-4" />

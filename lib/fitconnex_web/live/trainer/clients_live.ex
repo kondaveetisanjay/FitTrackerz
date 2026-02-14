@@ -21,10 +21,11 @@ defmodule FitconnexWeb.Trainer.ClientsLive do
        |> assign(no_gym: true, clients: [], gyms: [])}
     else
       gyms = Enum.map(gym_trainers, & &1.gym)
+      trainer_ids = Enum.map(gym_trainers, & &1.id)
 
       clients =
         Fitconnex.Gym.GymMember
-        |> Ash.Query.filter(assigned_trainer_id == ^uid)
+        |> Ash.Query.filter(assigned_trainer_id in ^trainer_ids)
         |> Ash.Query.load([:user, :gym])
         |> Ash.read!()
 

@@ -19,31 +19,32 @@ defmodule FitconnexWeb.Trainer.ClassesLive do
       {:ok,
        socket
        |> assign(page_title: "My Classes")
-       |> assign(no_gym: true, classes: [])}
+       |> assign(no_gym: true, classes: [], gym_trainer_ids: [])}
     else
-      classes = load_trainer_classes(uid)
+      trainer_ids = Enum.map(gym_trainers, & &1.id)
+      classes = load_trainer_classes(trainer_ids)
 
       {:ok,
        socket
        |> assign(page_title: "My Classes")
-       |> assign(no_gym: false, classes: classes)}
+       |> assign(no_gym: false, classes: classes, gym_trainer_ids: trainer_ids)}
     end
   end
 
   @impl true
   def handle_event("complete_class", %{"id" => id}, socket) do
-    uid = socket.assigns.current_user.id
+    trainer_ids = socket.assigns.gym_trainer_ids
 
     scheduled_class = Ash.get!(Fitconnex.Scheduling.ScheduledClass, id)
 
-    if scheduled_class && scheduled_class.trainer_id == uid do
+    if scheduled_class && scheduled_class.trainer_id in trainer_ids do
       case scheduled_class
            |> Ash.Changeset.for_update(:complete, %{})
            |> Ash.update() do
         {:ok, _updated} ->
           {:noreply,
            socket
-           |> assign(classes: load_trainer_classes(uid))
+           |> assign(classes: load_trainer_classes(trainer_ids))
            |> put_flash(:info, "Class marked as completed.")}
 
         {:error, changeset} ->
@@ -58,18 +59,18 @@ defmodule FitconnexWeb.Trainer.ClassesLive do
 
   @impl true
   def handle_event("cancel_class", %{"id" => id}, socket) do
-    uid = socket.assigns.current_user.id
+    trainer_ids = socket.assigns.gym_trainer_ids
 
     scheduled_class = Ash.get!(Fitconnex.Scheduling.ScheduledClass, id)
 
-    if scheduled_class && scheduled_class.trainer_id == uid do
+    if scheduled_class && scheduled_class.trainer_id in trainer_ids do
       case scheduled_class
            |> Ash.Changeset.for_update(:cancel, %{})
            |> Ash.update() do
         {:ok, _updated} ->
           {:noreply,
            socket
-           |> assign(classes: load_trainer_classes(uid))
+           |> assign(classes: load_trainer_classes(trainer_ids))
            |> put_flash(:info, "Class has been cancelled.")}
 
         {:error, changeset} ->
@@ -82,9 +83,9 @@ defmodule FitconnexWeb.Trainer.ClassesLive do
     end
   end
 
-  defp load_trainer_classes(uid) do
+  defp load_trainer_classes(trainer_ids) do
     Fitconnex.Scheduling.ScheduledClass
-    |> Ash.Query.filter(trainer_id == ^uid)
+    |> Ash.Query.filter(trainer_id in ^trainer_ids)
     |> Ash.Query.load([:class_definition, :branch, :bookings])
     |> Ash.read!()
   end

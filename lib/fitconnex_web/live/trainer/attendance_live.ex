@@ -22,16 +22,17 @@ defmodule FitconnexWeb.Trainer.AttendanceLive do
        |> assign(no_gym: true, records: [], clients: [], gyms: [], form: nil, show_form: false)}
     else
       gyms = Enum.map(gym_trainers, & &1.gym)
+      trainer_ids = Enum.map(gym_trainers, & &1.id)
 
       records =
         Fitconnex.Training.AttendanceRecord
         |> Ash.Query.filter(marked_by_id == ^uid)
-        |> Ash.Query.load([:member, :gym])
+        |> Ash.Query.load([:gym, member: [:user]])
         |> Ash.read!()
 
       clients =
         Fitconnex.Gym.GymMember
-        |> Ash.Query.filter(assigned_trainer_id == ^uid)
+        |> Ash.Query.filter(assigned_trainer_id in ^trainer_ids)
         |> Ash.Query.load([:user, :gym])
         |> Ash.read!()
 
@@ -97,7 +98,7 @@ defmodule FitconnexWeb.Trainer.AttendanceLive do
           records =
             Fitconnex.Training.AttendanceRecord
             |> Ash.Query.filter(marked_by_id == ^uid)
-            |> Ash.Query.load([:member, :gym])
+            |> Ash.Query.load([:gym, member: [:user]])
             |> Ash.read!()
 
           now = DateTime.utc_now() |> Calendar.strftime("%Y-%m-%dT%H:%M")
@@ -294,7 +295,7 @@ defmodule FitconnexWeb.Trainer.AttendanceLive do
                     <% else %>
                       <tr :for={record <- @records} id={"attendance-row-#{record.id}"}>
                         <td class="font-medium">
-                          {record.member_id}
+                          {if record.member && record.member.user, do: record.member.user.name, else: "Unknown"}
                         </td>
                         <td class="text-base-content/60">
                           {if record.gym, do: record.gym.name, else: "N/A"}
