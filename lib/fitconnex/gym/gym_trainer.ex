@@ -46,9 +46,17 @@ defmodule Fitconnex.Gym.GymTrainer do
 
     belongs_to :branch, Fitconnex.Gym.GymBranch
 
-    has_many :scheduled_classes, Fitconnex.Scheduling.ScheduledClass
-    has_many :workout_plans, Fitconnex.Training.WorkoutPlan
-    has_many :diet_plans, Fitconnex.Training.DietPlan
+    has_many :scheduled_classes, Fitconnex.Scheduling.ScheduledClass do
+      destination_attribute(:trainer_id)
+    end
+
+    has_many :workout_plans, Fitconnex.Training.WorkoutPlan do
+      destination_attribute(:trainer_id)
+    end
+
+    has_many :diet_plans, Fitconnex.Training.DietPlan do
+      destination_attribute(:trainer_id)
+    end
 
     has_many :assigned_members, Fitconnex.Gym.GymMember do
       destination_attribute(:assigned_trainer_id)

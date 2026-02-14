@@ -6,7 +6,20 @@ defmodule FitconnexWeb.Trainer.DashboardLive do
   @impl true
   def mount(_params, _session, socket) do
     user = socket.assigns.current_user
+
+    {:ok, load_dashboard(socket, user)}
+  end
+
+  defp load_dashboard(socket, user) do
     uid = user.id
+    email = user.email
+
+    pending_invitations =
+      Fitconnex.Gym.TrainerInvitation
+      |> Ash.Query.filter(invited_email == ^email)
+      |> Ash.Query.filter(status == :pending)
+      |> Ash.Query.load([:gym, :invited_by])
+      |> Ash.read!()
 
     gym_trainers =
       Fitconnex.Gym.GymTrainer
@@ -16,18 +29,18 @@ defmodule FitconnexWeb.Trainer.DashboardLive do
       |> Ash.read!()
 
     if gym_trainers == [] do
-      {:ok,
-       socket
-       |> assign(
-         page_title: "Trainer Dashboard",
-         no_gym: true,
-         client_count: 0,
-         class_count: 0,
-         workout_count: 0,
-         diet_count: 0,
-         clients: [],
-         upcoming_classes: []
-       )}
+      socket
+      |> assign(
+        page_title: "Trainer Dashboard",
+        no_gym: true,
+        pending_invitations: pending_invitations,
+        client_count: 0,
+        class_count: 0,
+        workout_count: 0,
+        diet_count: 0,
+        clients: [],
+        upcoming_classes: []
+      )
     else
       clients =
         Fitconnex.Gym.GymMember
@@ -52,18 +65,54 @@ defmodule FitconnexWeb.Trainer.DashboardLive do
         |> Ash.Query.filter(trainer_id == ^uid)
         |> Ash.count!()
 
-      {:ok,
-       socket
-       |> assign(
-         page_title: "Trainer Dashboard",
-         no_gym: false,
-         client_count: length(clients),
-         class_count: length(classes),
-         workout_count: workout_count,
-         diet_count: diet_count,
-         clients: Enum.take(clients, 5),
-         upcoming_classes: Enum.take(classes, 5)
-       )}
+      socket
+      |> assign(
+        page_title: "Trainer Dashboard",
+        no_gym: false,
+        pending_invitations: pending_invitations,
+        client_count: length(clients),
+        class_count: length(classes),
+        workout_count: workout_count,
+        diet_count: diet_count,
+        clients: Enum.take(clients, 5),
+        upcoming_classes: Enum.take(classes, 5)
+      )
+    end
+  end
+
+  @impl true
+  def handle_event("accept-invitation", %{"id" => id}, socket) do
+    invitation = Ash.get!(Fitconnex.Gym.TrainerInvitation, id, load: [:gym])
+
+    case invitation
+         |> Ash.Changeset.for_update(:accept, %{})
+         |> Ash.update() do
+      {:ok, _} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "Invitation accepted! You've been added to #{invitation.gym.name}.")
+         |> load_dashboard(socket.assigns.current_user)}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Failed to accept invitation. Please try again.")}
+    end
+  end
+
+  @impl true
+  def handle_event("reject-invitation", %{"id" => id}, socket) do
+    invitation = Ash.get!(Fitconnex.Gym.TrainerInvitation, id)
+
+    case invitation
+         |> Ash.Changeset.for_update(:reject, %{})
+         |> Ash.update() do
+      {:ok, _} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "Invitation declined.")
+         |> load_dashboard(socket.assigns.current_user)}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Failed to decline invitation. Please try again.")}
     end
   end
 
@@ -89,20 +138,76 @@ defmodule FitconnexWeb.Trainer.DashboardLive do
           </div>
         </div>
 
-        <%= if @no_gym do %>
-          <div class="min-h-[40vh] flex items-center justify-center">
-            <div class="text-center max-w-md">
-              <div class="w-20 h-20 rounded-3xl bg-warning/10 flex items-center justify-center mx-auto mb-6">
-                <.icon name="hero-academic-cap-solid" class="size-10 text-warning" />
+        <%!-- Pending Invitations --%>
+        <%= if @pending_invitations != [] do %>
+          <div class="card bg-base-200/50 border border-primary/30" id="pending-invitations">
+            <div class="card-body p-6">
+              <h2 class="text-lg font-bold flex items-center gap-2">
+                <.icon name="hero-envelope-solid" class="size-5 text-primary" />
+                Pending Invitations
+                <span class="badge badge-primary badge-sm">{length(@pending_invitations)}</span>
+              </h2>
+
+              <div class="space-y-3 mt-4">
+                <%= for inv <- @pending_invitations do %>
+                  <div
+                    class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-base-300/30 border border-base-300/50"
+                    id={"invitation-#{inv.id}"}
+                  >
+                    <div class="flex items-center gap-4">
+                      <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                        <.icon name="hero-building-office-2-solid" class="size-5 text-primary" />
+                      </div>
+
+                      <div>
+                        <p class="font-semibold">{inv.gym.name}</p>
+
+                        <p class="text-sm text-base-content/50">
+                          Invited by {inv.invited_by.name} &bull; {Calendar.strftime(inv.inserted_at, "%b %d, %Y")}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div class="flex gap-2 sm:shrink-0">
+                      <button
+                        phx-click="accept-invitation"
+                        phx-value-id={inv.id}
+                        class="btn btn-success btn-sm gap-1 font-semibold"
+                      >
+                        <.icon name="hero-check-mini" class="size-4" /> Accept
+                      </button>
+
+                      <button
+                        phx-click="reject-invitation"
+                        phx-value-id={inv.id}
+                        class="btn btn-ghost btn-sm gap-1"
+                      >
+                        <.icon name="hero-x-mark-mini" class="size-4" /> Decline
+                      </button>
+                    </div>
+                  </div>
+                <% end %>
               </div>
-
-              <h2 class="text-xl font-black tracking-tight">No Gym Association</h2>
-
-              <p class="text-base-content/50 mt-3">
-                You haven't been added to any gym yet. Ask a gym operator to invite you as a trainer.
-              </p>
             </div>
           </div>
+        <% end %>
+
+        <%= if @no_gym do %>
+          <%= if @pending_invitations == [] do %>
+            <div class="min-h-[40vh] flex items-center justify-center">
+              <div class="text-center max-w-md">
+                <div class="w-20 h-20 rounded-3xl bg-warning/10 flex items-center justify-center mx-auto mb-6">
+                  <.icon name="hero-academic-cap-solid" class="size-10 text-warning" />
+                </div>
+
+                <h2 class="text-xl font-black tracking-tight">No Gym Association</h2>
+
+                <p class="text-base-content/50 mt-3">
+                  You haven't been added to any gym yet. Ask a gym operator to invite you as a trainer.
+                </p>
+              </div>
+            </div>
+          <% end %>
         <% else %>
           <%!-- Stats Grid --%>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

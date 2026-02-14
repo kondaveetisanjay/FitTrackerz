@@ -13,7 +13,6 @@ defmodule Fitconnex.Scheduling.ClassBooking do
 
     create :create do
       accept([:scheduled_class_id, :member_id])
-      require_atomic?(false)
       validate(Fitconnex.Scheduling.Validations.ValidateActiveSubscription)
     end
 

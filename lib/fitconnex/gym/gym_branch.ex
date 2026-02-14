@@ -70,7 +70,12 @@ defmodule Fitconnex.Gym.GymBranch do
       allow_nil?(false)
     end
 
-    has_many :gym_members, Fitconnex.Gym.GymMember
-    has_many :gym_trainers, Fitconnex.Gym.GymTrainer
+    has_many :gym_members, Fitconnex.Gym.GymMember do
+      destination_attribute(:branch_id)
+    end
+
+    has_many :gym_trainers, Fitconnex.Gym.GymTrainer do
+      destination_attribute(:branch_id)
+    end
   end
 end

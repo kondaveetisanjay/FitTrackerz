@@ -16,7 +16,8 @@
       "Bash(gh repo edit:*)",
       "Bash(git push:*)",
       "Bash(mix ecto.migrate:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(mix ash_postgres.migrate:*)"
     ]
   }
 }
