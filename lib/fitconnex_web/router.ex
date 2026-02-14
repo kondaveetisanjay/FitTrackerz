@@ -145,6 +145,8 @@ defmodule FitconnexWeb.Router do
       pipe_through :browser
 
       live "/dashboard", DashboardLive
+      live "/gym", GymLive
+      live "/trainer", TrainerLive
       live "/workout", WorkoutLive
       live "/diet", DietLive
       live "/classes", ClassesLive

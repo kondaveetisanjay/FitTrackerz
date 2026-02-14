@@ -14,18 +14,33 @@ defmodule FitconnexWeb.GymOperator.MembersLive do
         members =
           Fitconnex.Gym.GymMember
           |> Ash.Query.filter(gym_id == ^gid)
-          |> Ash.Query.load([:user, :assigned_trainer])
+          |> Ash.Query.load([:user, assigned_trainer: [:user]])
           |> Ash.read!()
 
-        invite_form = to_form(%{"email" => ""}, as: "invite")
+        branches =
+          Fitconnex.Gym.GymBranch
+          |> Ash.Query.filter(gym_id == ^gid)
+          |> Ash.read!()
+
+        trainers =
+          Fitconnex.Gym.GymTrainer
+          |> Ash.Query.filter(gym_id == ^gid)
+          |> Ash.Query.filter(is_active == true)
+          |> Ash.Query.load([:user])
+          |> Ash.read!()
+
+        invite_form = to_form(%{"email" => "", "branch_id" => ""}, as: "invite")
 
         {:ok,
          assign(socket,
            page_title: "Members",
            gym: gym,
            members: members,
+           branches: branches,
+           trainers: trainers,
            invite_form: invite_form,
-           show_invite: false
+           show_invite: false,
+           assign_member_id: nil
          )}
 
       :no_gym ->
@@ -34,8 +49,11 @@ defmodule FitconnexWeb.GymOperator.MembersLive do
            page_title: "Members",
            gym: nil,
            members: [],
+           branches: [],
+           trainers: [],
            invite_form: nil,
-           show_invite: false
+           show_invite: false,
+           assign_member_id: nil
          )}
     end
   end
@@ -49,19 +67,28 @@ defmodule FitconnexWeb.GymOperator.MembersLive do
     {:noreply, socket}
   end
 
-  def handle_event("invite", %{"invite" => %{"email" => email}}, socket) do
+  def handle_event("invite", %{"invite" => params}, socket) do
     user = socket.assigns.current_user
     gym = socket.assigns.gym
+    email = params["email"]
+    branch_id = params["branch_id"]
+
+    create_params = %{
+      invited_email: email,
+      gym_id: gym.id,
+      invited_by_id: user.id
+    }
+
+    create_params =
+      if branch_id && branch_id != "",
+        do: Map.put(create_params, :branch_id, branch_id),
+        else: create_params
 
     case Fitconnex.Gym.MemberInvitation
-         |> Ash.Changeset.for_create(:create, %{
-           invited_email: email,
-           gym_id: gym.id,
-           invited_by_id: user.id
-         })
+         |> Ash.Changeset.for_create(:create, create_params)
          |> Ash.create() do
       {:ok, _invitation} ->
-        invite_form = to_form(%{"email" => ""}, as: "invite")
+        invite_form = to_form(%{"email" => "", "branch_id" => ""}, as: "invite")
 
         {:noreply,
          socket
@@ -70,6 +97,41 @@ defmodule FitconnexWeb.GymOperator.MembersLive do
 
       {:error, _changeset} ->
         {:noreply, put_flash(socket, :error, "Failed to send invitation. Please try again.")}
+    end
+  end
+
+  def handle_event("show_assign_trainer", %{"member-id" => member_id}, socket) do
+    {:noreply, assign(socket, assign_member_id: member_id)}
+  end
+
+  def handle_event("cancel_assign_trainer", _params, socket) do
+    {:noreply, assign(socket, assign_member_id: nil)}
+  end
+
+  def handle_event("assign_trainer", %{"trainer_id" => trainer_id, "member_id" => member_id}, socket) do
+    user = socket.assigns.current_user
+    gym = socket.assigns.gym
+
+    if trainer_id == "" do
+      {:noreply, put_flash(socket, :error, "Please select a trainer.")}
+    else
+      case Fitconnex.Gym.ClientAssignmentRequest
+           |> Ash.Changeset.for_create(:create, %{
+             gym_id: gym.id,
+             member_id: member_id,
+             trainer_id: trainer_id,
+             requested_by_id: user.id
+           })
+           |> Ash.create() do
+        {:ok, _request} ->
+          {:noreply,
+           socket
+           |> put_flash(:info, "Client assignment request sent to trainer!")
+           |> assign(assign_member_id: nil)}
+
+        {:error, _changeset} ->
+          {:noreply, put_flash(socket, :error, "Failed to send assignment request. Please try again.")}
+      end
     end
   end
 
@@ -92,7 +154,7 @@ defmodule FitconnexWeb.GymOperator.MembersLive do
           members =
             Fitconnex.Gym.GymMember
             |> Ash.Query.filter(gym_id == ^gid)
-            |> Ash.Query.load([:user, :assigned_trainer])
+            |> Ash.Query.load([:user, assigned_trainer: [:user]])
             |> Ash.read!()
 
           {:noreply,
@@ -168,7 +230,7 @@ defmodule FitconnexWeb.GymOperator.MembersLive do
                   phx-change="validate_invite"
                   phx-submit="invite"
                 >
-                  <div class="flex gap-4 items-end">
+                  <div class="flex flex-col sm:flex-row gap-4 items-end">
                     <div class="flex-1">
                       <.input
                         field={@invite_form[:email]}
@@ -178,6 +240,28 @@ defmodule FitconnexWeb.GymOperator.MembersLive do
                         required
                       />
                     </div>
+
+                    <div class="flex-1">
+                      <label class="label" for="invite_branch_id">
+                        <span class="label-text">Branch</span>
+                      </label>
+
+                      <select
+                        name="invite[branch_id]"
+                        id="invite_branch_id"
+                        class="select select-bordered w-full select-sm"
+                      >
+                        <option value="">Select a branch</option>
+
+                        <%= for branch <- @branches do %>
+                          <option value={branch.id}>
+                            {branch.city}, {branch.state} — {branch.address}
+                            {if branch.is_primary, do: " (Primary)", else: ""}
+                          </option>
+                        <% end %>
+                      </select>
+                    </div>
+
                     <div class="mb-2">
                       <button type="submit" class="btn btn-primary btn-sm gap-2" id="send-invite-btn">
                         <.icon name="hero-paper-airplane" class="size-4" /> Send Invite
@@ -223,7 +307,7 @@ defmodule FitconnexWeb.GymOperator.MembersLive do
                           <td>
                             <%= if member.assigned_trainer do %>
                               <span class="badge badge-info badge-sm">
-                                {member.assigned_trainer.name}
+                                {member.assigned_trainer.user.name}
                               </span>
                             <% else %>
                               <span class="text-base-content/40 text-sm">Unassigned</span>
@@ -237,18 +321,59 @@ defmodule FitconnexWeb.GymOperator.MembersLive do
                             <% end %>
                           </td>
                           <td>
-                            <button
-                              phx-click="toggle_active"
-                              phx-value-id={member.id}
-                              class="btn btn-ghost btn-xs"
-                              id={"toggle-member-#{member.id}"}
-                            >
-                              <%= if member.is_active do %>
-                                <.icon name="hero-pause" class="size-4 text-warning" />
-                              <% else %>
-                                <.icon name="hero-play" class="size-4 text-success" />
-                              <% end %>
-                            </button>
+                            <div class="flex items-center gap-1">
+                              <button
+                                phx-click="toggle_active"
+                                phx-value-id={member.id}
+                                class="btn btn-ghost btn-xs"
+                                id={"toggle-member-#{member.id}"}
+                              >
+                                <%= if member.is_active do %>
+                                  <.icon name="hero-pause" class="size-4 text-warning" />
+                                <% else %>
+                                  <.icon name="hero-play" class="size-4 text-success" />
+                                <% end %>
+                              </button>
+                              <button
+                                phx-click="show_assign_trainer"
+                                phx-value-member-id={member.id}
+                                class="btn btn-ghost btn-xs"
+                                id={"assign-trainer-btn-#{member.id}"}
+                                title="Assign Trainer"
+                              >
+                                <.icon name="hero-academic-cap" class="size-4 text-info" />
+                              </button>
+                            </div>
+                            <%= if @assign_member_id == member.id do %>
+                              <div class="mt-2 p-3 rounded-lg bg-base-300/30 border border-base-300/50">
+                                <form phx-submit="assign_trainer" class="flex flex-col gap-2">
+                                  <input type="hidden" name="member_id" value={member.id} />
+                                  <select
+                                    name="trainer_id"
+                                    class="select select-bordered select-xs w-full"
+                                  >
+                                    <option value="">Select a trainer</option>
+                                    <%= for trainer <- @trainers do %>
+                                      <option value={trainer.id}>
+                                        {trainer.user.name}
+                                      </option>
+                                    <% end %>
+                                  </select>
+                                  <div class="flex gap-1">
+                                    <button type="submit" class="btn btn-primary btn-xs gap-1">
+                                      <.icon name="hero-paper-airplane" class="size-3" /> Send
+                                    </button>
+                                    <button
+                                      type="button"
+                                      phx-click="cancel_assign_trainer"
+                                      class="btn btn-ghost btn-xs"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </form>
+                              </div>
+                            <% end %>
                           </td>
                         </tr>
                       <% end %>

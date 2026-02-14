@@ -17,7 +17,8 @@
       "Bash(git push:*)",
       "Bash(mix ecto.migrate:*)",
       "Bash(dir:*)",
-      "Bash(mix ash_postgres.migrate:*)"
+      "Bash(mix ash_postgres.migrate:*)",
+      "Bash(mix ash_postgres.generate_migrations:*)"
     ]
   }
 }

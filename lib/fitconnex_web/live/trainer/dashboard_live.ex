@@ -28,12 +28,26 @@ defmodule FitconnexWeb.Trainer.DashboardLive do
       |> Ash.Query.load([:gym])
       |> Ash.read!()
 
+    gym_trainer_ids = Enum.map(gym_trainers, & &1.id)
+
+    client_requests =
+      if gym_trainer_ids != [] do
+        Fitconnex.Gym.ClientAssignmentRequest
+        |> Ash.Query.filter(trainer_id in ^gym_trainer_ids)
+        |> Ash.Query.filter(status == :pending)
+        |> Ash.Query.load([:gym, :requested_by, member: [:user]])
+        |> Ash.read!()
+      else
+        []
+      end
+
     if gym_trainers == [] do
       socket
       |> assign(
         page_title: "Trainer Dashboard",
         no_gym: true,
         pending_invitations: pending_invitations,
+        client_requests: client_requests,
         client_count: 0,
         class_count: 0,
         workout_count: 0,
@@ -44,25 +58,25 @@ defmodule FitconnexWeb.Trainer.DashboardLive do
     else
       clients =
         Fitconnex.Gym.GymMember
-        |> Ash.Query.filter(assigned_trainer_id == ^uid)
+        |> Ash.Query.filter(assigned_trainer_id in ^gym_trainer_ids)
         |> Ash.Query.load([:user, :gym])
         |> Ash.read!()
 
       classes =
         Fitconnex.Scheduling.ScheduledClass
-        |> Ash.Query.filter(trainer_id == ^uid)
+        |> Ash.Query.filter(trainer_id in ^gym_trainer_ids)
         |> Ash.Query.filter(status == :scheduled)
         |> Ash.Query.load([:class_definition, :branch])
         |> Ash.read!()
 
       workout_count =
         Fitconnex.Training.WorkoutPlan
-        |> Ash.Query.filter(trainer_id == ^uid)
+        |> Ash.Query.filter(trainer_id in ^gym_trainer_ids)
         |> Ash.count!()
 
       diet_count =
         Fitconnex.Training.DietPlan
-        |> Ash.Query.filter(trainer_id == ^uid)
+        |> Ash.Query.filter(trainer_id in ^gym_trainer_ids)
         |> Ash.count!()
 
       socket
@@ -70,6 +84,7 @@ defmodule FitconnexWeb.Trainer.DashboardLive do
         page_title: "Trainer Dashboard",
         no_gym: false,
         pending_invitations: pending_invitations,
+        client_requests: client_requests,
         client_count: length(clients),
         class_count: length(classes),
         workout_count: workout_count,
@@ -95,6 +110,40 @@ defmodule FitconnexWeb.Trainer.DashboardLive do
 
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Failed to accept invitation. Please try again.")}
+    end
+  end
+
+  def handle_event("accept-client-request", %{"id" => id}, socket) do
+    request = Ash.get!(Fitconnex.Gym.ClientAssignmentRequest, id, load: [:gym, member: [:user]])
+
+    case request
+         |> Ash.Changeset.for_update(:accept, %{})
+         |> Ash.update() do
+      {:ok, _} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "Client assignment accepted! #{request.member.user.name} is now your client.")
+         |> load_dashboard(socket.assigns.current_user)}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Failed to accept client assignment. Please try again.")}
+    end
+  end
+
+  def handle_event("reject-client-request", %{"id" => id}, socket) do
+    request = Ash.get!(Fitconnex.Gym.ClientAssignmentRequest, id)
+
+    case request
+         |> Ash.Changeset.for_update(:reject, %{})
+         |> Ash.update() do
+      {:ok, _} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "Client assignment declined.")
+         |> load_dashboard(socket.assigns.current_user)}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Failed to decline client assignment. Please try again.")}
     end
   end
 
@@ -180,6 +229,64 @@ defmodule FitconnexWeb.Trainer.DashboardLive do
                       <button
                         phx-click="reject-invitation"
                         phx-value-id={inv.id}
+                        class="btn btn-ghost btn-sm gap-1"
+                      >
+                        <.icon name="hero-x-mark-mini" class="size-4" /> Decline
+                      </button>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+
+        <%!-- Client Assignment Requests --%>
+        <%= if @client_requests != [] do %>
+          <div class="card bg-base-200/50 border border-info/30" id="client-requests">
+            <div class="card-body p-6">
+              <h2 class="text-lg font-bold flex items-center gap-2">
+                <.icon name="hero-user-plus-solid" class="size-5 text-info" />
+                Client Assignment Requests
+                <span class="badge badge-info badge-sm">{length(@client_requests)}</span>
+              </h2>
+
+              <div class="space-y-3 mt-4">
+                <%= for req <- @client_requests do %>
+                  <div
+                    class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-base-300/30 border border-base-300/50"
+                    id={"client-request-#{req.id}"}
+                  >
+                    <div class="flex items-center gap-4">
+                      <div class="w-10 h-10 rounded-xl bg-info/10 flex items-center justify-center shrink-0">
+                        <.icon name="hero-user-solid" class="size-5 text-info" />
+                      </div>
+
+                      <div>
+                        <p class="font-semibold">{req.member.user.name}</p>
+
+                        <p class="text-sm text-base-content/50">
+                          {req.member.user.email} &bull; {req.gym.name}
+                        </p>
+
+                        <p class="text-xs text-base-content/40">
+                          Requested by {req.requested_by.name} &bull; {Calendar.strftime(req.inserted_at, "%b %d, %Y")}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div class="flex gap-2 sm:shrink-0">
+                      <button
+                        phx-click="accept-client-request"
+                        phx-value-id={req.id}
+                        class="btn btn-success btn-sm gap-1 font-semibold"
+                      >
+                        <.icon name="hero-check-mini" class="size-4" /> Accept
+                      </button>
+
+                      <button
+                        phx-click="reject-client-request"
+                        phx-value-id={req.id}
                         class="btn btn-ghost btn-sm gap-1"
                       >
                         <.icon name="hero-x-mark-mini" class="size-4" /> Decline

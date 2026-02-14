@@ -8,5 +8,6 @@ defmodule Fitconnex.Gym do
     resource(Fitconnex.Gym.GymTrainer)
     resource(Fitconnex.Gym.MemberInvitation)
     resource(Fitconnex.Gym.TrainerInvitation)
+    resource(Fitconnex.Gym.ClientAssignmentRequest)
   end
 end

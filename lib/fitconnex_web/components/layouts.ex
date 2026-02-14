@@ -256,6 +256,8 @@ defmodule FitconnexWeb.Layouts do
       Overview
     </p>
     <.nav_link href="/member/dashboard" icon="hero-squares-2x2-solid" label="Dashboard" />
+    <.nav_link href="/member/gym" icon="hero-building-office-2-solid" label="My Gym" />
+    <.nav_link href="/member/trainer" icon="hero-academic-cap-solid" label="My Trainer" />
 
     <div class="divider my-3"></div>
     <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">

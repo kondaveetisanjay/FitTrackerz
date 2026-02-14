@@ -1,10 +1,10 @@
-defmodule Fitconnex.Gym.MemberInvitation do
+defmodule Fitconnex.Gym.ClientAssignmentRequest do
   use Ash.Resource,
     domain: Fitconnex.Gym,
     data_layer: AshPostgres.DataLayer
 
   postgres do
-    table("member_invitations")
+    table("client_assignment_requests")
     repo(Fitconnex.Repo)
   end
 
@@ -12,7 +12,7 @@ defmodule Fitconnex.Gym.MemberInvitation do
     defaults([:read, :destroy])
 
     create :create do
-      accept([:invited_email, :gym_id, :invited_by_id, :branch_id])
+      accept([:gym_id, :member_id, :trainer_id, :requested_by_id])
     end
 
     update :accept do
@@ -20,29 +20,20 @@ defmodule Fitconnex.Gym.MemberInvitation do
       require_atomic?(false)
 
       change(set_attribute(:status, :accepted))
-      change(Fitconnex.Gym.Changes.CreateGymMemberOnAccept)
+      change(Fitconnex.Gym.Changes.AssignTrainerOnAccept)
     end
 
     update :reject do
       accept([])
       change(set_attribute(:status, :rejected))
     end
-
-    update :expire do
-      accept([])
-      change(set_attribute(:status, :expired))
-    end
   end
 
   attributes do
     uuid_primary_key(:id)
 
-    attribute :invited_email, :ci_string do
-      allow_nil?(false)
-    end
-
     attribute :status, :atom do
-      constraints(one_of: [:pending, :accepted, :rejected, :expired])
+      constraints(one_of: [:pending, :accepted, :rejected])
       allow_nil?(false)
       default(:pending)
     end
@@ -55,10 +46,16 @@ defmodule Fitconnex.Gym.MemberInvitation do
       allow_nil?(false)
     end
 
-    belongs_to :invited_by, Fitconnex.Accounts.User do
+    belongs_to :member, Fitconnex.Gym.GymMember do
       allow_nil?(false)
     end
 
-    belongs_to :branch, Fitconnex.Gym.GymBranch
+    belongs_to :trainer, Fitconnex.Gym.GymTrainer do
+      allow_nil?(false)
+    end
+
+    belongs_to :requested_by, Fitconnex.Accounts.User do
+      allow_nil?(false)
+    end
   end
 end
