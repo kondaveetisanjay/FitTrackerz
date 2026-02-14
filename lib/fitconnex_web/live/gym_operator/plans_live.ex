@@ -3,39 +3,42 @@ defmodule FitconnexWeb.GymOperator.PlansLive do
 
   require Ash.Query
 
+  @durations [
+    {:monthly, "1 Month"},
+    {:quarterly, "3 Months"},
+    {:half_yearly, "6 Months"},
+    {:annual, "12 Months"}
+  ]
+
+  @plan_type_options [
+    {:general, "General"},
+    {:personal_training, "Personal Training"}
+  ]
+
   @impl true
   def mount(_params, _session, socket) do
     user = socket.assigns.current_user
 
     case find_gym(user.id) do
       {:ok, gym} ->
-        gid = gym.id
-
-        plans =
-          Fitconnex.Billing.SubscriptionPlan
-          |> Ash.Query.filter(gym_id == ^gid)
-          |> Ash.read!()
-
-        form =
-          to_form(
-            %{
-              "name" => "",
-              "plan_type" => "",
-              "duration" => "",
-              "price_in_rupees" => ""
-            },
-            as: "plan"
-          )
+        plans = load_plans(gym.id)
 
         {:ok,
          assign(socket,
            page_title: "Plans & Billing",
            gym: gym,
            plans: plans,
-           form: form,
-           show_form: false,
+           view: :categories,
+           selected_category: nil,
+           wizard_step: 1,
+           wizard_categories: [""],
+           wizard_plan_types: MapSet.new(),
+           wizard_prices: %{},
+           wizard_errors: [],
            editing_plan_id: nil,
-           edit_form: nil
+           edit_form: nil,
+           durations: @durations,
+           plan_type_options: @plan_type_options
          )}
 
       :no_gym ->
@@ -44,72 +47,215 @@ defmodule FitconnexWeb.GymOperator.PlansLive do
            page_title: "Plans & Billing",
            gym: nil,
            plans: [],
-           form: nil,
-           show_form: false,
+           view: :categories,
+           selected_category: nil,
+           wizard_step: 1,
+           wizard_categories: [""],
+           wizard_plan_types: MapSet.new(),
+           wizard_prices: %{},
+           wizard_errors: [],
            editing_plan_id: nil,
-           edit_form: nil
+           edit_form: nil,
+           durations: @durations,
+           plan_type_options: @plan_type_options
          )}
     end
   end
 
+  # ── Navigation Events ──
+
   @impl true
-  def handle_event("toggle_form", _params, socket) do
-    {:noreply, assign(socket, show_form: !socket.assigns.show_form)}
+  def handle_event("create_plans", _params, socket) do
+    {:noreply,
+     assign(socket,
+       view: :wizard,
+       wizard_step: 1,
+       wizard_categories: [""],
+       wizard_plan_types: MapSet.new(),
+       wizard_prices: %{},
+       wizard_errors: [],
+       editing_plan_id: nil,
+       edit_form: nil
+     )}
   end
 
-  def handle_event("validate", %{"plan" => _params}, socket) do
-    {:noreply, socket}
+  def handle_event("view_category", %{"category" => category}, socket) do
+    {:noreply,
+     assign(socket,
+       view: :detail,
+       selected_category: category,
+       editing_plan_id: nil,
+       edit_form: nil
+     )}
   end
 
-  def handle_event("save_plan", %{"plan" => params}, socket) do
-    gym = socket.assigns.gym
-    gid = gym.id
+  def handle_event("back_to_categories", _params, socket) do
+    {:noreply,
+     assign(socket,
+       view: :categories,
+       selected_category: nil,
+       editing_plan_id: nil,
+       edit_form: nil
+     )}
+  end
 
-    case Fitconnex.Billing.SubscriptionPlan
-         |> Ash.Changeset.for_create(:create, %{
-           name: params["name"],
-           plan_type: String.to_existing_atom(params["plan_type"]),
-           duration: String.to_existing_atom(params["duration"]),
-           price_in_paise: rupees_to_paise(params["price_in_rupees"]),
-           gym_id: gym.id
-         })
-         |> Ash.create() do
-      {:ok, _plan} ->
-        plans =
-          Fitconnex.Billing.SubscriptionPlan
-          |> Ash.Query.filter(gym_id == ^gid)
-          |> Ash.read!()
+  # ── Wizard Step 1: Categories ──
 
-        form =
-          to_form(
-            %{
-              "name" => "",
-              "plan_type" => "",
-              "duration" => "",
-              "price_in_rupees" => ""
-            },
-            as: "plan"
-          )
+  def handle_event("add_category_input", _params, socket) do
+    categories = socket.assigns.wizard_categories ++ [""]
+    {:noreply, assign(socket, wizard_categories: categories, wizard_errors: [])}
+  end
 
-        {:noreply,
-         socket
-         |> put_flash(:info, "Subscription plan created successfully!")
-         |> assign(plans: plans, form: form, show_form: false)}
+  def handle_event("remove_category_input", %{"index" => index_str}, socket) do
+    index = String.to_integer(index_str)
+    removed = Enum.at(socket.assigns.wizard_categories, index)
+    categories = List.delete_at(socket.assigns.wizard_categories, index)
+    categories = if categories == [], do: [""], else: categories
 
-      {:error, _changeset} ->
-        {:noreply, put_flash(socket, :error, "Failed to create plan. Please check your input.")}
+    prices =
+      socket.assigns.wizard_prices
+      |> Enum.reject(fn {{cat, _pt, _dur}, _v} -> cat == removed end)
+      |> Map.new()
+
+    {:noreply,
+     assign(socket, wizard_categories: categories, wizard_prices: prices, wizard_errors: [])}
+  end
+
+  def handle_event("update_category_input", %{"index" => index_str, "value" => value}, socket) do
+    index = String.to_integer(index_str)
+    old_name = Enum.at(socket.assigns.wizard_categories, index)
+    categories = List.replace_at(socket.assigns.wizard_categories, index, value)
+
+    prices =
+      if old_name != "" and old_name != value do
+        socket.assigns.wizard_prices
+        |> Enum.map(fn
+          {{^old_name, pt, dur}, v} -> {{value, pt, dur}, v}
+          other -> other
+        end)
+        |> Map.new()
+      else
+        socket.assigns.wizard_prices
+      end
+
+    {:noreply,
+     assign(socket, wizard_categories: categories, wizard_prices: prices, wizard_errors: [])}
+  end
+
+  # ── Wizard Step 2: Plan Types ──
+
+  def handle_event("toggle_wizard_plan_type", %{"type" => type_str}, socket) do
+    type = String.to_existing_atom(type_str)
+    current = socket.assigns.wizard_plan_types
+
+    updated =
+      if MapSet.member?(current, type),
+        do: MapSet.delete(current, type),
+        else: MapSet.put(current, type)
+
+    prices =
+      socket.assigns.wizard_prices
+      |> Enum.filter(fn {{_cat, pt, _dur}, _v} -> MapSet.member?(updated, pt) end)
+      |> Map.new()
+
+    {:noreply,
+     assign(socket, wizard_plan_types: updated, wizard_prices: prices, wizard_errors: [])}
+  end
+
+  # ── Wizard Step 3: Prices ──
+
+  def handle_event(
+        "update_wizard_price",
+        %{"category" => cat, "type" => type_str, "duration" => dur_str, "value" => value},
+        socket
+      ) do
+    key = {cat, String.to_existing_atom(type_str), String.to_existing_atom(dur_str)}
+    prices = Map.put(socket.assigns.wizard_prices, key, value)
+    {:noreply, assign(socket, wizard_prices: prices, wizard_errors: [])}
+  end
+
+  # ── Wizard Navigation ──
+
+  def handle_event("wizard_next", _params, socket) do
+    case socket.assigns.wizard_step do
+      1 ->
+        categories =
+          socket.assigns.wizard_categories
+          |> Enum.map(&String.trim/1)
+          |> Enum.reject(&(&1 == ""))
+          |> Enum.uniq()
+
+        if categories == [] do
+          {:noreply, assign(socket, wizard_errors: ["Enter at least one category name."])}
+        else
+          {:noreply,
+           assign(socket, wizard_step: 2, wizard_categories: categories, wizard_errors: [])}
+        end
+
+      2 ->
+        if MapSet.size(socket.assigns.wizard_plan_types) == 0 do
+          {:noreply, assign(socket, wizard_errors: ["Select at least one plan type."])}
+        else
+          {:noreply, assign(socket, wizard_step: 3, wizard_errors: [])}
+        end
+
+      _ ->
+        {:noreply, socket}
     end
   end
 
-  def handle_event("edit_plan", %{"id" => id}, socket) do
-    gym = socket.assigns.gym
-    gid = gym.id
+  def handle_event("wizard_back", _params, socket) do
+    step = socket.assigns.wizard_step
 
-    plan =
-      Fitconnex.Billing.SubscriptionPlan
-      |> Ash.Query.filter(id == ^id and gym_id == ^gid)
-      |> Ash.read!()
-      |> List.first()
+    if step > 1 do
+      {:noreply, assign(socket, wizard_step: step - 1, wizard_errors: [])}
+    else
+      {:noreply, assign(socket, view: :categories)}
+    end
+  end
+
+  def handle_event("wizard_done", _params, socket) do
+    case validate_wizard(socket.assigns) do
+      {:ok, plan_params_list} ->
+        gym = socket.assigns.gym
+        gid = gym.id
+
+        results =
+          Enum.map(plan_params_list, fn params ->
+            Fitconnex.Billing.SubscriptionPlan
+            |> Ash.Changeset.for_create(:create, Map.put(params, :gym_id, gid))
+            |> Ash.create()
+          end)
+
+        errors = Enum.filter(results, &match?({:error, _}, &1))
+        plans = load_plans(gid)
+
+        if errors == [] do
+          {:noreply,
+           socket
+           |> put_flash(:info, "#{length(plan_params_list)} plan(s) created successfully!")
+           |> assign(plans: plans, view: :categories)}
+        else
+          success_count = length(results) - length(errors)
+
+          {:noreply,
+           socket
+           |> put_flash(
+             :error,
+             "#{length(errors)} plan(s) failed. #{success_count} created."
+           )
+           |> assign(plans: plans, view: :categories)}
+        end
+
+      {:error, errors} ->
+        {:noreply, assign(socket, wizard_errors: errors)}
+    end
+  end
+
+  # ── Plan Edit / Delete Events ──
+
+  def handle_event("edit_plan", %{"id" => id}, socket) do
+    plan = Enum.find(socket.assigns.plans, &(&1.id == id))
 
     if plan do
       edit_form =
@@ -118,12 +264,13 @@ defmodule FitconnexWeb.GymOperator.PlansLive do
             "name" => plan.name || "",
             "plan_type" => to_string(plan.plan_type),
             "duration" => to_string(plan.duration),
-            "price_in_rupees" => to_string(div(plan.price_in_paise, 100))
+            "price_in_rupees" => to_string(div(plan.price_in_paise, 100)),
+            "category" => plan.category || ""
           },
           as: "plan"
         )
 
-      {:noreply, assign(socket, editing_plan_id: id, edit_form: edit_form, show_form: false)}
+      {:noreply, assign(socket, editing_plan_id: id, edit_form: edit_form)}
     else
       {:noreply, put_flash(socket, :error, "Plan not found.")}
     end
@@ -131,6 +278,10 @@ defmodule FitconnexWeb.GymOperator.PlansLive do
 
   def handle_event("cancel_edit", _params, socket) do
     {:noreply, assign(socket, editing_plan_id: nil, edit_form: nil)}
+  end
+
+  def handle_event("validate", %{"plan" => _params}, socket) do
+    {:noreply, socket}
   end
 
   def handle_event("update_plan", %{"plan" => params}, socket) do
@@ -145,21 +296,25 @@ defmodule FitconnexWeb.GymOperator.PlansLive do
       |> List.first()
 
     if plan do
+      category =
+        case String.trim(params["category"] || "") do
+          "" -> nil
+          val -> val
+        end
+
       update_params = %{
         name: params["name"],
         plan_type: String.to_existing_atom(params["plan_type"]),
         duration: String.to_existing_atom(params["duration"]),
-        price_in_paise: rupees_to_paise(params["price_in_rupees"])
+        price_in_paise: rupees_to_paise(params["price_in_rupees"]),
+        category: category
       }
 
       case plan
            |> Ash.Changeset.for_update(:update, update_params)
            |> Ash.update() do
         {:ok, _updated} ->
-          plans =
-            Fitconnex.Billing.SubscriptionPlan
-            |> Ash.Query.filter(gym_id == ^gid)
-            |> Ash.read!()
+          plans = load_plans(gid)
 
           {:noreply,
            socket
@@ -167,7 +322,7 @@ defmodule FitconnexWeb.GymOperator.PlansLive do
            |> assign(plans: plans, editing_plan_id: nil, edit_form: nil)}
 
         {:error, _changeset} ->
-          {:noreply, put_flash(socket, :error, "Failed to update plan. Please check your input.")}
+          {:noreply, put_flash(socket, :error, "Failed to update plan.")}
       end
     else
       {:noreply, put_flash(socket, :error, "Plan not found.")}
@@ -180,18 +335,28 @@ defmodule FitconnexWeb.GymOperator.PlansLive do
 
     plan =
       Fitconnex.Billing.SubscriptionPlan
-      |> Ash.Query.filter(id == ^id)
-      |> Ash.Query.filter(gym_id == ^gid)
+      |> Ash.Query.filter(id == ^id and gym_id == ^gid)
       |> Ash.read!()
       |> List.first()
 
     if plan do
       case Ash.destroy(plan) do
         :ok ->
-          plans =
-            Fitconnex.Billing.SubscriptionPlan
-            |> Ash.Query.filter(gym_id == ^gid)
-            |> Ash.read!()
+          plans = load_plans(gid)
+
+          socket =
+            if socket.assigns.view == :detail do
+              remaining =
+                Enum.filter(plans, &(&1.category == socket.assigns.selected_category))
+
+              if remaining == [] do
+                assign(socket, view: :categories, selected_category: nil)
+              else
+                socket
+              end
+            else
+              socket
+            end
 
           {:noreply,
            socket
@@ -206,6 +371,68 @@ defmodule FitconnexWeb.GymOperator.PlansLive do
     end
   end
 
+  # ── Helpers ──
+
+  defp validate_wizard(assigns) do
+    categories =
+      assigns.wizard_categories
+      |> Enum.map(&String.trim/1)
+      |> Enum.reject(&(&1 == ""))
+      |> Enum.uniq()
+
+    plan_types = MapSet.to_list(assigns.wizard_plan_types)
+
+    errors = []
+    errors = if categories == [], do: ["Enter at least one category." | errors], else: errors
+
+    errors =
+      if plan_types == [], do: ["Select at least one plan type." | errors], else: errors
+
+    expected_keys =
+      for cat <- categories,
+          pt <- plan_types,
+          {dur, _label} <- @durations,
+          do: {cat, pt, dur}
+
+    missing =
+      Enum.filter(expected_keys, fn key ->
+        val = Map.get(assigns.wizard_prices, key, "")
+        val == "" or val == nil
+      end)
+
+    errors =
+      if missing != [],
+        do: ["Fill in all price fields (#{length(missing)} missing)." | errors],
+        else: errors
+
+    if errors == [] do
+      plans =
+        Enum.map(expected_keys, fn {cat, pt, dur} = key ->
+          price_str = Map.get(assigns.wizard_prices, key)
+          name = build_plan_name(cat, pt, dur, price_str)
+
+          %{
+            name: name,
+            category: cat,
+            plan_type: pt,
+            duration: dur,
+            price_in_paise: rupees_to_paise(price_str)
+          }
+        end)
+
+      {:ok, plans}
+    else
+      {:error, Enum.reverse(errors)}
+    end
+  end
+
+  defp build_plan_name(category, plan_type, duration, price_str) do
+    cat = category || "N/A"
+    pt = format_plan_type(plan_type)
+    dur = format_duration(duration)
+    "#{cat} - #{pt} - #{dur} - \u20B9#{price_str}"
+  end
+
   defp find_gym(user_id) do
     case Fitconnex.Gym.Gym
          |> Ash.Query.filter(owner_id == ^user_id)
@@ -213,6 +440,28 @@ defmodule FitconnexWeb.GymOperator.PlansLive do
       [gym | _] -> {:ok, gym}
       [] -> :no_gym
     end
+  end
+
+  defp load_plans(gym_id) do
+    Fitconnex.Billing.SubscriptionPlan
+    |> Ash.Query.filter(gym_id == ^gym_id)
+    |> Ash.read!()
+  end
+
+  defp group_plans_by_category(plans) do
+    plans
+    |> Enum.group_by(&(&1.category || "Uncategorized"))
+    |> Enum.sort_by(fn {cat, _} -> cat end)
+  end
+
+  defp plans_by_type(plans, type) do
+    duration_order = [:day_pass, :monthly, :quarterly, :half_yearly, :annual, :two_year]
+
+    plans
+    |> Enum.filter(&(&1.plan_type == type))
+    |> Enum.sort_by(fn p ->
+      Enum.find_index(duration_order, &(&1 == p.duration)) || 99
+    end)
   end
 
   defp rupees_to_paise(val) when is_binary(val) do
@@ -225,11 +474,10 @@ defmodule FitconnexWeb.GymOperator.PlansLive do
   defp rupees_to_paise(_), do: 0
 
   defp format_price(paise) when is_integer(paise) do
-    rupees = paise / 100
-    :erlang.float_to_binary(rupees, decimals: 2)
+    Integer.to_string(div(paise, 100))
   end
 
-  defp format_price(_), do: "0.00"
+  defp format_price(_), do: "0"
 
   defp format_duration(:day_pass), do: "1 Day Pass"
   defp format_duration(:monthly), do: "1 Month"
@@ -239,38 +487,75 @@ defmodule FitconnexWeb.GymOperator.PlansLive do
   defp format_duration(:two_year), do: "24 Months"
   defp format_duration(other), do: Phoenix.Naming.humanize(other)
 
-  defp plan_type_class(:general), do: "badge-primary"
-  defp plan_type_class(:personal_training), do: "badge-secondary"
-  defp plan_type_class(_), do: "badge-neutral"
+  defp format_plan_type(:general), do: "General"
+  defp format_plan_type(:personal_training), do: "Personal Training"
+  defp format_plan_type(other), do: Phoenix.Naming.humanize(other)
+
+  defp category_icon_bg(cat) do
+    colors = [
+      "bg-primary/20 text-primary",
+      "bg-secondary/20 text-secondary",
+      "bg-accent/20 text-accent",
+      "bg-info/20 text-info",
+      "bg-success/20 text-success",
+      "bg-warning/20 text-warning"
+    ]
+
+    index = :erlang.phash2(cat, length(colors))
+    Enum.at(colors, index)
+  end
+
+  # ── Render ──
 
   @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
       <div class="space-y-8">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div class="flex items-center gap-3">
-            <Layouts.back_button />
-            <div>
-              <h1 class="text-2xl sm:text-3xl font-black tracking-tight">Plans & Billing</h1>
-              <p class="text-base-content/50 mt-1">Manage subscription plans for your gym.</p>
-            </div>
-          </div>
-          <%= if @gym do %>
+        <%!-- Page Header --%>
+        <div class="flex items-center gap-3">
+          <%= if @view == :detail do %>
             <button
-              phx-click="toggle_form"
-              class="btn btn-primary btn-sm gap-2 font-semibold"
-              id="toggle-plan-form-btn"
+              phx-click="back_to_categories"
+              class="btn btn-ghost btn-sm btn-circle"
+              id="back-to-cats"
             >
-              <.icon name="hero-plus-mini" class="size-4" /> Create Plan
+              <.icon name="hero-arrow-left" class="size-5" />
             </button>
+          <% else %>
+            <Layouts.back_button />
           <% end %>
+          <div>
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight">
+              <%= case @view do %>
+                <% :detail -> %>
+                  {@selected_category}
+                <% :wizard -> %>
+                  Create Plans
+                <% _ -> %>
+                  Plans & Billing
+              <% end %>
+            </h1>
+            <p class="text-base-content/50 mt-1">
+              <%= case @view do %>
+                <% :detail -> %>
+                  View and manage plans in this category.
+                <% :wizard -> %>
+                  Step {@wizard_step} of 3
+                <% _ -> %>
+                  Manage subscription plans for your gym.
+              <% end %>
+            </p>
+          </div>
         </div>
 
         <%= if @gym == nil do %>
           <div class="card bg-base-200/50 border border-base-300/50" id="no-gym-card">
             <div class="card-body p-6 text-center">
-              <.icon name="hero-building-office-solid" class="size-12 text-base-content/20 mx-auto" />
+              <.icon
+                name="hero-building-office-solid"
+                class="size-12 text-base-content/20 mx-auto"
+              />
               <h2 class="text-lg font-bold mt-4">No Gym Found</h2>
               <p class="text-base-content/50 mt-1">
                 You need to create a gym first before managing plans.
@@ -281,204 +566,475 @@ defmodule FitconnexWeb.GymOperator.PlansLive do
             </div>
           </div>
         <% else %>
-          <%!-- Create Plan Form --%>
-          <%= if @show_form do %>
-            <div class="card bg-base-200/50 border border-base-300/50" id="add-plan-card">
-              <div class="card-body p-6">
-                <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                  <.icon name="hero-credit-card-solid" class="size-5 text-warning" />
-                  New Subscription Plan
-                </h2>
-                <.form for={@form} id="add-plan-form" phx-change="validate" phx-submit="save_plan">
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <.input
-                      field={@form[:name]}
-                      label="Plan Name"
-                      placeholder="e.g. Premium Monthly"
-                      required
-                    />
-                    <.input
-                      field={@form[:plan_type]}
-                      type="select"
-                      label="Plan Type"
-                      prompt="Select plan type"
-                      options={[{"General", "general"}, {"Personal Training", "personal_training"}]}
-                      required
-                    />
-                    <.input
-                      field={@form[:duration]}
-                      type="select"
-                      label="Duration"
-                      prompt="Select duration"
-                      options={[
-                        {"1 Day Pass", "day_pass"},
-                        {"1 Month", "monthly"},
-                        {"3 Months", "quarterly"},
-                        {"6 Months", "half_yearly"},
-                        {"12 Months", "annual"},
-                        {"24 Months", "two_year"}
-                      ]}
-                      required
-                    />
-                    <.input
-                      field={@form[:price_in_rupees]}
-                      type="number"
-                      label="Price (in Rupees)"
-                      placeholder="e.g. 1000"
-                      required
-                    />
-                  </div>
-                  <div class="flex gap-2 mt-4">
-                    <button type="submit" class="btn btn-primary btn-sm gap-2" id="save-plan-btn">
-                      <.icon name="hero-check-mini" class="size-4" /> Save Plan
-                    </button>
-                    <button
-                      type="button"
-                      phx-click="toggle_form"
-                      class="btn btn-ghost btn-sm"
-                      id="cancel-plan-btn"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </.form>
-              </div>
-            </div>
-          <% end %>
-
-          <%!-- Edit Plan Form --%>
-          <%= if @editing_plan_id do %>
-            <div class="card bg-base-200/50 border border-base-300/50" id="edit-plan-card">
-              <div class="card-body p-6">
-                <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                  <.icon name="hero-pencil-square-solid" class="size-5 text-info" /> Edit Plan
-                </h2>
-                <.form
-                  for={@edit_form}
-                  id="edit-plan-form"
-                  phx-change="validate"
-                  phx-submit="update_plan"
-                >
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <.input
-                      field={@edit_form[:name]}
-                      label="Plan Name"
-                      placeholder="e.g. Premium Monthly"
-                      required
-                    />
-                    <.input
-                      field={@edit_form[:plan_type]}
-                      type="select"
-                      label="Plan Type"
-                      prompt="Select plan type"
-                      options={[{"General", "general"}, {"Personal Training", "personal_training"}]}
-                      required
-                    />
-                    <.input
-                      field={@edit_form[:duration]}
-                      type="select"
-                      label="Duration"
-                      prompt="Select duration"
-                      options={[
-                        {"1 Day Pass", "day_pass"},
-                        {"1 Month", "monthly"},
-                        {"3 Months", "quarterly"},
-                        {"6 Months", "half_yearly"},
-                        {"12 Months", "annual"},
-                        {"24 Months", "two_year"}
-                      ]}
-                      required
-                    />
-                    <.input
-                      field={@edit_form[:price_in_rupees]}
-                      type="number"
-                      label="Price (in Rupees)"
-                      placeholder="e.g. 1000"
-                      required
-                    />
-                  </div>
-                  <div class="flex gap-2 mt-4">
-                    <button type="submit" class="btn btn-primary btn-sm gap-2" id="update-plan-btn">
-                      <.icon name="hero-check-mini" class="size-4" /> Update Plan
-                    </button>
-                    <button
-                      type="button"
-                      phx-click="cancel_edit"
-                      class="btn btn-ghost btn-sm"
-                      id="cancel-edit-btn"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </.form>
-              </div>
-            </div>
-          <% end %>
-
-          <%!-- Plans Grid --%>
-          <%= if @plans == [] do %>
-            <div class="card bg-base-200/50 border border-base-300/50" id="no-plans-card">
-              <div class="card-body p-6 text-center">
-                <.icon name="hero-credit-card-solid" class="size-12 text-base-content/20 mx-auto" />
-                <h2 class="text-lg font-bold mt-4">No Plans Yet</h2>
-                <p class="text-base-content/50 mt-1">
-                  Create subscription plans so members can sign up.
-                </p>
-              </div>
-            </div>
-          <% else %>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="plans-grid">
-              <%= for plan <- @plans do %>
-                <div class="card bg-base-200/50 border border-base-300/50" id={"plan-#{plan.id}"}>
-                  <div class="card-body p-5">
-                    <div class="flex items-start justify-between">
-                      <div>
-                        <h3 class="text-lg font-bold">{plan.name}</h3>
-                        <span class={"badge badge-sm mt-1 #{plan_type_class(plan.plan_type)}"}>
-                          {Phoenix.Naming.humanize(plan.plan_type)}
-                        </span>
-                      </div>
-                      <div class="flex gap-1">
-                        <button
-                          phx-click="edit_plan"
-                          phx-value-id={plan.id}
-                          class="btn btn-ghost btn-xs text-info"
-                          id={"edit-plan-#{plan.id}"}
-                        >
-                          <.icon name="hero-pencil-square" class="size-4" />
-                        </button>
-                        <button
-                          phx-click="delete_plan"
-                          phx-value-id={plan.id}
-                          data-confirm="Are you sure you want to delete this plan?"
-                          class="btn btn-ghost btn-xs text-error"
-                          id={"delete-plan-#{plan.id}"}
-                        >
-                          <.icon name="hero-trash" class="size-4" />
-                        </button>
-                      </div>
-                    </div>
-                    <div class="divider my-2"></div>
-                    <div class="space-y-2">
-                      <div class="flex items-center justify-between">
-                        <span class="text-sm text-base-content/60">Duration</span>
-                        <span class="text-sm font-semibold">{format_duration(plan.duration)}</span>
-                      </div>
-                      <div class="flex items-center justify-between">
-                        <span class="text-sm text-base-content/60">Price</span>
-                        <span class="text-lg font-black text-primary">
-                          Rs {format_price(plan.price_in_paise)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              <% end %>
-            </div>
+          <%= case @view do %>
+            <% :categories -> %>
+              {render_categories(assigns)}
+            <% :wizard -> %>
+              {render_wizard(assigns)}
+            <% :detail -> %>
+              {render_detail(assigns)}
           <% end %>
         <% end %>
       </div>
     </Layouts.app>
+    """
+  end
+
+  # ── Categories Landing View ──
+
+  defp render_categories(assigns) do
+    grouped = group_plans_by_category(assigns.plans)
+    assigns = assign(assigns, :grouped, grouped)
+
+    ~H"""
+    <%= if @plans == [] do %>
+      <div class="flex flex-col items-center justify-center py-20" id="no-plans">
+        <.icon name="hero-credit-card-solid" class="size-16 text-base-content/15 mb-6" />
+        <h2 class="text-xl font-bold text-base-content/60 mb-2">No Plans Yet</h2>
+        <p class="text-base-content/40 mb-8 text-center max-w-md">
+          Create subscription plans so members can sign up for your gym.
+        </p>
+        <button phx-click="create_plans" class="btn btn-primary gap-2" id="create-plans-btn">
+          <.icon name="hero-plus-mini" class="size-5" /> Create Plans
+        </button>
+      </div>
+    <% else %>
+      <div class="flex justify-end mb-2">
+        <button
+          phx-click="create_plans"
+          class="btn btn-primary btn-sm gap-2"
+          id="create-plans-btn"
+        >
+          <.icon name="hero-plus-mini" class="size-4" /> Create Plans
+        </button>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="category-grid">
+        <div
+          :for={{category, cat_plans} <- @grouped}
+          class="card bg-base-200/50 border border-base-300/50 hover:border-primary/30 hover:shadow-lg cursor-pointer transition-all"
+          phx-click="view_category"
+          phx-value-category={category}
+          id={"cat-#{category}"}
+        >
+          <div class="card-body p-5">
+            <div class="flex items-center gap-3">
+              <div class={"size-10 rounded-lg flex items-center justify-center #{category_icon_bg(category)}"}>
+                <.icon name="hero-tag-solid" class="size-5" />
+              </div>
+              <div class="flex-1 min-w-0">
+                <h3 class="text-lg font-bold truncate">{category}</h3>
+                <p class="text-sm text-base-content/50">
+                  {length(cat_plans)} plan(s)
+                </p>
+              </div>
+              <.icon name="hero-chevron-right" class="size-5 text-base-content/30 shrink-0" />
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+    """
+  end
+
+  # ── Wizard View ──
+
+  defp render_wizard(assigns) do
+    ~H"""
+    <div class="card bg-base-200/50 border border-base-300/50" id="wizard-card">
+      <div class="card-body p-6">
+        <%!-- Progress Steps --%>
+        <ul class="steps steps-horizontal w-full mb-8">
+          <li class={"step #{if @wizard_step >= 1, do: "step-primary"}"}>Categories</li>
+          <li class={"step #{if @wizard_step >= 2, do: "step-primary"}"}>Plan Types</li>
+          <li class={"step #{if @wizard_step >= 3, do: "step-primary"}"}>Pricing</li>
+        </ul>
+
+        <%!-- Errors --%>
+        <%= if @wizard_errors != [] do %>
+          <div class="alert alert-error mb-6" id="wizard-errors">
+            <.icon name="hero-exclamation-circle" class="size-5 shrink-0" />
+            <div>
+              <p :for={err <- @wizard_errors} class="text-sm">{err}</p>
+            </div>
+          </div>
+        <% end %>
+
+        <%= case @wizard_step do %>
+          <% 1 -> %>
+            {render_wizard_step1(assigns)}
+          <% 2 -> %>
+            {render_wizard_step2(assigns)}
+          <% 3 -> %>
+            {render_wizard_step3(assigns)}
+        <% end %>
+      </div>
+    </div>
+    """
+  end
+
+  defp render_wizard_step1(assigns) do
+    ~H"""
+    <div>
+      <h2 class="text-lg font-bold mb-1">What categories do you offer?</h2>
+      <p class="text-base-content/50 text-sm mb-6">
+        Enter the training categories at your gym (e.g. Cross Fit, Gym, Yoga, Calisthenics).
+      </p>
+
+      <div class="space-y-3 max-w-md">
+        <div
+          :for={{cat, index} <- Enum.with_index(@wizard_categories)}
+          class="flex items-center gap-2"
+          id={"wiz-cat-row-#{index}"}
+        >
+          <input
+            type="text"
+            placeholder={"Category #{index + 1}"}
+            class="input input-bordered input-sm flex-1"
+            value={cat}
+            phx-blur="update_category_input"
+            phx-keyup="update_category_input"
+            phx-debounce="300"
+            phx-value-index={index}
+            id={"wiz-cat-input-#{index}"}
+          />
+          <%= if length(@wizard_categories) > 1 do %>
+            <button
+              phx-click="remove_category_input"
+              phx-value-index={index}
+              class="btn btn-ghost btn-sm btn-circle text-error"
+              id={"wiz-cat-remove-#{index}"}
+            >
+              <.icon name="hero-x-mark-mini" class="size-4" />
+            </button>
+          <% end %>
+        </div>
+      </div>
+
+      <button
+        phx-click="add_category_input"
+        class="btn btn-ghost btn-sm gap-1 mt-3 text-primary"
+        id="wiz-add-category"
+      >
+        <.icon name="hero-plus-mini" class="size-4" /> Add another category
+      </button>
+
+      <div class="flex justify-between mt-8">
+        <button phx-click="wizard_back" class="btn btn-ghost btn-sm" id="wiz-back-1">
+          Cancel
+        </button>
+        <button phx-click="wizard_next" class="btn btn-primary btn-sm gap-1" id="wiz-next-1">
+          Next <.icon name="hero-arrow-right-mini" class="size-4" />
+        </button>
+      </div>
+    </div>
+    """
+  end
+
+  defp render_wizard_step2(assigns) do
+    ~H"""
+    <div>
+      <h2 class="text-lg font-bold mb-1">Select Plan Types</h2>
+      <p class="text-base-content/50 text-sm mb-6">
+        Choose which plan types you want to offer.
+      </p>
+
+      <div class="space-y-4 max-w-md">
+        <label
+          :for={{value, label} <- @plan_type_options}
+          class={"flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all #{if MapSet.member?(@wizard_plan_types, value), do: "bg-primary/5 border-primary/30", else: "bg-base-300/10 border-base-300/30"}"}
+          id={"wiz-type-#{value}"}
+        >
+          <input
+            type="checkbox"
+            class="checkbox checkbox-sm checkbox-primary"
+            checked={MapSet.member?(@wizard_plan_types, value)}
+            phx-click="toggle_wizard_plan_type"
+            phx-value-type={value}
+          />
+          <div>
+            <span class="font-semibold">{label}</span>
+            <p class="text-xs text-base-content/50 mt-0.5">
+              <%= if value == :general do %>
+                Standard gym membership with access to facilities.
+              <% else %>
+                One-on-one training sessions with a personal trainer.
+              <% end %>
+            </p>
+          </div>
+        </label>
+      </div>
+
+      <div class="flex justify-between mt-8">
+        <button phx-click="wizard_back" class="btn btn-ghost btn-sm gap-1" id="wiz-back-2">
+          <.icon name="hero-arrow-left-mini" class="size-4" /> Back
+        </button>
+        <button phx-click="wizard_next" class="btn btn-primary btn-sm gap-1" id="wiz-next-2">
+          Next <.icon name="hero-arrow-right-mini" class="size-4" />
+        </button>
+      </div>
+    </div>
+    """
+  end
+
+  defp render_wizard_step3(assigns) do
+    categories =
+      assigns.wizard_categories
+      |> Enum.map(&String.trim/1)
+      |> Enum.reject(&(&1 == ""))
+      |> Enum.uniq()
+
+    selected_types =
+      Enum.filter(@plan_type_options, fn {v, _} ->
+        MapSet.member?(assigns.wizard_plan_types, v)
+      end)
+
+    total_plans = length(categories) * length(selected_types) * length(@durations)
+
+    assigns =
+      assign(assigns,
+        wiz_categories: categories,
+        wiz_selected_types: selected_types,
+        wiz_total_plans: total_plans
+      )
+
+    ~H"""
+    <div>
+      <h2 class="text-lg font-bold mb-1">Set Prices</h2>
+      <p class="text-base-content/50 text-sm mb-6">
+        Enter the price (in &#8377;) for each combination.
+      </p>
+
+      <div class="space-y-8">
+        <div :for={cat <- @wiz_categories} id={"wiz-price-cat-#{cat}"}>
+          <h3 class="text-md font-bold mb-3 flex items-center gap-2">
+            <.icon name="hero-tag-solid" class="size-4 text-primary" />
+            {cat}
+          </h3>
+          <div class="overflow-x-auto">
+            <table class="table table-sm">
+              <thead>
+                <tr class="text-base-content/40 text-xs">
+                  <th>Duration</th>
+                  <th :for={{_v, label} <- @wiz_selected_types}>{label} (&#8377;)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  :for={{dur_value, dur_label} <- @durations}
+                  id={"wiz-price-#{cat}-#{dur_value}"}
+                >
+                  <td class="font-medium text-sm">{dur_label}</td>
+                  <td :for={{pt_value, _pt_label} <- @wiz_selected_types}>
+                    <input
+                      type="number"
+                      min="1"
+                      placeholder="Price"
+                      class="input input-bordered input-sm w-28"
+                      value={Map.get(@wizard_prices, {cat, pt_value, dur_value}, "")}
+                      phx-blur="update_wizard_price"
+                      phx-value-category={cat}
+                      phx-value-type={pt_value}
+                      phx-value-duration={dur_value}
+                      id={"wiz-price-input-#{cat}-#{pt_value}-#{dur_value}"}
+                    />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-between mt-8">
+        <button phx-click="wizard_back" class="btn btn-ghost btn-sm gap-1" id="wiz-back-3">
+          <.icon name="hero-arrow-left-mini" class="size-4" /> Back
+        </button>
+        <button phx-click="wizard_done" class="btn btn-primary btn-sm gap-2" id="wiz-done">
+          <.icon name="hero-check-mini" class="size-4" /> Create {@wiz_total_plans} Plan(s)
+        </button>
+      </div>
+    </div>
+    """
+  end
+
+  # ── Category Detail View ──
+
+  defp render_detail(assigns) do
+    cat_plans =
+      Enum.filter(assigns.plans, &(&1.category == assigns.selected_category))
+
+    general_plans = plans_by_type(cat_plans, :general)
+    pt_plans = plans_by_type(cat_plans, :personal_training)
+
+    assigns =
+      assign(assigns,
+        general_plans: general_plans,
+        pt_plans: pt_plans,
+        has_general: general_plans != [],
+        has_pt: pt_plans != []
+      )
+
+    ~H"""
+    <%!-- Edit Form --%>
+    <%= if @editing_plan_id do %>
+      <div class="card bg-base-200/50 border border-base-300/50 mb-6" id="edit-plan-card">
+        <div class="card-body p-6">
+          <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
+            <.icon name="hero-pencil-square-solid" class="size-5 text-info" /> Edit Plan
+          </h2>
+          <.form
+            for={@edit_form}
+            id="edit-plan-form"
+            phx-change="validate"
+            phx-submit="update_plan"
+          >
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <.input field={@edit_form[:name]} label="Plan Name" required />
+              <.input field={@edit_form[:category]} label="Category" />
+              <.input
+                field={@edit_form[:plan_type]}
+                type="select"
+                label="Plan Type"
+                prompt="Select plan type"
+                options={[
+                  {"General", "general"},
+                  {"Personal Training", "personal_training"}
+                ]}
+                required
+              />
+              <.input
+                field={@edit_form[:duration]}
+                type="select"
+                label="Duration"
+                prompt="Select duration"
+                options={[
+                  {"1 Day Pass", "day_pass"},
+                  {"1 Month", "monthly"},
+                  {"3 Months", "quarterly"},
+                  {"6 Months", "half_yearly"},
+                  {"12 Months", "annual"},
+                  {"24 Months", "two_year"}
+                ]}
+                required
+              />
+              <.input
+                field={@edit_form[:price_in_rupees]}
+                type="number"
+                label="Price (in Rupees)"
+                required
+              />
+            </div>
+            <div class="flex gap-2 mt-4">
+              <button type="submit" class="btn btn-primary btn-sm gap-2" id="update-plan-btn">
+                <.icon name="hero-check-mini" class="size-4" /> Update
+              </button>
+              <button
+                type="button"
+                phx-click="cancel_edit"
+                class="btn btn-ghost btn-sm"
+                id="cancel-edit-btn"
+              >
+                Cancel
+              </button>
+            </div>
+          </.form>
+        </div>
+      </div>
+    <% end %>
+
+    <%!-- Side-by-side Plan Types --%>
+    <div
+      class={"grid gap-6 #{if @has_general and @has_pt, do: "grid-cols-1 md:grid-cols-2", else: "grid-cols-1 max-w-lg"}"}
+      id="detail-grid"
+    >
+      <%!-- General Plans --%>
+      <%= if @has_general do %>
+        <div class="card bg-base-200/50 border border-base-300/50" id="general-plans">
+          <div class="card-body p-5">
+            <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
+              <span class="badge badge-primary badge-sm">General</span>
+            </h2>
+            <div class="space-y-3">
+              <div
+                :for={plan <- @general_plans}
+                class="flex items-center justify-between p-3 rounded-lg bg-base-300/20"
+                id={"detail-plan-#{plan.id}"}
+              >
+                <p class="font-semibold text-sm">{format_duration(plan.duration)}</p>
+                <div class="flex items-center gap-2">
+                  <span class="font-black text-primary text-lg">
+                    &#8377;{format_price(plan.price_in_paise)}
+                  </span>
+                  <div class="flex gap-0.5">
+                    <button
+                      phx-click="edit_plan"
+                      phx-value-id={plan.id}
+                      class="btn btn-ghost btn-xs text-info"
+                      id={"edit-#{plan.id}"}
+                    >
+                      <.icon name="hero-pencil-square" class="size-3.5" />
+                    </button>
+                    <button
+                      phx-click="delete_plan"
+                      phx-value-id={plan.id}
+                      data-confirm="Delete this plan?"
+                      class="btn btn-ghost btn-xs text-error"
+                      id={"delete-#{plan.id}"}
+                    >
+                      <.icon name="hero-trash" class="size-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <%!-- Personal Training Plans --%>
+      <%= if @has_pt do %>
+        <div class="card bg-base-200/50 border border-base-300/50" id="pt-plans">
+          <div class="card-body p-5">
+            <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
+              <span class="badge badge-secondary badge-sm">Personal Training</span>
+            </h2>
+            <div class="space-y-3">
+              <div
+                :for={plan <- @pt_plans}
+                class="flex items-center justify-between p-3 rounded-lg bg-base-300/20"
+                id={"detail-plan-#{plan.id}"}
+              >
+                <p class="font-semibold text-sm">{format_duration(plan.duration)}</p>
+                <div class="flex items-center gap-2">
+                  <span class="font-black text-primary text-lg">
+                    &#8377;{format_price(plan.price_in_paise)}
+                  </span>
+                  <div class="flex gap-0.5">
+                    <button
+                      phx-click="edit_plan"
+                      phx-value-id={plan.id}
+                      class="btn btn-ghost btn-xs text-info"
+                      id={"edit-#{plan.id}"}
+                    >
+                      <.icon name="hero-pencil-square" class="size-3.5" />
+                    </button>
+                    <button
+                      phx-click="delete_plan"
+                      phx-value-id={plan.id}
+                      data-confirm="Delete this plan?"
+                      class="btn btn-ghost btn-xs text-error"
+                      id={"delete-#{plan.id}"}
+                    >
+                      <.icon name="hero-trash" class="size-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
     """
   end
 end

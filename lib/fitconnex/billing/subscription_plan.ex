@@ -12,11 +12,11 @@ defmodule Fitconnex.Billing.SubscriptionPlan do
     defaults([:read, :destroy])
 
     create :create do
-      accept([:name, :plan_type, :duration, :price_in_paise, :gym_id])
+      accept([:name, :plan_type, :duration, :price_in_paise, :gym_id, :category])
     end
 
     update :update do
-      accept([:name, :plan_type, :duration, :price_in_paise])
+      accept([:name, :plan_type, :duration, :price_in_paise, :category])
     end
   end
 
@@ -39,6 +39,10 @@ defmodule Fitconnex.Billing.SubscriptionPlan do
 
     attribute :price_in_paise, :integer do
       allow_nil?(false)
+    end
+
+    attribute :category, :string do
+      allow_nil?(true)
     end
 
     timestamps()
