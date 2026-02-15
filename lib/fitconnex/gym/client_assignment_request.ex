@@ -1,15 +1,61 @@
 defmodule Fitconnex.Gym.ClientAssignmentRequest do
   use Ash.Resource,
     domain: Fitconnex.Gym,
-    data_layer: AshPostgres.DataLayer
+    data_layer: AshPostgres.DataLayer,
+    authorizers: [Ash.Policy.Authorizer]
 
   postgres do
     table("client_assignment_requests")
     repo(Fitconnex.Repo)
+
+    references do
+      reference :gym, on_delete: :delete
+      reference :member, on_delete: :delete
+      reference :trainer, on_delete: :delete
+      reference :requested_by, on_delete: :delete
+    end
+
+    custom_indexes do
+      index([:gym_id])
+      index([:member_id])
+      index([:trainer_id])
+    end
+  end
+
+  policies do
+    bypass actor_attribute_equals(:is_system_actor, true) do
+      authorize_if always()
+    end
+
+    bypass actor_attribute_equals(:role, :platform_admin) do
+      authorize_if always()
+    end
+
+    policy action_type(:read) do
+      authorize_if always()
+    end
+
+    policy action_type([:create, :update, :destroy]) do
+      authorize_if actor_attribute_equals(:role, :gym_operator)
+      authorize_if actor_attribute_equals(:role, :trainer)
+    end
   end
 
   actions do
     defaults([:read, :destroy])
+
+    read :get_by_id do
+      get? true
+      argument :id, :uuid, allow_nil?: false
+      filter expr(id == ^arg(:id))
+      prepare build(load: [:gym, :requested_by, member: [:user]])
+    end
+
+    read :list_pending_by_trainer do
+      argument :trainer_ids, {:array, :uuid}, allow_nil?: false
+      filter expr(trainer_id in ^arg(:trainer_ids) and status == :pending)
+      prepare build(load: [:gym, :requested_by, member: [:user]])
+    end
 
     create :create do
       accept([:gym_id, :member_id, :trainer_id, :requested_by_id])

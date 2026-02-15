@@ -1,18 +1,58 @@
 defmodule Fitconnex.Training.AttendanceRecord do
   use Ash.Resource,
     domain: Fitconnex.Training,
-    data_layer: AshPostgres.DataLayer
+    data_layer: AshPostgres.DataLayer,
+    authorizers: [Ash.Policy.Authorizer]
 
   postgres do
     table("attendance_records")
     repo(Fitconnex.Repo)
+
+    references do
+      reference :member, on_delete: :delete
+      reference :gym, on_delete: :delete
+      reference :marked_by, on_delete: :nilify
+    end
+
+    custom_indexes do
+      index([:member_id])
+      index([:gym_id])
+      index([:attended_at])
+    end
+  end
+
+  policies do
+    bypass actor_attribute_equals(:is_system_actor, true) do
+      authorize_if always()
+    end
+
+    bypass actor_attribute_equals(:role, :platform_admin) do
+      authorize_if always()
+    end
+
+    policy action_type(:read) do
+      authorize_if always()
+    end
+
+    policy action_type([:create, :destroy]) do
+      authorize_if actor_attribute_equals(:role, :gym_operator)
+      authorize_if actor_attribute_equals(:role, :trainer)
+    end
   end
 
   actions do
     defaults([:read, :destroy])
 
+    read :list_by_member do
+      argument :member_ids, {:array, :uuid}, allow_nil?: false
+      filter expr(member_id in ^arg(:member_ids))
+      prepare build(load: [:gym, :marked_by])
+    end
+
     create :create do
       accept([:attended_at, :notes, :member_id, :gym_id, :marked_by_id])
+
+      validate string_length(:notes, max: 500)
     end
   end
 
@@ -23,7 +63,9 @@ defmodule Fitconnex.Training.AttendanceRecord do
       allow_nil?(false)
     end
 
-    attribute(:notes, :string)
+    attribute :notes, :string do
+      constraints(max_length: 500)
+    end
 
     timestamps()
   end

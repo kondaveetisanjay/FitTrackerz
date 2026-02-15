@@ -1,15 +1,52 @@
 defmodule Fitconnex.Scheduling.ClassBooking do
   use Ash.Resource,
     domain: Fitconnex.Scheduling,
-    data_layer: AshPostgres.DataLayer
+    data_layer: AshPostgres.DataLayer,
+    authorizers: [Ash.Policy.Authorizer]
 
   postgres do
     table("class_bookings")
     repo(Fitconnex.Repo)
+
+    references do
+      reference :scheduled_class, on_delete: :delete
+      reference :member, on_delete: :delete
+    end
+
+    custom_indexes do
+      index([:member_id])
+      index([:scheduled_class_id])
+    end
+  end
+
+  policies do
+    bypass actor_attribute_equals(:is_system_actor, true) do
+      authorize_if always()
+    end
+
+    bypass actor_attribute_equals(:role, :platform_admin) do
+      authorize_if always()
+    end
+
+    policy action_type(:read) do
+      authorize_if always()
+    end
+
+    policy action_type([:create, :update, :destroy]) do
+      authorize_if actor_attribute_equals(:role, :gym_operator)
+      authorize_if actor_attribute_equals(:role, :trainer)
+      authorize_if actor_attribute_equals(:role, :member)
+    end
   end
 
   actions do
     defaults([:read, :destroy])
+
+    read :list_by_member do
+      argument :member_ids, {:array, :uuid}, allow_nil?: false
+      filter expr(member_id in ^arg(:member_ids))
+      prepare build(load: [scheduled_class: [:class_definition, :trainer, :branch]])
+    end
 
     create :create do
       accept([:scheduled_class_id, :member_id])

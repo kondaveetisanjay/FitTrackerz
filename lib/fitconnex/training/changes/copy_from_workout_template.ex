@@ -1,6 +1,8 @@
 defmodule Fitconnex.Training.Changes.CopyFromWorkoutTemplate do
   use Ash.Resource.Change
 
+  alias Fitconnex.Accounts.SystemActor
+
   @impl true
   def change(changeset, _opts, _context) do
     Ash.Changeset.before_action(changeset, fn changeset ->
@@ -9,7 +11,7 @@ defmodule Fitconnex.Training.Changes.CopyFromWorkoutTemplate do
           changeset
 
         template_id ->
-          case Ash.get(Fitconnex.Training.WorkoutPlanTemplate, template_id) do
+          case Ash.get(Fitconnex.Training.WorkoutPlanTemplate, template_id, actor: SystemActor.system_actor()) do
             {:ok, template} ->
               changeset
               |> Ash.Changeset.change_attribute(:name, template.name)

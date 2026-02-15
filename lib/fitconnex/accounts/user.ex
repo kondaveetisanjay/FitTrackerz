@@ -2,7 +2,8 @@ defmodule Fitconnex.Accounts.User do
   use Ash.Resource,
     domain: Fitconnex.Accounts,
     data_layer: AshPostgres.DataLayer,
-    extensions: [AshAuthentication]
+    extensions: [AshAuthentication],
+    authorizers: [Ash.Policy.Authorizer]
 
   postgres do
     table("users")
@@ -33,8 +34,32 @@ defmodule Fitconnex.Accounts.User do
     end
   end
 
+  policies do
+    bypass actor_attribute_equals(:is_system_actor, true) do
+      authorize_if always()
+    end
+
+    bypass actor_attribute_equals(:role, :platform_admin) do
+      authorize_if always()
+    end
+
+    policy action_type(:read) do
+      authorize_if always()
+    end
+
+    policy action_type(:update) do
+      authorize_if expr(id == ^actor(:id))
+    end
+  end
+
   actions do
     defaults([:read, :destroy])
+
+    read :get_by_id do
+      get? true
+      argument :id, :uuid, allow_nil?: false
+      filter expr(id == ^arg(:id))
+    end
 
     create :create do
       accept([:email, :name, :phone, :role])
@@ -57,10 +82,12 @@ defmodule Fitconnex.Accounts.User do
       allow_nil?(false)
       default("User")
       public?(true)
+      constraints(min_length: 1, max_length: 255)
     end
 
     attribute :phone, :string do
       public?(true)
+      constraints(max_length: 20)
     end
 
     attribute :role, :atom do

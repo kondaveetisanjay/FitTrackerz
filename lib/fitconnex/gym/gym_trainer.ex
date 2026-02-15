@@ -1,15 +1,64 @@
 defmodule Fitconnex.Gym.GymTrainer do
   use Ash.Resource,
     domain: Fitconnex.Gym,
-    data_layer: AshPostgres.DataLayer
+    data_layer: AshPostgres.DataLayer,
+    authorizers: [Ash.Policy.Authorizer]
 
   postgres do
     table("gym_trainers")
     repo(Fitconnex.Repo)
+
+    references do
+      reference :gym, on_delete: :delete
+      reference :user, on_delete: :delete
+      reference :branch, on_delete: :nilify
+    end
+
+    custom_indexes do
+      index([:user_id])
+      index([:gym_id])
+      index([:branch_id])
+    end
+  end
+
+  policies do
+    bypass actor_attribute_equals(:is_system_actor, true) do
+      authorize_if always()
+    end
+
+    bypass actor_attribute_equals(:role, :platform_admin) do
+      authorize_if always()
+    end
+
+    policy action_type(:read) do
+      authorize_if always()
+    end
+
+    policy action_type([:create, :update, :destroy]) do
+      authorize_if actor_attribute_equals(:role, :gym_operator)
+    end
   end
 
   actions do
     defaults([:read, :destroy])
+
+    read :list_active_by_user do
+      argument :user_id, :uuid, allow_nil?: false
+      filter expr(user_id == ^arg(:user_id) and is_active == true)
+      prepare build(load: [:gym])
+    end
+
+    read :list_by_gym do
+      argument :gym_id, :uuid, allow_nil?: false
+      filter expr(gym_id == ^arg(:gym_id))
+      prepare build(load: [:user])
+    end
+
+    read :list_active_by_gym do
+      argument :gym_id, :uuid, allow_nil?: false
+      filter expr(gym_id == ^arg(:gym_id) and is_active == true)
+      prepare build(load: [:user])
+    end
 
     create :create do
       accept([:user_id, :gym_id, :specializations, :branch_id])

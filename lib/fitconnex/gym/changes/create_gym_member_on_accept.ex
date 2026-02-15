@@ -3,16 +3,18 @@ defmodule Fitconnex.Gym.Changes.CreateGymMemberOnAccept do
 
   require Ash.Query
 
+  alias Fitconnex.Accounts.SystemActor
+
   @impl true
   def change(changeset, _opts, _context) do
     Ash.Changeset.after_action(changeset, fn _changeset, invitation ->
-      case Ash.get(Fitconnex.Accounts.User, email: invitation.invited_email) do
+      case Ash.get(Fitconnex.Accounts.User, email: invitation.invited_email, actor: SystemActor.system_actor()) do
         {:ok, user} ->
           existing =
             case Fitconnex.Gym.GymMember
                  |> Ash.Query.filter(user_id == ^user.id)
                  |> Ash.Query.filter(gym_id == ^invitation.gym_id)
-                 |> Ash.read() do
+                 |> Ash.read(actor: SystemActor.system_actor()) do
               {:ok, members} -> List.first(members)
               {:error, _} -> nil
             end
@@ -22,7 +24,7 @@ defmodule Fitconnex.Gym.Changes.CreateGymMemberOnAccept do
             if invitation.branch_id do
               existing
               |> Ash.Changeset.for_update(:update, %{branch_id: invitation.branch_id})
-              |> Ash.update()
+              |> Ash.update(actor: SystemActor.system_actor())
             end
           else
             params = %{
@@ -37,7 +39,7 @@ defmodule Fitconnex.Gym.Changes.CreateGymMemberOnAccept do
 
             Fitconnex.Gym.GymMember
             |> Ash.Changeset.for_create(:create, params)
-            |> Ash.create()
+            |> Ash.create(actor: SystemActor.system_actor())
           end
 
           {:ok, invitation}

@@ -146,6 +146,7 @@ defmodule FitconnexWeb.Router do
 
       live "/dashboard", DashboardLive
       live "/gym", GymLive
+      live "/gym/:id", GymDetailLive
       live "/trainer", TrainerLive
       live "/workout", WorkoutLive
       live "/diet", DietLive

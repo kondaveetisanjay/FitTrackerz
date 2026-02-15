@@ -3,14 +3,16 @@ defmodule Fitconnex.Gym.Changes.AssignTrainerOnAccept do
 
   require Ash.Query
 
+  alias Fitconnex.Accounts.SystemActor
+
   @impl true
   def change(changeset, _opts, _context) do
     Ash.Changeset.after_action(changeset, fn _changeset, request ->
-      case Ash.get(Fitconnex.Gym.GymMember, request.member_id) do
+      case Ash.get(Fitconnex.Gym.GymMember, request.member_id, actor: SystemActor.system_actor()) do
         {:ok, member} ->
           case member
                |> Ash.Changeset.for_update(:update, %{assigned_trainer_id: request.trainer_id})
-               |> Ash.update() do
+               |> Ash.update(actor: SystemActor.system_actor()) do
             {:ok, _updated_member} ->
               {:ok, request}
 
