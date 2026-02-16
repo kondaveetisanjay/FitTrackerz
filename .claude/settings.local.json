@@ -24,7 +24,12 @@
       "Bash(mix test --help:*)",
       "WebSearch",
       "Bash(mix deps.get:*)",
-      "Bash(mix test)"
+      "Bash(mix test)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(done)",
+      "Bash(while read f)",
+      "Bash(do grep -n \"Ash\\\\.\\\\\\(read\\\\|get\\\\|create\\\\|update\\\\|destroy\\\\\\)\" \"$f\")"
     ]
   }
 }

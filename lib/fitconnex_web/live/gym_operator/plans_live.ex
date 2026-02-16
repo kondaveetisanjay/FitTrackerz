@@ -107,7 +107,7 @@ defmodule FitconnexWeb.GymOperator.PlansLive do
   end
 
   def handle_event("remove_category_input", %{"index" => index_str}, socket) do
-    index = String.to_integer(index_str)
+    index = parse_index(index_str)
     removed = Enum.at(socket.assigns.wizard_categories, index)
     categories = List.delete_at(socket.assigns.wizard_categories, index)
     categories = if categories == [], do: [""], else: categories
@@ -122,7 +122,7 @@ defmodule FitconnexWeb.GymOperator.PlansLive do
   end
 
   def handle_event("update_category_input", %{"index" => index_str, "value" => value}, socket) do
-    index = String.to_integer(index_str)
+    index = parse_index(index_str)
     old_name = Enum.at(socket.assigns.wizard_categories, index)
     categories = List.replace_at(socket.assigns.wizard_categories, index, value)
 
@@ -360,6 +360,13 @@ defmodule FitconnexWeb.GymOperator.PlansLive do
   end
 
   # ── Helpers ──
+
+  defp parse_index(val) when is_binary(val) do
+    case Integer.parse(val) do
+      {n, _} -> n
+      :error -> 0
+    end
+  end
 
   defp validate_wizard(assigns) do
     categories =

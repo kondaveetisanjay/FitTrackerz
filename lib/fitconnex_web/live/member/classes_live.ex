@@ -95,6 +95,7 @@ defmodule FitconnexWeb.Member.ClassesLive do
     Calendar.strftime(datetime, "%b %d, %Y at %I:%M %p")
   end
 
+  defp membership_for_class([], _scheduled_class), do: nil
   defp membership_for_class(memberships, scheduled_class) do
     gym_id = if scheduled_class.branch, do: scheduled_class.branch.gym_id, else: nil
 
@@ -225,14 +226,17 @@ defmodule FitconnexWeb.Member.ClassesLive do
                         Full
                       </button>
                     <% else %>
-                      <button
-                        class="btn btn-primary btn-sm gap-1"
-                        phx-click="book_class"
-                        phx-value-class-id={sc.id}
-                        phx-value-member-id={membership_for_class(@memberships, sc).id}
-                      >
-                        <.icon name="hero-ticket-mini" class="size-4" /> Book
-                      </button>
+                      <% membership = membership_for_class(@memberships, sc) %>
+                      <%= if membership do %>
+                        <button
+                          class="btn btn-primary btn-sm gap-1"
+                          phx-click="book_class"
+                          phx-value-class-id={sc.id}
+                          phx-value-member-id={membership.id}
+                        >
+                          <.icon name="hero-ticket-mini" class="size-4" /> Book
+                        </button>
+                      <% end %>
                     <% end %>
                   </div>
                 </div>

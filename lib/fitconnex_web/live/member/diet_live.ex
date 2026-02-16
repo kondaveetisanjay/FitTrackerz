@@ -97,7 +97,7 @@ defmodule FitconnexWeb.Member.DietLive do
   end
 
   def handle_event("remove_meal", %{"index" => index}, socket) do
-    idx = String.to_integer(index)
+    idx = parse_index(index)
     meals = List.delete_at(socket.assigns.meals, idx)
 
     meals =
@@ -109,14 +109,53 @@ defmodule FitconnexWeb.Member.DietLive do
   end
 
   def handle_event("update_meal", %{"index" => index, "field" => field, "value" => value}, socket) do
-    idx = String.to_integer(index)
+    idx = parse_index(index)
     meals = List.update_at(socket.assigns.meals, idx, fn m -> Map.put(m, field, value) end)
     {:noreply, assign(socket, meals: meals)}
   end
 
   def handle_event("save_diet", %{"diet" => params}, socket) do
     memberships = socket.assigns.memberships
-    membership = Enum.find(memberships, &(&1.gym_id == params["gym_id"])) || List.first(memberships)
+
+    if memberships == [] do
+      {:noreply, put_flash(socket, :error, "No active membership found.")}
+    else
+      handle_save_diet(params, memberships, socket)
+    end
+  end
+
+  def handle_event("delete_diet", %{"id" => id}, socket) do
+    actor = socket.assigns.current_user
+    memberships = socket.assigns.memberships
+    mids = Enum.map(memberships, & &1.id)
+
+    diet = Enum.find(socket.assigns.diet_plans, fn d ->
+      d.id == id && is_nil(d.trainer_id)
+    end)
+
+    if diet do
+      case Fitconnex.Training.destroy_diet(diet, actor: actor) do
+        :ok ->
+          diet_plans = case Fitconnex.Training.list_diets_by_member(mids, actor: actor, load: [:gym, trainer: [:user]]) do
+            {:ok, plans} -> plans
+            _ -> []
+          end
+
+          {:noreply,
+           socket
+           |> assign(diet_plans: diet_plans)
+           |> put_flash(:info, "Diet plan deleted.")}
+
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Failed to delete diet plan.")}
+      end
+    else
+      {:noreply, put_flash(socket, :error, "Diet plan not found.")}
+    end
+  end
+
+  defp handle_save_diet(params, memberships, socket) do
+    membership = Enum.find(memberships, List.first(memberships), &(&1.gym_id == params["gym_id"]))
 
     calorie_target =
       case Integer.parse(params["calorie_target"] || "") do
@@ -183,33 +222,10 @@ defmodule FitconnexWeb.Member.DietLive do
     end
   end
 
-  def handle_event("delete_diet", %{"id" => id}, socket) do
-    actor = socket.assigns.current_user
-    memberships = socket.assigns.memberships
-    mids = Enum.map(memberships, & &1.id)
-
-    diet = Enum.find(socket.assigns.diet_plans, fn d ->
-      d.id == id && is_nil(d.trainer_id)
-    end)
-
-    if diet do
-      case Fitconnex.Training.destroy_diet(diet, actor: actor) do
-        :ok ->
-          diet_plans = case Fitconnex.Training.list_diets_by_member(mids, actor: actor, load: [:gym, trainer: [:user]]) do
-            {:ok, plans} -> plans
-            _ -> []
-          end
-
-          {:noreply,
-           socket
-           |> assign(diet_plans: diet_plans)
-           |> put_flash(:info, "Diet plan deleted.")}
-
-        {:error, _} ->
-          {:noreply, put_flash(socket, :error, "Failed to delete diet plan.")}
-      end
-    else
-      {:noreply, put_flash(socket, :error, "Diet plan not found.")}
+  defp parse_index(val) when is_binary(val) do
+    case Integer.parse(val) do
+      {n, _} -> n
+      :error -> 0
     end
   end
 

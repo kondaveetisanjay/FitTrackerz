@@ -89,7 +89,7 @@ defmodule FitconnexWeb.Trainer.WorkoutsLive do
 
   @impl true
   def handle_event("remove_exercise", %{"index" => index}, socket) do
-    idx = String.to_integer(index)
+    idx = parse_index(index)
     exercises = List.delete_at(socket.assigns.exercises, idx)
 
     exercises =
@@ -106,7 +106,7 @@ defmodule FitconnexWeb.Trainer.WorkoutsLive do
         %{"index" => index, "field" => field, "value" => value},
         socket
       ) do
-    idx = String.to_integer(index)
+    idx = parse_index(index)
 
     exercises =
       List.update_at(socket.assigns.exercises, idx, fn ex -> Map.put(ex, field, value) end)
@@ -191,6 +191,13 @@ defmodule FitconnexWeb.Trainer.WorkoutsLive do
       end
     else
       {:noreply, put_flash(socket, :error, "Workout plan not found.")}
+    end
+  end
+
+  defp parse_index(val) when is_binary(val) do
+    case Integer.parse(val) do
+      {n, _} -> n
+      :error -> 0
     end
   end
 
