@@ -12,7 +12,13 @@ defmodule FitconnexWeb.Admin.UsersLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    users = Fitconnex.Accounts.User |> Ash.read!()
+    actor = socket.assigns.current_user
+
+    users =
+      case Fitconnex.Accounts.list_users(actor: actor) do
+        {:ok, users} -> users
+        _ -> []
+      end
 
     {:ok,
      assign(socket,
@@ -23,13 +29,18 @@ defmodule FitconnexWeb.Admin.UsersLive do
 
   @impl true
   def handle_event("toggle_active", %{"id" => user_id}, socket) do
-    case Ash.get(Fitconnex.Accounts.User, user_id) do
+    actor = socket.assigns.current_user
+
+    case Fitconnex.Accounts.get_user(user_id, actor: actor) do
       {:ok, user} ->
-        case user
-             |> Ash.Changeset.for_update(:update, %{is_active: !user.is_active})
-             |> Ash.update() do
+        case Fitconnex.Accounts.update_user(user, %{is_active: !user.is_active}, actor: actor) do
           {:ok, _} ->
-            users = Fitconnex.Accounts.User |> Ash.read!()
+            users =
+              case Fitconnex.Accounts.list_users(actor: actor) do
+                {:ok, users} -> users
+                _ -> []
+              end
+
             {:noreply, assign(socket, users: users)}
 
           {:error, _} ->
@@ -43,16 +54,20 @@ defmodule FitconnexWeb.Admin.UsersLive do
 
   @impl true
   def handle_event("change_role", %{"user_id" => user_id, "role" => role}, socket) do
+    actor = socket.assigns.current_user
     role_atom = String.to_existing_atom(role)
 
     if role_atom in @valid_roles do
-      case Ash.get(Fitconnex.Accounts.User, user_id) do
+      case Fitconnex.Accounts.get_user(user_id, actor: actor) do
         {:ok, user} ->
-          case user
-               |> Ash.Changeset.for_update(:update, %{role: role_atom})
-               |> Ash.update() do
+          case Fitconnex.Accounts.update_user(user, %{role: role_atom}, actor: actor) do
             {:ok, _} ->
-              users = Fitconnex.Accounts.User |> Ash.read!()
+              users =
+                case Fitconnex.Accounts.list_users(actor: actor) do
+                  {:ok, users} -> users
+                  _ -> []
+                end
+
               {:noreply, assign(socket, users: users)}
 
             {:error, _} ->

@@ -1,22 +1,16 @@
 defmodule FitconnexWeb.Member.ClassesLive do
   use FitconnexWeb, :live_view
-  require Ash.Query
+
+  alias FitconnexWeb.AshErrorHelpers
 
   @impl true
   def mount(_params, _session, socket) do
-    user = socket.assigns.current_user
-    uid = user.id
+    actor = socket.assigns.current_user
 
-    memberships =
-      try do
-        Fitconnex.Gym.GymMember
-        |> Ash.Query.filter(user_id == ^uid)
-        |> Ash.Query.filter(is_active == true)
-        |> Ash.Query.load([:gym, :assigned_trainer])
-        |> Ash.read!()
-      rescue
-        _ -> []
-      end
+    memberships = case Fitconnex.Gym.list_active_memberships(actor.id, actor: actor, load: [:gym, :assigned_trainer]) do
+      {:ok, memberships} -> memberships
+      _ -> []
+    end
 
     case memberships do
       [] ->
@@ -29,33 +23,7 @@ defmodule FitconnexWeb.Member.ClassesLive do
          )}
 
       memberships ->
-        gids = memberships |> Enum.map(& &1.gym_id) |> Enum.uniq()
-
-        bids =
-          try do
-            Fitconnex.Gym.GymBranch
-            |> Ash.Query.filter(gym_id in ^gids)
-            |> Ash.read!()
-            |> Enum.map(& &1.id)
-          rescue
-            _ -> []
-          end
-
-        scheduled_classes =
-          if bids == [] do
-            []
-          else
-            try do
-              Fitconnex.Scheduling.ScheduledClass
-              |> Ash.Query.filter(branch_id in ^bids)
-              |> Ash.Query.filter(status == :scheduled)
-              |> Ash.Query.load([:class_definition, :branch, :trainer, :bookings])
-              |> Ash.read!()
-              |> Enum.sort_by(& &1.scheduled_at, DateTime)
-            rescue
-              _ -> []
-            end
-          end
+        scheduled_classes = load_scheduled_classes(memberships, actor)
 
         {:ok,
          assign(socket,
@@ -64,6 +32,28 @@ defmodule FitconnexWeb.Member.ClassesLive do
            scheduled_classes: scheduled_classes,
            no_gym: false
          )}
+    end
+  end
+
+  defp load_scheduled_classes(memberships, actor) do
+    gids = memberships |> Enum.map(& &1.gym_id) |> Enum.uniq()
+
+    branch_ids =
+      gids
+      |> Enum.flat_map(fn gid ->
+        case Fitconnex.Gym.list_branches_by_gym(gid, actor: actor) do
+          {:ok, branches} -> Enum.map(branches, & &1.id)
+          _ -> []
+        end
+      end)
+
+    if branch_ids == [] do
+      []
+    else
+      case Fitconnex.Scheduling.list_classes_by_branch(branch_ids, actor: actor, load: [:class_definition, :branch, :trainer, :bookings]) do
+        {:ok, classes} -> Enum.sort_by(classes, & &1.scheduled_at, DateTime)
+        _ -> []
+      end
     end
   end
 
@@ -107,56 +97,22 @@ defmodule FitconnexWeb.Member.ClassesLive do
 
   @impl true
   def handle_event("book_class", %{"class-id" => class_id, "member-id" => member_id}, socket) do
-    case Fitconnex.Scheduling.ClassBooking
-         |> Ash.Changeset.for_create(:create, %{
-           scheduled_class_id: class_id,
-           member_id: member_id
-         })
-         |> Ash.create() do
+    actor = socket.assigns.current_user
+
+    case Fitconnex.Scheduling.create_booking(%{
+      scheduled_class_id: class_id,
+      member_id: member_id
+    }, actor: actor) do
       {:ok, _booking} ->
-        # Reload classes to reflect updated bookings
-        memberships = socket.assigns.memberships
-        gids = memberships |> Enum.map(& &1.gym_id) |> Enum.uniq()
-
-        bids =
-          try do
-            Fitconnex.Gym.GymBranch
-            |> Ash.Query.filter(gym_id in ^gids)
-            |> Ash.read!()
-            |> Enum.map(& &1.id)
-          rescue
-            _ -> []
-          end
-
-        scheduled_classes =
-          if bids == [] do
-            []
-          else
-            try do
-              Fitconnex.Scheduling.ScheduledClass
-              |> Ash.Query.filter(branch_id in ^bids)
-              |> Ash.Query.filter(status == :scheduled)
-              |> Ash.Query.load([:class_definition, :branch, :trainer, :bookings])
-              |> Ash.read!()
-              |> Enum.sort_by(& &1.scheduled_at, DateTime)
-            rescue
-              _ -> []
-            end
-          end
+        scheduled_classes = load_scheduled_classes(socket.assigns.memberships, actor)
 
         {:noreply,
          socket
          |> put_flash(:info, "Class booked successfully! Check your bookings for status updates.")
          |> assign(scheduled_classes: scheduled_classes)}
 
-      {:error, changeset} ->
-        message =
-          case Ash.Error.to_ash_error(changeset) do
-            %{errors: [%{message: msg} | _]} when is_binary(msg) -> msg
-            _ -> "Could not book this class. You may have already booked it."
-          end
-
-        {:noreply, put_flash(socket, :error, message)}
+      {:error, error} ->
+        {:noreply, put_flash(socket, :error, AshErrorHelpers.user_friendly_message(error))}
     end
   end
 

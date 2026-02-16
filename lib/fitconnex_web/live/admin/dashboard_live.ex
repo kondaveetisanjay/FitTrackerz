@@ -1,34 +1,41 @@
 defmodule FitconnexWeb.Admin.DashboardLive do
   use FitconnexWeb, :live_view
 
-  require Ash.Query
-
   @impl true
   def mount(_params, _session, socket) do
-    user_count = Fitconnex.Accounts.User |> Ash.count!()
+    actor = socket.assigns.current_user
+
+    user_count =
+      case Fitconnex.Accounts.list_users(actor: actor) do
+        {:ok, users} -> length(users)
+        _ -> 0
+      end
 
     gym_count =
-      Fitconnex.Gym.Gym
-      |> Ash.Query.filter(status == :verified)
-      |> Ash.count!()
-
-    pending_count =
-      Fitconnex.Gym.Gym
-      |> Ash.Query.filter(status == :pending_verification)
-      |> Ash.count!()
-
-    trainer_count =
-      Fitconnex.Accounts.User
-      |> Ash.Query.filter(role == :trainer)
-      |> Ash.count!()
-
-    subscription_count = Fitconnex.Billing.MemberSubscription |> Ash.count!()
+      case Fitconnex.Gym.list_verified_gyms(actor: actor) do
+        {:ok, gyms} -> length(gyms)
+        _ -> 0
+      end
 
     pending_gyms =
-      Fitconnex.Gym.Gym
-      |> Ash.Query.filter(status == :pending_verification)
-      |> Ash.Query.load([:owner])
-      |> Ash.read!()
+      case Fitconnex.Gym.list_pending_gyms(actor: actor) do
+        {:ok, gyms} -> gyms
+        _ -> []
+      end
+
+    pending_count = length(pending_gyms)
+
+    trainer_count =
+      case Fitconnex.Accounts.list_users(actor: actor) do
+        {:ok, users} -> Enum.count(users, fn u -> u.role == :trainer end)
+        _ -> 0
+      end
+
+    subscription_count =
+      case Fitconnex.Billing.list_subscriptions(actor: actor) do
+        {:ok, subs} -> length(subs)
+        _ -> 0
+      end
 
     {:ok,
      assign(socket,
@@ -44,9 +51,11 @@ defmodule FitconnexWeb.Admin.DashboardLive do
 
   @impl true
   def handle_event("verify_gym", %{"id" => gym_id}, socket) do
-    case Ash.get(Fitconnex.Gym.Gym, gym_id) do
+    actor = socket.assigns.current_user
+
+    case Fitconnex.Gym.get_gym(gym_id, actor: actor) do
       {:ok, gym} ->
-        case gym |> Ash.Changeset.for_update(:update, %{status: :verified}) |> Ash.update() do
+        case Fitconnex.Gym.update_gym(gym, %{status: :verified}, actor: actor) do
           {:ok, _} ->
             {:noreply,
              socket

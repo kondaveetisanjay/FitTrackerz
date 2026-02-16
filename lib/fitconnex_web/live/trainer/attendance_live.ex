@@ -1,19 +1,16 @@
 defmodule FitconnexWeb.Trainer.AttendanceLive do
   use FitconnexWeb, :live_view
 
-  require Ash.Query
+  alias FitconnexWeb.AshErrorHelpers
 
   @impl true
   def mount(_params, _session, socket) do
-    user = socket.assigns.current_user
-    uid = user.id
+    actor = socket.assigns.current_user
 
-    gym_trainers =
-      Fitconnex.Gym.GymTrainer
-      |> Ash.Query.filter(user_id == ^uid)
-      |> Ash.Query.filter(is_active == true)
-      |> Ash.Query.load([:gym])
-      |> Ash.read!()
+    gym_trainers = case Fitconnex.Gym.list_active_trainerships(actor.id, actor: actor, load: [:gym]) do
+      {:ok, trainers} -> trainers
+      _ -> []
+    end
 
     if gym_trainers == [] do
       {:ok,
@@ -24,17 +21,17 @@ defmodule FitconnexWeb.Trainer.AttendanceLive do
       gyms = Enum.map(gym_trainers, & &1.gym)
       trainer_ids = Enum.map(gym_trainers, & &1.id)
 
-      records =
-        Fitconnex.Training.AttendanceRecord
-        |> Ash.Query.filter(marked_by_id == ^uid)
-        |> Ash.Query.load([:gym, member: [:user]])
-        |> Ash.read!()
+      clients = case Fitconnex.Gym.list_members_by_trainer(trainer_ids, actor: actor, load: [:user, :gym]) do
+        {:ok, members} -> members
+        _ -> []
+      end
 
-      clients =
-        Fitconnex.Gym.GymMember
-        |> Ash.Query.filter(assigned_trainer_id in ^trainer_ids)
-        |> Ash.Query.load([:user, :gym])
-        |> Ash.read!()
+      member_ids = Enum.map(clients, & &1.id)
+
+      records = case Fitconnex.Training.list_attendance_by_member(member_ids, actor: actor, load: [:gym, member: [:user]]) do
+        {:ok, records} -> Enum.filter(records, &(&1.marked_by_id == actor.id))
+        _ -> []
+      end
 
       now = DateTime.utc_now() |> Calendar.strftime("%Y-%m-%dT%H:%M")
 
@@ -71,8 +68,6 @@ defmodule FitconnexWeb.Trainer.AttendanceLive do
 
   @impl true
   def handle_event("save_attendance", %{"attendance" => params}, socket) do
-    uid = socket.assigns.current_user.id
-
     client =
       Enum.find(socket.assigns.clients, fn c -> c.id == params["member_id"] end)
 
@@ -85,21 +80,21 @@ defmodule FitconnexWeb.Trainer.AttendanceLive do
           _ -> DateTime.utc_now()
         end
 
-      case Fitconnex.Training.AttendanceRecord
-           |> Ash.Changeset.for_create(:create, %{
-             attended_at: attended_at,
-             notes: params["notes"],
-             member_id: client.id,
-             gym_id: client.gym_id,
-             marked_by_id: uid
-           })
-           |> Ash.create() do
+      actor = socket.assigns.current_user
+      client_ids = Enum.map(socket.assigns.clients, & &1.id)
+
+      case Fitconnex.Training.create_attendance(%{
+        attended_at: attended_at,
+        notes: params["notes"],
+        member_id: client.id,
+        gym_id: client.gym_id,
+        marked_by_id: actor.id
+      }, actor: actor) do
         {:ok, _record} ->
-          records =
-            Fitconnex.Training.AttendanceRecord
-            |> Ash.Query.filter(marked_by_id == ^uid)
-            |> Ash.Query.load([:gym, member: [:user]])
-            |> Ash.read!()
+          records = case Fitconnex.Training.list_attendance_by_member(client_ids, actor: actor, load: [:gym, member: [:user]]) do
+            {:ok, records} -> Enum.filter(records, &(&1.marked_by_id == actor.id))
+            _ -> []
+          end
 
           now = DateTime.utc_now() |> Calendar.strftime("%Y-%m-%dT%H:%M")
 
@@ -111,10 +106,8 @@ defmodule FitconnexWeb.Trainer.AttendanceLive do
            |> assign(records: records, form: form, show_form: false)
            |> put_flash(:info, "Attendance marked successfully.")}
 
-        {:error, changeset} ->
-          {:noreply,
-           socket
-           |> put_flash(:error, "Failed to mark attendance: #{inspect(changeset.errors)}")}
+        {:error, error} ->
+          {:noreply, put_flash(socket, :error, AshErrorHelpers.user_friendly_message(error))}
       end
     end
   end

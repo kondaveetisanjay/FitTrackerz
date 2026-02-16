@@ -1,58 +1,38 @@
 defmodule FitconnexWeb.GymOperator.AttendanceLive do
   use FitconnexWeb, :live_view
 
-  require Ash.Query
-
   @impl true
   def mount(_params, _session, socket) do
-    user = socket.assigns.current_user
+    actor = socket.assigns.current_user
 
-    case find_gym(user.id) do
-      {:ok, gym} ->
-        gid = gym.id
+    case Fitconnex.Gym.list_gyms_by_owner(actor.id, actor: actor) do
+      {:ok, [gym | _]} ->
+        members = case Fitconnex.Gym.list_members_by_gym(gym.id, actor: actor) do
+          {:ok, members} -> members
+          _ -> []
+        end
 
-        records =
-          Fitconnex.Training.AttendanceRecord
-          |> Ash.Query.filter(gym_id == ^gid)
-          |> Ash.Query.load([:member, :marked_by])
-          |> Ash.read!()
+        member_ids = Enum.map(members, & &1.id)
 
-        # Load member user info for display
-        records_with_users =
-          Enum.map(records, fn record ->
-            member_with_user =
-              if record.member do
-                Ash.load!(record.member, [:user])
-              else
-                record.member
-              end
-
-            %{record | member: member_with_user}
-          end)
+        records = case Fitconnex.Training.list_attendance_by_member(member_ids, actor: actor, load: [:marked_by, member: [:user]]) do
+          {:ok, records} -> records
+          _ -> []
+        end
 
         {:ok,
          assign(socket,
            page_title: "Attendance",
            gym: gym,
-           records: records_with_users
+           records: records
          )}
 
-      :no_gym ->
+      _ ->
         {:ok,
          assign(socket,
            page_title: "Attendance",
            gym: nil,
            records: []
          )}
-    end
-  end
-
-  defp find_gym(user_id) do
-    case Fitconnex.Gym.Gym
-         |> Ash.Query.filter(owner_id == ^user_id)
-         |> Ash.read!() do
-      [gym | _] -> {:ok, gym}
-      [] -> :no_gym
     end
   end
 

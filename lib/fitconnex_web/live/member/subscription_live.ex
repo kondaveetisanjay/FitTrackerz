@@ -1,19 +1,14 @@
 defmodule FitconnexWeb.Member.SubscriptionLive do
   use FitconnexWeb, :live_view
 
-  require Ash.Query
-
   @impl true
   def mount(_params, _session, socket) do
-    user = socket.assigns.current_user
-    uid = user.id
+    actor = socket.assigns.current_user
 
-    memberships =
-      Fitconnex.Gym.GymMember
-      |> Ash.Query.filter(user_id == ^uid)
-      |> Ash.Query.filter(is_active == true)
-      |> Ash.Query.load([:gym, :assigned_trainer])
-      |> Ash.read!()
+    memberships = case Fitconnex.Gym.list_active_memberships(actor.id, actor: actor, load: [:gym, :assigned_trainer]) do
+      {:ok, memberships} -> memberships
+      _ -> []
+    end
 
     case memberships do
       [] ->
@@ -28,12 +23,10 @@ defmodule FitconnexWeb.Member.SubscriptionLive do
       memberships ->
         member_ids = Enum.map(memberships, & &1.id)
 
-        subscriptions =
-          Fitconnex.Billing.MemberSubscription
-          |> Ash.Query.filter(member_id in ^member_ids)
-          |> Ash.Query.load([:subscription_plan, :gym])
-          |> Ash.read!()
-          |> Enum.sort_by(& &1.inserted_at, {:desc, DateTime})
+        subscriptions = case Fitconnex.Billing.list_active_subscriptions_by_member(member_ids, actor: actor, load: [:subscription_plan, :gym]) do
+          {:ok, subs} -> Enum.sort_by(subs, & &1.inserted_at, {:desc, DateTime})
+          _ -> []
+        end
 
         {:ok,
          assign(socket,

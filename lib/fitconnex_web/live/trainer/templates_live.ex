@@ -1,18 +1,16 @@
 defmodule FitconnexWeb.Trainer.TemplatesLive do
   use FitconnexWeb, :live_view
-  require Ash.Query
+
+  alias FitconnexWeb.AshErrorHelpers
 
   @impl true
   def mount(_params, _session, socket) do
-    user = socket.assigns.current_user
-    uid = user.id
+    actor = socket.assigns.current_user
 
-    gym_trainers =
-      Fitconnex.Gym.GymTrainer
-      |> Ash.Query.filter(user_id == ^uid)
-      |> Ash.Query.filter(is_active == true)
-      |> Ash.Query.load([:gym])
-      |> Ash.read!()
+    gym_trainers = case Fitconnex.Gym.list_active_trainerships(actor.id, actor: actor, load: [:gym]) do
+      {:ok, trainers} -> trainers
+      _ -> []
+    end
 
     if gym_trainers == [] do
       {:ok,
@@ -30,16 +28,27 @@ defmodule FitconnexWeb.Trainer.TemplatesLive do
        )}
     else
       gyms = Enum.map(gym_trainers, & &1.gym)
+      gym_ids = Enum.map(gyms, & &1.id)
 
       workout_templates =
-        Fitconnex.Training.WorkoutPlanTemplate
-        |> Ash.Query.filter(created_by_id == ^uid)
-        |> Ash.read!()
+        gym_ids
+        |> Enum.flat_map(fn gid ->
+          case Fitconnex.Training.list_workout_templates_by_gym(gid, actor: actor) do
+            {:ok, templates} -> templates
+            _ -> []
+          end
+        end)
+        |> Enum.filter(&(&1.created_by_id == actor.id))
 
       diet_templates =
-        Fitconnex.Training.DietPlanTemplate
-        |> Ash.Query.filter(created_by_id == ^uid)
-        |> Ash.read!()
+        gym_ids
+        |> Enum.flat_map(fn gid ->
+          case Fitconnex.Training.list_diet_templates_by_gym(gid, actor: actor) do
+            {:ok, templates} -> templates
+            _ -> []
+          end
+        end)
+        |> Enum.filter(&(&1.created_by_id == actor.id))
 
       workout_form =
         to_form(%{"name" => "", "difficulty_level" => "", "gym_id" => ""}, as: "workout_template")
@@ -89,8 +98,7 @@ defmodule FitconnexWeb.Trainer.TemplatesLive do
 
   @impl true
   def handle_event("save_workout_template", %{"workout_template" => params}, socket) do
-    user = socket.assigns.current_user
-    uid = user.id
+    actor = socket.assigns.current_user
 
     difficulty_level =
       case params["difficulty_level"] do
@@ -98,19 +106,14 @@ defmodule FitconnexWeb.Trainer.TemplatesLive do
         val -> String.to_existing_atom(val)
       end
 
-    case Fitconnex.Training.WorkoutPlanTemplate
-         |> Ash.Changeset.for_create(:create, %{
-           name: params["name"],
-           difficulty_level: difficulty_level,
-           gym_id: params["gym_id"],
-           created_by_id: uid
-         })
-         |> Ash.create() do
+    case Fitconnex.Training.create_workout_template(%{
+      name: params["name"],
+      difficulty_level: difficulty_level,
+      gym_id: params["gym_id"],
+      created_by_id: actor.id
+    }, actor: actor) do
       {:ok, _template} ->
-        workout_templates =
-          Fitconnex.Training.WorkoutPlanTemplate
-          |> Ash.Query.filter(created_by_id == ^uid)
-          |> Ash.read!()
+        workout_templates = reload_workout_templates(socket.assigns.gyms, actor)
 
         workout_form =
           to_form(%{"name" => "", "difficulty_level" => "", "gym_id" => ""},
@@ -126,17 +129,14 @@ defmodule FitconnexWeb.Trainer.TemplatesLive do
          )
          |> put_flash(:info, "Workout template created successfully.")}
 
-      {:error, changeset} ->
-        {:noreply,
-         socket
-         |> put_flash(:error, "Failed to create workout template: #{inspect(changeset.errors)}")}
+      {:error, error} ->
+        {:noreply, put_flash(socket, :error, AshErrorHelpers.user_friendly_message(error))}
     end
   end
 
   @impl true
   def handle_event("save_diet_template", %{"diet_template" => params}, socket) do
-    user = socket.assigns.current_user
-    uid = user.id
+    actor = socket.assigns.current_user
 
     calorie_target =
       case Integer.parse(params["calorie_target"] || "") do
@@ -150,20 +150,15 @@ defmodule FitconnexWeb.Trainer.TemplatesLive do
         val -> String.to_existing_atom(val)
       end
 
-    case Fitconnex.Training.DietPlanTemplate
-         |> Ash.Changeset.for_create(:create, %{
-           name: params["name"],
-           calorie_target: calorie_target,
-           dietary_type: dietary_type,
-           gym_id: params["gym_id"],
-           created_by_id: uid
-         })
-         |> Ash.create() do
+    case Fitconnex.Training.create_diet_template(%{
+      name: params["name"],
+      calorie_target: calorie_target,
+      dietary_type: dietary_type,
+      gym_id: params["gym_id"],
+      created_by_id: actor.id
+    }, actor: actor) do
       {:ok, _template} ->
-        diet_templates =
-          Fitconnex.Training.DietPlanTemplate
-          |> Ash.Query.filter(created_by_id == ^uid)
-          |> Ash.read!()
+        diet_templates = reload_diet_templates(socket.assigns.gyms, actor)
 
         diet_form =
           to_form(%{"name" => "", "calorie_target" => "", "dietary_type" => "", "gym_id" => ""},
@@ -175,31 +170,20 @@ defmodule FitconnexWeb.Trainer.TemplatesLive do
          |> assign(diet_templates: diet_templates, diet_form: diet_form, show_diet_form: false)
          |> put_flash(:info, "Diet template created successfully.")}
 
-      {:error, changeset} ->
-        {:noreply,
-         socket
-         |> put_flash(:error, "Failed to create diet template: #{inspect(changeset.errors)}")}
+      {:error, error} ->
+        {:noreply, put_flash(socket, :error, AshErrorHelpers.user_friendly_message(error))}
     end
   end
 
   @impl true
   def handle_event("delete_workout_template", %{"id" => id}, socket) do
-    uid = socket.assigns.current_user.id
-
-    template =
-      Fitconnex.Training.WorkoutPlanTemplate
-      |> Ash.Query.filter(id == ^id)
-      |> Ash.Query.filter(created_by_id == ^uid)
-      |> Ash.read!()
-      |> List.first()
+    actor = socket.assigns.current_user
+    template = Enum.find(socket.assigns.workout_templates, &(&1.id == id))
 
     if template do
-      case Ash.destroy(template) do
+      case Fitconnex.Training.destroy_workout_template(template, actor: actor) do
         :ok ->
-          workout_templates =
-            Fitconnex.Training.WorkoutPlanTemplate
-            |> Ash.Query.filter(created_by_id == ^uid)
-            |> Ash.read!()
+          workout_templates = reload_workout_templates(socket.assigns.gyms, actor)
 
           {:noreply,
            socket
@@ -216,22 +200,13 @@ defmodule FitconnexWeb.Trainer.TemplatesLive do
 
   @impl true
   def handle_event("delete_diet_template", %{"id" => id}, socket) do
-    uid = socket.assigns.current_user.id
-
-    template =
-      Fitconnex.Training.DietPlanTemplate
-      |> Ash.Query.filter(id == ^id)
-      |> Ash.Query.filter(created_by_id == ^uid)
-      |> Ash.read!()
-      |> List.first()
+    actor = socket.assigns.current_user
+    template = Enum.find(socket.assigns.diet_templates, &(&1.id == id))
 
     if template do
-      case Ash.destroy(template) do
+      case Fitconnex.Training.destroy_diet_template(template, actor: actor) do
         :ok ->
-          diet_templates =
-            Fitconnex.Training.DietPlanTemplate
-            |> Ash.Query.filter(created_by_id == ^uid)
-            |> Ash.read!()
+          diet_templates = reload_diet_templates(socket.assigns.gyms, actor)
 
           {:noreply,
            socket
@@ -244,6 +219,32 @@ defmodule FitconnexWeb.Trainer.TemplatesLive do
     else
       {:noreply, put_flash(socket, :error, "Template not found.")}
     end
+  end
+
+  defp reload_workout_templates(gyms, actor) do
+    gym_ids = Enum.map(gyms, & &1.id)
+
+    gym_ids
+    |> Enum.flat_map(fn gid ->
+      case Fitconnex.Training.list_workout_templates_by_gym(gid, actor: actor) do
+        {:ok, templates} -> templates
+        _ -> []
+      end
+    end)
+    |> Enum.filter(&(&1.created_by_id == actor.id))
+  end
+
+  defp reload_diet_templates(gyms, actor) do
+    gym_ids = Enum.map(gyms, & &1.id)
+
+    gym_ids
+    |> Enum.flat_map(fn gid ->
+      case Fitconnex.Training.list_diet_templates_by_gym(gid, actor: actor) do
+        {:ok, templates} -> templates
+        _ -> []
+      end
+    end)
+    |> Enum.filter(&(&1.created_by_id == actor.id))
   end
 
   defp difficulty_badge_class(level) do

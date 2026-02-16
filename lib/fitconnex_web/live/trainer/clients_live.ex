@@ -1,18 +1,14 @@
 defmodule FitconnexWeb.Trainer.ClientsLive do
   use FitconnexWeb, :live_view
-  require Ash.Query
 
   @impl true
   def mount(_params, _session, socket) do
-    user = socket.assigns.current_user
-    uid = user.id
+    actor = socket.assigns.current_user
 
-    gym_trainers =
-      Fitconnex.Gym.GymTrainer
-      |> Ash.Query.filter(user_id == ^uid)
-      |> Ash.Query.filter(is_active == true)
-      |> Ash.Query.load([:gym])
-      |> Ash.read!()
+    gym_trainers = case Fitconnex.Gym.list_active_trainerships(actor.id, actor: actor, load: [:gym]) do
+      {:ok, trainers} -> trainers
+      _ -> []
+    end
 
     if gym_trainers == [] do
       {:ok,
@@ -23,11 +19,10 @@ defmodule FitconnexWeb.Trainer.ClientsLive do
       gyms = Enum.map(gym_trainers, & &1.gym)
       trainer_ids = Enum.map(gym_trainers, & &1.id)
 
-      clients =
-        Fitconnex.Gym.GymMember
-        |> Ash.Query.filter(assigned_trainer_id in ^trainer_ids)
-        |> Ash.Query.load([:user, :gym])
-        |> Ash.read!()
+      clients = case Fitconnex.Gym.list_members_by_trainer(trainer_ids, actor: actor, load: [:user, :gym]) do
+        {:ok, members} -> members
+        _ -> []
+      end
 
       {:ok,
        socket

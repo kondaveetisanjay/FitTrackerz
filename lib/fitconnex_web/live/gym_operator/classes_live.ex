@@ -1,26 +1,30 @@
 defmodule FitconnexWeb.GymOperator.ClassesLive do
   use FitconnexWeb, :live_view
 
-  require Ash.Query
+  alias FitconnexWeb.AshErrorHelpers
 
   @impl true
   def mount(_params, _session, socket) do
-    user = socket.assigns.current_user
+    actor = socket.assigns.current_user
 
-    case find_gym(user.id) do
-      {:ok, gym} ->
-        gid = gym.id
+    case Fitconnex.Gym.list_gyms_by_owner(actor.id, actor: actor) do
+      {:ok, [gym | _]} ->
+        class_definitions = case Fitconnex.Scheduling.list_class_definitions_by_gym(gym.id, actor: actor) do
+          {:ok, defs} -> defs
+          _ -> []
+        end
 
-        class_definitions =
-          Fitconnex.Scheduling.ClassDefinition
-          |> Ash.Query.filter(gym_id == ^gid)
-          |> Ash.read!()
+        branches = case Fitconnex.Gym.list_branches_by_gym(gym.id, actor: actor) do
+          {:ok, branches} -> branches
+          _ -> []
+        end
 
-        scheduled_classes =
-          Fitconnex.Scheduling.ScheduledClass
-          |> Ash.Query.filter(class_definition.gym_id == ^gid)
-          |> Ash.Query.load([:class_definition, :branch, :trainer])
-          |> Ash.read!()
+        branch_ids = Enum.map(branches, & &1.id)
+
+        scheduled_classes = case Fitconnex.Scheduling.list_classes_by_branch(branch_ids, actor: actor, load: [:class_definition, :branch, :trainer]) do
+          {:ok, classes} -> classes
+          _ -> []
+        end
 
         def_form =
           to_form(
@@ -56,7 +60,7 @@ defmodule FitconnexWeb.GymOperator.ClassesLive do
            show_schedule_form: false
          )}
 
-      :no_gym ->
+      _ ->
         {:ok,
          assign(socket,
            page_title: "Classes",
@@ -94,8 +98,8 @@ defmodule FitconnexWeb.GymOperator.ClassesLive do
   end
 
   def handle_event("save_definition", %{"class_def" => params}, socket) do
+    actor = socket.assigns.current_user
     gym = socket.assigns.gym
-    gid = gym.id
 
     max_p =
       case Integer.parse(params["max_participants"] || "") do
@@ -103,20 +107,18 @@ defmodule FitconnexWeb.GymOperator.ClassesLive do
         :error -> nil
       end
 
-    case Fitconnex.Scheduling.ClassDefinition
-         |> Ash.Changeset.for_create(:create, %{
-           name: params["name"],
-           class_type: params["class_type"],
-           default_duration_minutes: String.to_integer(params["default_duration_minutes"]),
-           max_participants: max_p,
-           gym_id: gym.id
-         })
-         |> Ash.create() do
+    case Fitconnex.Scheduling.create_class_definition(%{
+      name: params["name"],
+      class_type: params["class_type"],
+      default_duration_minutes: String.to_integer(params["default_duration_minutes"]),
+      max_participants: max_p,
+      gym_id: gym.id
+    }, actor: actor) do
       {:ok, _def} ->
-        class_definitions =
-          Fitconnex.Scheduling.ClassDefinition
-          |> Ash.Query.filter(gym_id == ^gid)
-          |> Ash.read!()
+        class_definitions = case Fitconnex.Scheduling.list_class_definitions_by_gym(gym.id, actor: actor) do
+          {:ok, defs} -> defs
+          _ -> []
+        end
 
         def_form =
           to_form(
@@ -134,39 +136,40 @@ defmodule FitconnexWeb.GymOperator.ClassesLive do
          |> put_flash(:info, "Class type created successfully!")
          |> assign(class_definitions: class_definitions, def_form: def_form, show_def_form: false)}
 
-      {:error, _changeset} ->
-        {:noreply,
-         put_flash(socket, :error, "Failed to create class type. Please check your input.")}
+      {:error, error} ->
+        {:noreply, put_flash(socket, :error, AshErrorHelpers.user_friendly_message(error))}
     end
   end
 
   def handle_event("save_schedule", %{"schedule" => params}, socket) do
+    actor = socket.assigns.current_user
     gym = socket.assigns.gym
 
-    branch =
-      Fitconnex.Gym.GymBranch
-      |> Ash.Query.filter(gym_id == ^gym.id)
-      |> Ash.read!()
-      |> List.first()
+    branch = case Fitconnex.Gym.list_branches_by_gym(gym.id, actor: actor) do
+      {:ok, [branch | _]} -> branch
+      _ -> nil
+    end
 
     branch_id = if branch, do: branch.id, else: nil
 
-    case Fitconnex.Scheduling.ScheduledClass
-         |> Ash.Changeset.for_create(:create, %{
-           class_definition_id: params["class_definition_id"],
-           branch_id: branch_id,
-           scheduled_at: params["scheduled_at"],
-           duration_minutes: String.to_integer(params["duration_minutes"])
-         })
-         |> Ash.create() do
+    case Fitconnex.Scheduling.create_scheduled_class(%{
+      class_definition_id: params["class_definition_id"],
+      branch_id: branch_id,
+      scheduled_at: params["scheduled_at"],
+      duration_minutes: String.to_integer(params["duration_minutes"])
+    }, actor: actor) do
       {:ok, _class} ->
-        gid = socket.assigns.gym.id
+        branches = case Fitconnex.Gym.list_branches_by_gym(gym.id, actor: actor) do
+          {:ok, branches} -> branches
+          _ -> []
+        end
 
-        scheduled_classes =
-          Fitconnex.Scheduling.ScheduledClass
-          |> Ash.Query.filter(class_definition.gym_id == ^gid)
-          |> Ash.Query.load([:class_definition, :branch, :trainer])
-          |> Ash.read!()
+        branch_ids = Enum.map(branches, & &1.id)
+
+        scheduled_classes = case Fitconnex.Scheduling.list_classes_by_branch(branch_ids, actor: actor, load: [:class_definition, :branch, :trainer]) do
+          {:ok, classes} -> classes
+          _ -> []
+        end
 
         schedule_form =
           to_form(
@@ -187,18 +190,8 @@ defmodule FitconnexWeb.GymOperator.ClassesLive do
            show_schedule_form: false
          )}
 
-      {:error, _changeset} ->
-        {:noreply,
-         put_flash(socket, :error, "Failed to schedule class. Please check your input.")}
-    end
-  end
-
-  defp find_gym(user_id) do
-    case Fitconnex.Gym.Gym
-         |> Ash.Query.filter(owner_id == ^user_id)
-         |> Ash.read!() do
-      [gym | _] -> {:ok, gym}
-      [] -> :no_gym
+      {:error, error} ->
+        {:noreply, put_flash(socket, :error, AshErrorHelpers.user_friendly_message(error))}
     end
   end
 

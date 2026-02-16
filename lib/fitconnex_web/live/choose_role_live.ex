@@ -17,12 +17,12 @@ defmodule FitconnexWeb.ChooseRoleLive do
 
   @impl true
   def handle_event("select_role", %{"role" => role}, socket) when role in @valid_roles do
-    user_id = socket.assigns.current_user.id
+    actor = socket.assigns.current_user
     role_atom = String.to_existing_atom(role)
 
-    case Ash.get(Fitconnex.Accounts.User, user_id) do
+    case Fitconnex.Accounts.get_user(actor.id, actor: actor) do
       {:ok, user} ->
-        case Ash.update(Ash.Changeset.for_update(user, :update, %{role: role_atom})) do
+        case Fitconnex.Accounts.update_user(user, %{role: role_atom}, actor: actor) do
           {:ok, _} ->
             {:noreply, redirect(socket, to: ~p"/role-selected")}
 

@@ -9,10 +9,13 @@ defmodule FitconnexWeb.Admin.GymsLive do
 
   @impl true
   def mount(_params, _session, socket) do
+    actor = socket.assigns.current_user
+
     gyms =
-      Fitconnex.Gym.Gym
-      |> Ash.Query.load([:owner, :branches, :gym_members, :gym_trainers])
-      |> Ash.read!()
+      case Fitconnex.Gym.list_gyms(actor: actor, load: [:owner, :branches, :gym_members, :gym_trainers]) do
+        {:ok, gyms} -> gyms
+        _ -> []
+      end
 
     {:ok,
      assign(socket,
@@ -23,11 +26,11 @@ defmodule FitconnexWeb.Admin.GymsLive do
 
   @impl true
   def handle_event("verify_gym", %{"id" => gym_id}, socket) do
-    case Ash.get(Fitconnex.Gym.Gym, gym_id) do
+    actor = socket.assigns.current_user
+
+    case Fitconnex.Gym.get_gym(gym_id, actor: actor) do
       {:ok, gym} ->
-        case gym
-             |> Ash.Changeset.for_update(:update, %{status: :verified})
-             |> Ash.update() do
+        case Fitconnex.Gym.update_gym(gym, %{status: :verified}, actor: actor) do
           {:ok, _} -> {:noreply, reload_gyms(socket)}
           {:error, _} -> {:noreply, put_flash(socket, :error, "Failed to verify gym.")}
         end
@@ -39,11 +42,11 @@ defmodule FitconnexWeb.Admin.GymsLive do
 
   @impl true
   def handle_event("suspend_gym", %{"id" => gym_id}, socket) do
-    case Ash.get(Fitconnex.Gym.Gym, gym_id) do
+    actor = socket.assigns.current_user
+
+    case Fitconnex.Gym.get_gym(gym_id, actor: actor) do
       {:ok, gym} ->
-        case gym
-             |> Ash.Changeset.for_update(:update, %{status: :suspended})
-             |> Ash.update() do
+        case Fitconnex.Gym.update_gym(gym, %{status: :suspended}, actor: actor) do
           {:ok, _} -> {:noreply, reload_gyms(socket)}
           {:error, _} -> {:noreply, put_flash(socket, :error, "Failed to suspend gym.")}
         end
@@ -55,11 +58,11 @@ defmodule FitconnexWeb.Admin.GymsLive do
 
   @impl true
   def handle_event("toggle_promoted", %{"id" => gym_id}, socket) do
-    case Ash.get(Fitconnex.Gym.Gym, gym_id) do
+    actor = socket.assigns.current_user
+
+    case Fitconnex.Gym.get_gym(gym_id, actor: actor) do
       {:ok, gym} ->
-        case gym
-             |> Ash.Changeset.for_update(:update, %{is_promoted: !gym.is_promoted})
-             |> Ash.update() do
+        case Fitconnex.Gym.update_gym(gym, %{is_promoted: !gym.is_promoted}, actor: actor) do
           {:ok, _} -> {:noreply, reload_gyms(socket)}
           {:error, _} -> {:noreply, put_flash(socket, :error, "Failed to update promotion status.")}
         end
@@ -70,10 +73,13 @@ defmodule FitconnexWeb.Admin.GymsLive do
   end
 
   defp reload_gyms(socket) do
+    actor = socket.assigns.current_user
+
     gyms =
-      Fitconnex.Gym.Gym
-      |> Ash.Query.load([:owner, :branches, :gym_members, :gym_trainers])
-      |> Ash.read!()
+      case Fitconnex.Gym.list_gyms(actor: actor, load: [:owner, :branches, :gym_members, :gym_trainers]) do
+        {:ok, gyms} -> gyms
+        _ -> []
+      end
 
     assign(socket, gyms: gyms)
   end

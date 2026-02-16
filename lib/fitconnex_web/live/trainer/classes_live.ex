@@ -1,19 +1,14 @@
 defmodule FitconnexWeb.Trainer.ClassesLive do
   use FitconnexWeb, :live_view
 
-  require Ash.Query
-
   @impl true
   def mount(_params, _session, socket) do
-    user = socket.assigns.current_user
-    uid = user.id
+    actor = socket.assigns.current_user
 
-    gym_trainers =
-      Fitconnex.Gym.GymTrainer
-      |> Ash.Query.filter(user_id == ^uid)
-      |> Ash.Query.filter(is_active == true)
-      |> Ash.Query.load([:gym])
-      |> Ash.read!()
+    gym_trainers = case Fitconnex.Gym.list_active_trainerships(actor.id, actor: actor, load: [:gym]) do
+      {:ok, trainers} -> trainers
+      _ -> []
+    end
 
     if gym_trainers == [] do
       {:ok,
@@ -22,7 +17,7 @@ defmodule FitconnexWeb.Trainer.ClassesLive do
        |> assign(no_gym: true, classes: [], gym_trainer_ids: [])}
     else
       trainer_ids = Enum.map(gym_trainers, & &1.id)
-      classes = load_trainer_classes(trainer_ids)
+      classes = load_trainer_classes(trainer_ids, actor)
 
       {:ok,
        socket
@@ -33,69 +28,63 @@ defmodule FitconnexWeb.Trainer.ClassesLive do
 
   @impl true
   def handle_event("complete_class", %{"id" => id}, socket) do
+    actor = socket.assigns.current_user
     trainer_ids = socket.assigns.gym_trainer_ids
+    scheduled_class = Enum.find(socket.assigns.classes, &(&1.id == id))
 
-    case Ash.get(Fitconnex.Scheduling.ScheduledClass, id) do
-      {:ok, scheduled_class} ->
-        if scheduled_class.trainer_id in trainer_ids do
-          case scheduled_class
-               |> Ash.Changeset.for_update(:complete, %{})
-               |> Ash.update() do
-            {:ok, _updated} ->
-              {:noreply,
-               socket
-               |> assign(classes: load_trainer_classes(trainer_ids))
-               |> put_flash(:info, "Class marked as completed.")}
-
-            {:error, changeset} ->
-              {:noreply,
-               socket
-               |> put_flash(:error, "Failed to complete class: #{inspect(changeset.errors)}")}
-          end
-        else
-          {:noreply, put_flash(socket, :error, "You are not authorized to manage this class.")}
-        end
-
-      {:error, _} ->
+    cond do
+      is_nil(scheduled_class) ->
         {:noreply, put_flash(socket, :error, "Class not found.")}
+
+      scheduled_class.trainer_id not in trainer_ids ->
+        {:noreply, put_flash(socket, :error, "You are not authorized to manage this class.")}
+
+      true ->
+        case Fitconnex.Scheduling.complete_scheduled_class(scheduled_class, %{}, actor: actor) do
+          {:ok, _updated} ->
+            {:noreply,
+             socket
+             |> assign(classes: load_trainer_classes(trainer_ids, actor))
+             |> put_flash(:info, "Class marked as completed.")}
+
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to complete class.")}
+        end
     end
   end
 
   @impl true
   def handle_event("cancel_class", %{"id" => id}, socket) do
+    actor = socket.assigns.current_user
     trainer_ids = socket.assigns.gym_trainer_ids
+    scheduled_class = Enum.find(socket.assigns.classes, &(&1.id == id))
 
-    case Ash.get(Fitconnex.Scheduling.ScheduledClass, id) do
-      {:ok, scheduled_class} ->
-        if scheduled_class.trainer_id in trainer_ids do
-          case scheduled_class
-               |> Ash.Changeset.for_update(:cancel, %{})
-               |> Ash.update() do
-            {:ok, _updated} ->
-              {:noreply,
-               socket
-               |> assign(classes: load_trainer_classes(trainer_ids))
-               |> put_flash(:info, "Class has been cancelled.")}
-
-            {:error, changeset} ->
-              {:noreply,
-               socket
-               |> put_flash(:error, "Failed to cancel class: #{inspect(changeset.errors)}")}
-          end
-        else
-          {:noreply, put_flash(socket, :error, "You are not authorized to manage this class.")}
-        end
-
-      {:error, _} ->
+    cond do
+      is_nil(scheduled_class) ->
         {:noreply, put_flash(socket, :error, "Class not found.")}
+
+      scheduled_class.trainer_id not in trainer_ids ->
+        {:noreply, put_flash(socket, :error, "You are not authorized to manage this class.")}
+
+      true ->
+        case Fitconnex.Scheduling.cancel_scheduled_class(scheduled_class, %{}, actor: actor) do
+          {:ok, _updated} ->
+            {:noreply,
+             socket
+             |> assign(classes: load_trainer_classes(trainer_ids, actor))
+             |> put_flash(:info, "Class has been cancelled.")}
+
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to cancel class.")}
+        end
     end
   end
 
-  defp load_trainer_classes(trainer_ids) do
-    Fitconnex.Scheduling.ScheduledClass
-    |> Ash.Query.filter(trainer_id in ^trainer_ids)
-    |> Ash.Query.load([:class_definition, :branch, :bookings])
-    |> Ash.read!()
+  defp load_trainer_classes(trainer_ids, actor) do
+    case Fitconnex.Scheduling.list_classes_by_trainer(trainer_ids, actor: actor, load: [:class_definition, :branch, :bookings]) do
+      {:ok, classes} -> classes
+      _ -> []
+    end
   end
 
   defp status_badge_class(status) do

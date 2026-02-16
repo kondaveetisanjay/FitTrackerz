@@ -1,7 +1,7 @@
 defmodule FitconnexWeb.GymOperator.PlansLive do
   use FitconnexWeb, :live_view
 
-  require Ash.Query
+  alias FitconnexWeb.AshErrorHelpers
 
   @durations [
     {:monthly, "1 Month"},
@@ -17,11 +17,11 @@ defmodule FitconnexWeb.GymOperator.PlansLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    user = socket.assigns.current_user
+    actor = socket.assigns.current_user
 
-    case find_gym(user.id) do
+    case find_gym(actor) do
       {:ok, gym} ->
-        plans = load_plans(gym.id)
+        plans = load_plans(gym.id, actor)
 
         {:ok,
          assign(socket,
@@ -217,18 +217,16 @@ defmodule FitconnexWeb.GymOperator.PlansLive do
   def handle_event("wizard_done", _params, socket) do
     case validate_wizard(socket.assigns) do
       {:ok, plan_params_list} ->
+        actor = socket.assigns.current_user
         gym = socket.assigns.gym
-        gid = gym.id
 
         results =
           Enum.map(plan_params_list, fn params ->
-            Fitconnex.Billing.SubscriptionPlan
-            |> Ash.Changeset.for_create(:create, Map.put(params, :gym_id, gid))
-            |> Ash.create()
+            Fitconnex.Billing.create_plan(Map.put(params, :gym_id, gym.id), actor: actor)
           end)
 
         errors = Enum.filter(results, &match?({:error, _}, &1))
-        plans = load_plans(gid)
+        plans = load_plans(gym.id, actor)
 
         if errors == [] do
           {:noreply,
@@ -285,15 +283,11 @@ defmodule FitconnexWeb.GymOperator.PlansLive do
   end
 
   def handle_event("update_plan", %{"plan" => params}, socket) do
+    actor = socket.assigns.current_user
     gym = socket.assigns.gym
-    gid = gym.id
     plan_id = socket.assigns.editing_plan_id
 
-    plan =
-      Fitconnex.Billing.SubscriptionPlan
-      |> Ash.Query.filter(id == ^plan_id and gym_id == ^gid)
-      |> Ash.read!()
-      |> List.first()
+    plan = Enum.find(socket.assigns.plans, &(&1.id == plan_id))
 
     if plan do
       category =
@@ -310,19 +304,17 @@ defmodule FitconnexWeb.GymOperator.PlansLive do
         category: category
       }
 
-      case plan
-           |> Ash.Changeset.for_update(:update, update_params)
-           |> Ash.update() do
+      case Fitconnex.Billing.update_plan(plan, update_params, actor: actor) do
         {:ok, _updated} ->
-          plans = load_plans(gid)
+          plans = load_plans(gym.id, actor)
 
           {:noreply,
            socket
            |> put_flash(:info, "Plan updated successfully!")
            |> assign(plans: plans, editing_plan_id: nil, edit_form: nil)}
 
-        {:error, _changeset} ->
-          {:noreply, put_flash(socket, :error, "Failed to update plan.")}
+        {:error, error} ->
+          {:noreply, put_flash(socket, :error, AshErrorHelpers.user_friendly_message(error))}
       end
     else
       {:noreply, put_flash(socket, :error, "Plan not found.")}
@@ -330,19 +322,15 @@ defmodule FitconnexWeb.GymOperator.PlansLive do
   end
 
   def handle_event("delete_plan", %{"id" => id}, socket) do
+    actor = socket.assigns.current_user
     gym = socket.assigns.gym
-    gid = gym.id
 
-    plan =
-      Fitconnex.Billing.SubscriptionPlan
-      |> Ash.Query.filter(id == ^id and gym_id == ^gid)
-      |> Ash.read!()
-      |> List.first()
+    plan = Enum.find(socket.assigns.plans, &(&1.id == id))
 
     if plan do
-      case Ash.destroy(plan) do
+      case Fitconnex.Billing.destroy_plan(plan, actor: actor) do
         :ok ->
-          plans = load_plans(gid)
+          plans = load_plans(gym.id, actor)
 
           socket =
             if socket.assigns.view == :detail do
@@ -433,19 +421,18 @@ defmodule FitconnexWeb.GymOperator.PlansLive do
     "#{cat} - #{pt} - #{dur} - \u20B9#{price_str}"
   end
 
-  defp find_gym(user_id) do
-    case Fitconnex.Gym.Gym
-         |> Ash.Query.filter(owner_id == ^user_id)
-         |> Ash.read!() do
-      [gym | _] -> {:ok, gym}
-      [] -> :no_gym
+  defp find_gym(actor) do
+    case Fitconnex.Gym.list_gyms_by_owner(actor.id, actor: actor) do
+      {:ok, [gym | _]} -> {:ok, gym}
+      _ -> :no_gym
     end
   end
 
-  defp load_plans(gym_id) do
-    Fitconnex.Billing.SubscriptionPlan
-    |> Ash.Query.filter(gym_id == ^gym_id)
-    |> Ash.read!()
+  defp load_plans(gym_id, actor) do
+    case Fitconnex.Billing.list_plans_by_gym(gym_id, actor: actor) do
+      {:ok, plans} -> plans
+      _ -> []
+    end
   end
 
   defp group_plans_by_category(plans) do

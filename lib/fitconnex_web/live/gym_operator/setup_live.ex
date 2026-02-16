@@ -1,20 +1,13 @@
 defmodule FitconnexWeb.GymOperator.SetupLive do
   use FitconnexWeb, :live_view
 
-  require Ash.Query
-
   @impl true
   def mount(_params, _session, socket) do
-    user = socket.assigns.current_user
+    actor = socket.assigns.current_user
 
-    gyms =
-      Fitconnex.Gym.Gym
-      |> Ash.Query.filter(owner_id == ^user.id)
-      |> Ash.read!()
-
-    case gyms do
-      [gym | _] ->
-        branch = load_branch(gym.id)
+    case Fitconnex.Gym.list_gyms_by_owner(actor.id, actor: actor) do
+      {:ok, [gym | _]} ->
+        branch = load_branch(gym.id, actor)
 
         form =
           to_form(
@@ -46,7 +39,7 @@ defmodule FitconnexWeb.GymOperator.SetupLive do
            max_file_size: 5_000_000
          )}
 
-      [] ->
+      _ ->
         form = to_form(%{"name" => "", "slug" => "", "description" => ""}, as: "gym")
 
         {:ok,
@@ -83,16 +76,14 @@ defmodule FitconnexWeb.GymOperator.SetupLive do
   end
 
   def handle_event("save", %{"gym" => params}, socket) do
-    user = socket.assigns.current_user
+    actor = socket.assigns.current_user
 
-    case Fitconnex.Gym.Gym
-         |> Ash.Changeset.for_create(:create, %{
-           name: params["name"],
-           slug: params["slug"],
-           description: params["description"],
-           owner_id: user.id
-         })
-         |> Ash.create(actor: user) do
+    case Fitconnex.Gym.create_gym(%{
+      name: params["name"],
+      slug: params["slug"],
+      description: params["description"],
+      owner_id: actor.id
+    }, actor: actor) do
       {:ok, gym} ->
         form =
           to_form(
@@ -120,15 +111,13 @@ defmodule FitconnexWeb.GymOperator.SetupLive do
 
   def handle_event("update", %{"gym" => params}, socket) do
     gym = socket.assigns.gym
-    user = socket.assigns.current_user
+    actor = socket.assigns.current_user
 
-    case gym
-         |> Ash.Changeset.for_update(:update, %{
-           name: params["name"],
-           slug: params["slug"],
-           description: params["description"]
-         })
-         |> Ash.update(actor: user) do
+    case Fitconnex.Gym.update_gym(gym, %{
+      name: params["name"],
+      slug: params["slug"],
+      description: params["description"]
+    }, actor: actor) do
       {:ok, updated_gym} ->
         form =
           to_form(
@@ -190,7 +179,7 @@ defmodule FitconnexWeb.GymOperator.SetupLive do
 
   def handle_event("save_location", %{"location" => params}, socket) do
     gym = socket.assigns.gym
-    user = socket.assigns.current_user
+    actor = socket.assigns.current_user
     branch = socket.assigns.branch
 
     # Consume uploaded logo
@@ -228,13 +217,9 @@ defmodule FitconnexWeb.GymOperator.SetupLive do
 
     result =
       if branch do
-        branch
-        |> Ash.Changeset.for_update(:update, location_params)
-        |> Ash.update(actor: user)
+        Fitconnex.Gym.update_branch(branch, location_params, actor: actor)
       else
-        Fitconnex.Gym.GymBranch
-        |> Ash.Changeset.for_create(:create, Map.put(location_params, :gym_id, gym.id))
-        |> Ash.create(actor: user)
+        Fitconnex.Gym.create_branch(Map.put(location_params, :gym_id, gym.id), actor: actor)
       end
 
     case result do
@@ -270,11 +255,11 @@ defmodule FitconnexWeb.GymOperator.SetupLive do
 
   # ── Helpers ──
 
-  defp load_branch(gym_id) do
-    Fitconnex.Gym.GymBranch
-    |> Ash.Query.filter(gym_id == ^gym_id)
-    |> Ash.read!()
-    |> List.first()
+  defp load_branch(gym_id, actor) do
+    case Fitconnex.Gym.list_branches_by_gym(gym_id, actor: actor) do
+      {:ok, [branch | _]} -> branch
+      _ -> nil
+    end
   end
 
   defp build_location_form(nil) do

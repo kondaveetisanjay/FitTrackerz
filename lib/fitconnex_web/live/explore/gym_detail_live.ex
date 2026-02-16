@@ -1,8 +1,6 @@
 defmodule FitconnexWeb.Explore.GymDetailLive do
   use FitconnexWeb, :live_view
 
-  require Ash.Query
-
   @impl true
   def mount(_params, _session, socket) do
     {:ok, socket}
@@ -10,7 +8,9 @@ defmodule FitconnexWeb.Explore.GymDetailLive do
 
   @impl true
   def handle_params(%{"slug" => slug}, _uri, socket) do
-    case load_gym_by_slug(slug) do
+    actor = socket.assigns.current_user
+
+    case load_gym_by_slug(slug, actor) do
       nil ->
         {:noreply,
          socket
@@ -26,40 +26,27 @@ defmodule FitconnexWeb.Explore.GymDetailLive do
     end
   end
 
-  defp load_gym_by_slug(slug) do
-    case Fitconnex.Gym.Gym
-         |> Ash.Query.filter(slug == ^slug and status == :verified)
-         |> Ash.Query.load([:branches])
-         |> Ash.read!() do
-      [gym | _] ->
+  defp load_gym_by_slug(slug, actor) do
+    case Fitconnex.Gym.get_gym_by_slug(slug, actor: actor) do
+      {:ok, gym} ->
         gym_id = gym.id
 
         plans =
-          try do
-            Fitconnex.Billing.SubscriptionPlan
-            |> Ash.Query.filter(gym_id == ^gym_id)
-            |> Ash.read!()
-            |> Enum.sort_by(& &1.price_in_paise)
-          rescue
-            _ -> []
+          case Fitconnex.Billing.list_plans_by_gym(gym_id, actor: actor) do
+            {:ok, result} -> Enum.sort_by(result, & &1.price_in_paise)
+            {:error, _} -> []
           end
 
         class_defs =
-          try do
-            Fitconnex.Scheduling.ClassDefinition
-            |> Ash.Query.filter(gym_id == ^gym_id)
-            |> Ash.read!()
-          rescue
-            _ -> []
+          case Fitconnex.Scheduling.list_class_definitions_by_gym(gym_id, actor: actor) do
+            {:ok, result} -> result
+            {:error, _} -> []
           end
 
         trainers =
-          try do
-            Fitconnex.Gym.GymTrainer
-            |> Ash.Query.filter(gym_id == ^gym_id and is_active == true)
-            |> Ash.read!()
-          rescue
-            _ -> []
+          case Fitconnex.Gym.list_active_trainers_by_gym(gym_id, actor: actor) do
+            {:ok, result} -> result
+            {:error, _} -> []
           end
 
         all_specializations =
@@ -84,7 +71,7 @@ defmodule FitconnexWeb.Explore.GymDetailLive do
           cheapest_monthly: cheapest_monthly
         }
 
-      [] ->
+      {:error, _} ->
         nil
     end
   end

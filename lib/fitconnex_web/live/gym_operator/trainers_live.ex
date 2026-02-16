@@ -1,21 +1,18 @@
 defmodule FitconnexWeb.GymOperator.TrainersLive do
   use FitconnexWeb, :live_view
 
-  require Ash.Query
+  alias FitconnexWeb.AshErrorHelpers
 
   @impl true
   def mount(_params, _session, socket) do
-    user = socket.assigns.current_user
+    actor = socket.assigns.current_user
 
-    case find_gym(user.id) do
-      {:ok, gym} ->
-        gid = gym.id
-
-        trainers =
-          Fitconnex.Gym.GymTrainer
-          |> Ash.Query.filter(gym_id == ^gid)
-          |> Ash.Query.load([:user])
-          |> Ash.read!()
+    case Fitconnex.Gym.list_gyms_by_owner(actor.id, actor: actor) do
+      {:ok, [gym | _]} ->
+        trainers = case Fitconnex.Gym.list_trainers_by_gym(gym.id, actor: actor, load: [:user]) do
+          {:ok, trainers} -> trainers
+          _ -> []
+        end
 
         invite_form = to_form(%{"email" => ""}, as: "invite")
 
@@ -28,7 +25,7 @@ defmodule FitconnexWeb.GymOperator.TrainersLive do
            show_invite: false
          )}
 
-      :no_gym ->
+      _ ->
         {:ok,
          assign(socket,
            page_title: "Trainers",
@@ -50,16 +47,14 @@ defmodule FitconnexWeb.GymOperator.TrainersLive do
   end
 
   def handle_event("invite", %{"invite" => %{"email" => email}}, socket) do
-    user = socket.assigns.current_user
+    actor = socket.assigns.current_user
     gym = socket.assigns.gym
 
-    case Fitconnex.Gym.TrainerInvitation
-         |> Ash.Changeset.for_create(:create, %{
-           invited_email: email,
-           gym_id: gym.id,
-           invited_by_id: user.id
-         })
-         |> Ash.create() do
+    case Fitconnex.Gym.create_trainer_invitation(%{
+      invited_email: email,
+      gym_id: gym.id,
+      invited_by_id: actor.id
+    }, actor: actor) do
       {:ok, _invitation} ->
         invite_form = to_form(%{"email" => ""}, as: "invite")
 
@@ -68,32 +63,24 @@ defmodule FitconnexWeb.GymOperator.TrainersLive do
          |> put_flash(:info, "Trainer invitation sent to #{email}!")
          |> assign(invite_form: invite_form, show_invite: false)}
 
-      {:error, _changeset} ->
-        {:noreply, put_flash(socket, :error, "Failed to send invitation. Please try again.")}
+      {:error, error} ->
+        {:noreply, put_flash(socket, :error, AshErrorHelpers.user_friendly_message(error))}
     end
   end
 
   def handle_event("toggle_active", %{"id" => id}, socket) do
+    actor = socket.assigns.current_user
     gym = socket.assigns.gym
-    gid = gym.id
 
-    trainer =
-      Fitconnex.Gym.GymTrainer
-      |> Ash.Query.filter(id == ^id)
-      |> Ash.Query.filter(gym_id == ^gid)
-      |> Ash.read!()
-      |> List.first()
+    trainer = Enum.find(socket.assigns.trainers, &(&1.id == id))
 
     if trainer do
-      case trainer
-           |> Ash.Changeset.for_update(:update, %{is_active: !trainer.is_active})
-           |> Ash.update() do
+      case Fitconnex.Gym.update_gym_trainer(trainer, %{is_active: !trainer.is_active}, actor: actor) do
         {:ok, _updated} ->
-          trainers =
-            Fitconnex.Gym.GymTrainer
-            |> Ash.Query.filter(gym_id == ^gid)
-            |> Ash.Query.load([:user])
-            |> Ash.read!()
+          trainers = case Fitconnex.Gym.list_trainers_by_gym(gym.id, actor: actor, load: [:user]) do
+            {:ok, trainers} -> trainers
+            _ -> []
+          end
 
           {:noreply,
            socket
@@ -105,15 +92,6 @@ defmodule FitconnexWeb.GymOperator.TrainersLive do
       end
     else
       {:noreply, put_flash(socket, :error, "Trainer not found.")}
-    end
-  end
-
-  defp find_gym(user_id) do
-    case Fitconnex.Gym.Gym
-         |> Ash.Query.filter(owner_id == ^user_id)
-         |> Ash.read!() do
-      [gym | _] -> {:ok, gym}
-      [] -> :no_gym
     end
   end
 

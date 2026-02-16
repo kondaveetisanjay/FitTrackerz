@@ -1,13 +1,12 @@
 defmodule FitconnexWeb.Explore.GymListLive do
   use FitconnexWeb, :live_view
 
-  require Ash.Query
-
   alias Fitconnex.Gym.Geo
 
   @impl true
   def mount(_params, _session, socket) do
-    gym_entries = load_verified_gyms()
+    actor = socket.assigns.current_user
+    gym_entries = load_verified_gyms(actor)
 
     cities =
       gym_entries
@@ -125,43 +124,32 @@ defmodule FitconnexWeb.Explore.GymListLive do
     end)
   end
 
-  defp load_verified_gyms do
+  defp load_verified_gyms(actor) do
     gyms =
-      Fitconnex.Gym.Gym
-      |> Ash.Query.filter(status == :verified)
-      |> Ash.Query.load([:branches])
-      |> Ash.read!()
+      case Fitconnex.Gym.list_verified_gyms(actor: actor) do
+        {:ok, result} -> result
+        {:error, _} -> []
+      end
 
     Enum.map(gyms, fn gym ->
       gym_id = gym.id
 
       plans =
-        try do
-          Fitconnex.Billing.SubscriptionPlan
-          |> Ash.Query.filter(gym_id == ^gym_id)
-          |> Ash.read!()
-        rescue
-          _ -> []
+        case Fitconnex.Billing.list_plans_by_gym(gym_id, actor: actor) do
+          {:ok, result} -> result
+          {:error, _} -> []
         end
 
       class_defs =
-        try do
-          Fitconnex.Scheduling.ClassDefinition
-          |> Ash.Query.filter(gym_id == ^gym_id)
-          |> Ash.read!()
-        rescue
-          _ -> []
+        case Fitconnex.Scheduling.list_class_definitions_by_gym(gym_id, actor: actor) do
+          {:ok, result} -> result
+          {:error, _} -> []
         end
 
       trainer_count =
-        try do
-          Fitconnex.Gym.GymTrainer
-          |> Ash.Query.filter(gym_id == ^gym_id)
-          |> Ash.Query.filter(is_active == true)
-          |> Ash.read!()
-          |> length()
-        rescue
-          _ -> 0
+        case Fitconnex.Gym.list_active_trainers_by_gym(gym_id, actor: actor) do
+          {:ok, result} -> length(result)
+          {:error, _} -> 0
         end
 
       %{

@@ -1,18 +1,16 @@
 defmodule FitconnexWeb.Member.DietLive do
   use FitconnexWeb, :live_view
-  require Ash.Query
+
+  alias FitconnexWeb.AshErrorHelpers
 
   @impl true
   def mount(_params, _session, socket) do
-    user = socket.assigns.current_user
-    uid = user.id
+    actor = socket.assigns.current_user
 
-    memberships =
-      Fitconnex.Gym.GymMember
-      |> Ash.Query.filter(user_id == ^uid)
-      |> Ash.Query.filter(is_active == true)
-      |> Ash.Query.load([:gym, :assigned_trainer])
-      |> Ash.read!()
+    memberships = case Fitconnex.Gym.list_active_memberships(actor.id, actor: actor, load: [:gym, :assigned_trainer]) do
+      {:ok, memberships} -> memberships
+      _ -> []
+    end
 
     case memberships do
       [] ->
@@ -31,13 +29,12 @@ defmodule FitconnexWeb.Member.DietLive do
       memberships ->
         mids = Enum.map(memberships, & &1.id)
 
-        diet_plans =
-          Fitconnex.Training.DietPlan
-          |> Ash.Query.filter(member_id in ^mids)
-          |> Ash.Query.load([:gym, trainer: [:user]])
-          |> Ash.read!()
+        diet_plans = case Fitconnex.Training.list_diets_by_member(mids, actor: actor, load: [:gym, trainer: [:user]]) do
+          {:ok, plans} -> plans
+          _ -> []
+        end
 
-        plan_type = determine_plan_type(mids)
+        plan_type = determine_plan_type(mids, actor)
 
         form =
           to_form(
@@ -59,14 +56,11 @@ defmodule FitconnexWeb.Member.DietLive do
     end
   end
 
-  defp determine_plan_type(member_ids) do
-    active_sub =
-      Fitconnex.Billing.MemberSubscription
-      |> Ash.Query.filter(member_id in ^member_ids)
-      |> Ash.Query.filter(status == :active)
-      |> Ash.Query.load([:subscription_plan])
-      |> Ash.read!()
-      |> List.first()
+  defp determine_plan_type(member_ids, actor) do
+    active_sub = case Fitconnex.Billing.list_active_subscriptions_by_member(member_ids, actor: actor, load: [:subscription_plan]) do
+      {:ok, subs} -> List.first(subs)
+      _ -> nil
+    end
 
     if active_sub && active_sub.subscription_plan,
       do: active_sub.subscription_plan.plan_type,
@@ -155,24 +149,23 @@ defmodule FitconnexWeb.Member.DietLive do
 
     gym_id = if params["gym_id"] != "", do: params["gym_id"], else: membership.gym_id
 
-    case Fitconnex.Training.DietPlan
-         |> Ash.Changeset.for_create(:create, %{
-           name: params["name"],
-           calorie_target: calorie_target,
-           dietary_type: dietary_type,
-           meals: meals,
-           member_id: membership.id,
-           gym_id: gym_id
-         })
-         |> Ash.create() do
+    actor = socket.assigns.current_user
+
+    case Fitconnex.Training.create_diet(%{
+      name: params["name"],
+      calorie_target: calorie_target,
+      dietary_type: dietary_type,
+      meals: meals,
+      member_id: membership.id,
+      gym_id: gym_id
+    }, actor: actor) do
       {:ok, _plan} ->
         mids = Enum.map(memberships, & &1.id)
 
-        diet_plans =
-          Fitconnex.Training.DietPlan
-          |> Ash.Query.filter(member_id in ^mids)
-          |> Ash.Query.load([:gym, trainer: [:user]])
-          |> Ash.read!()
+        diet_plans = case Fitconnex.Training.list_diets_by_member(mids, actor: actor, load: [:gym, trainer: [:user]]) do
+          {:ok, plans} -> plans
+          _ -> []
+        end
 
         form =
           to_form(
@@ -185,31 +178,27 @@ defmodule FitconnexWeb.Member.DietLive do
          |> assign(diet_plans: diet_plans, form: form, show_form: false, meals: [blank_meal(1)])
          |> put_flash(:info, "Diet plan created successfully.")}
 
-      {:error, changeset} ->
-        {:noreply, put_flash(socket, :error, "Failed to create diet plan: #{inspect(changeset.errors)}")}
+      {:error, error} ->
+        {:noreply, put_flash(socket, :error, AshErrorHelpers.user_friendly_message(error))}
     end
   end
 
   def handle_event("delete_diet", %{"id" => id}, socket) do
+    actor = socket.assigns.current_user
     memberships = socket.assigns.memberships
     mids = Enum.map(memberships, & &1.id)
 
-    diet =
-      Fitconnex.Training.DietPlan
-      |> Ash.Query.filter(id == ^id)
-      |> Ash.Query.filter(member_id in ^mids)
-      |> Ash.Query.filter(is_nil(trainer_id))
-      |> Ash.read!()
-      |> List.first()
+    diet = Enum.find(socket.assigns.diet_plans, fn d ->
+      d.id == id && is_nil(d.trainer_id)
+    end)
 
     if diet do
-      case Ash.destroy(diet) do
+      case Fitconnex.Training.destroy_diet(diet, actor: actor) do
         :ok ->
-          diet_plans =
-            Fitconnex.Training.DietPlan
-            |> Ash.Query.filter(member_id in ^mids)
-            |> Ash.Query.load([:gym, trainer: [:user]])
-            |> Ash.read!()
+          diet_plans = case Fitconnex.Training.list_diets_by_member(mids, actor: actor, load: [:gym, trainer: [:user]]) do
+            {:ok, plans} -> plans
+            _ -> []
+          end
 
           {:noreply,
            socket

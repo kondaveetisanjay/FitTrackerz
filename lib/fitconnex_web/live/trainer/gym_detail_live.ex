@@ -1,8 +1,6 @@
 defmodule FitconnexWeb.Trainer.GymDetailLive do
   use FitconnexWeb, :live_view
 
-  require Ash.Query
-
   @impl true
   def mount(_params, _session, socket) do
     {:ok, socket}
@@ -10,21 +8,23 @@ defmodule FitconnexWeb.Trainer.GymDetailLive do
 
   @impl true
   def handle_params(%{"id" => id}, _uri, socket) do
-    user = socket.assigns.current_user
+    actor = socket.assigns.current_user
 
     # Verify the trainer belongs to this gym
-    trainer_check =
-      Fitconnex.Gym.GymTrainer
-      |> Ash.Query.filter(user_id == ^user.id and gym_id == ^id and is_active == true)
-      |> Ash.read!()
+    trainerships = case Fitconnex.Gym.list_active_trainerships(actor.id, actor: actor) do
+      {:ok, t} -> t
+      _ -> []
+    end
 
-    if trainer_check == [] do
+    belongs_to_gym = Enum.any?(trainerships, &(&1.gym_id == id))
+
+    if !belongs_to_gym do
       {:noreply,
        socket
        |> put_flash(:error, "You are not associated with this gym.")
        |> push_navigate(to: "/trainer/gyms", replace: true)}
     else
-      case load_gym_data(id) do
+      case load_gym_data(id, actor) do
         nil ->
           {:noreply,
            socket
@@ -41,25 +41,23 @@ defmodule FitconnexWeb.Trainer.GymDetailLive do
     end
   end
 
-  defp load_gym_data(gym_id) do
-    case Ash.get(Fitconnex.Gym.Gym, gym_id, load: [:branches]) do
+  defp load_gym_data(gym_id, actor) do
+    case Fitconnex.Gym.get_gym(gym_id, actor: actor, load: [:branches]) do
       {:ok, gym} ->
-        plans =
-          Fitconnex.Billing.SubscriptionPlan
-          |> Ash.Query.filter(gym_id == ^gym_id)
-          |> Ash.read!()
-          |> Enum.sort_by(& &1.price_in_paise)
+        plans = case Fitconnex.Billing.list_plans_by_gym(gym_id, actor: actor) do
+          {:ok, plans} -> Enum.sort_by(plans, & &1.price_in_paise)
+          _ -> []
+        end
 
-        class_defs =
-          Fitconnex.Scheduling.ClassDefinition
-          |> Ash.Query.filter(gym_id == ^gym_id)
-          |> Ash.read!()
+        class_defs = case Fitconnex.Scheduling.list_class_definitions_by_gym(gym_id, actor: actor) do
+          {:ok, defs} -> defs
+          _ -> []
+        end
 
-        trainers =
-          Fitconnex.Gym.GymTrainer
-          |> Ash.Query.filter(gym_id == ^gym_id and is_active == true)
-          |> Ash.Query.load([:user])
-          |> Ash.read!()
+        trainers = case Fitconnex.Gym.list_active_trainers_by_gym(gym_id, actor: actor, load: [:user]) do
+          {:ok, trainers} -> trainers
+          _ -> []
+        end
 
         all_specializations =
           trainers

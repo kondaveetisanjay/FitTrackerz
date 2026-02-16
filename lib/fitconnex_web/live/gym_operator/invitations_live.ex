@@ -1,27 +1,21 @@
 defmodule FitconnexWeb.GymOperator.InvitationsLive do
   use FitconnexWeb, :live_view
 
-  require Ash.Query
-
   @impl true
   def mount(_params, _session, socket) do
-    user = socket.assigns.current_user
+    actor = socket.assigns.current_user
 
-    case find_gym(user.id) do
-      {:ok, gym} ->
-        gid = gym.id
+    case Fitconnex.Gym.list_gyms_by_owner(actor.id, actor: actor) do
+      {:ok, [gym | _]} ->
+        member_invitations = case Fitconnex.Gym.list_pending_member_invitations(gym.id, actor: actor, load: [:invited_by]) do
+          {:ok, invitations} -> invitations
+          _ -> []
+        end
 
-        member_invitations =
-          Fitconnex.Gym.MemberInvitation
-          |> Ash.Query.filter(gym_id == ^gid)
-          |> Ash.Query.load([:invited_by])
-          |> Ash.read!()
-
-        trainer_invitations =
-          Fitconnex.Gym.TrainerInvitation
-          |> Ash.Query.filter(gym_id == ^gid)
-          |> Ash.Query.load([:invited_by])
-          |> Ash.read!()
+        trainer_invitations = case Fitconnex.Gym.list_pending_trainer_invitations(gym.id, actor: actor, load: [:invited_by]) do
+          {:ok, invitations} -> invitations
+          _ -> []
+        end
 
         {:ok,
          assign(socket,
@@ -31,7 +25,7 @@ defmodule FitconnexWeb.GymOperator.InvitationsLive do
            trainer_invitations: trainer_invitations
          )}
 
-      :no_gym ->
+      _ ->
         {:ok,
          assign(socket,
            page_title: "Invitations",
@@ -39,15 +33,6 @@ defmodule FitconnexWeb.GymOperator.InvitationsLive do
            member_invitations: [],
            trainer_invitations: []
          )}
-    end
-  end
-
-  defp find_gym(user_id) do
-    case Fitconnex.Gym.Gym
-         |> Ash.Query.filter(owner_id == ^user_id)
-         |> Ash.read!() do
-      [gym | _] -> {:ok, gym}
-      [] -> :no_gym
     end
   end
 

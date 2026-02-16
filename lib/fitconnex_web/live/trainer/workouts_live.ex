@@ -1,18 +1,16 @@
 defmodule FitconnexWeb.Trainer.WorkoutsLive do
   use FitconnexWeb, :live_view
-  require Ash.Query
+
+  alias FitconnexWeb.AshErrorHelpers
 
   @impl true
   def mount(_params, _session, socket) do
-    user = socket.assigns.current_user
-    uid = user.id
+    actor = socket.assigns.current_user
 
-    gym_trainers =
-      Fitconnex.Gym.GymTrainer
-      |> Ash.Query.filter(user_id == ^uid)
-      |> Ash.Query.filter(is_active == true)
-      |> Ash.Query.load([:gym])
-      |> Ash.read!()
+    gym_trainers = case Fitconnex.Gym.list_active_trainerships(actor.id, actor: actor, load: [:gym]) do
+      {:ok, trainers} -> trainers
+      _ -> []
+    end
 
     if gym_trainers == [] do
       {:ok,
@@ -32,17 +30,15 @@ defmodule FitconnexWeb.Trainer.WorkoutsLive do
       gyms = Enum.map(gym_trainers, & &1.gym)
       trainer_ids = Enum.map(gym_trainers, & &1.id)
 
-      workouts =
-        Fitconnex.Training.WorkoutPlan
-        |> Ash.Query.filter(trainer_id in ^trainer_ids)
-        |> Ash.Query.load([:gym, member: [:user]])
-        |> Ash.read!()
+      workouts = case Fitconnex.Training.list_workouts_by_trainer(trainer_ids, actor: actor, load: [:gym, member: [:user]]) do
+        {:ok, workouts} -> workouts
+        _ -> []
+      end
 
-      clients =
-        Fitconnex.Gym.GymMember
-        |> Ash.Query.filter(assigned_trainer_id in ^trainer_ids)
-        |> Ash.Query.load([:user])
-        |> Ash.read!()
+      clients = case Fitconnex.Gym.list_members_by_trainer(trainer_ids, actor: actor, load: [:user]) do
+        {:ok, members} -> members
+        _ -> []
+      end
 
       form = to_form(%{"name" => "", "member_id" => "", "gym_id" => ""}, as: "workout")
 
@@ -138,21 +134,20 @@ defmodule FitconnexWeb.Trainer.WorkoutsLive do
       end)
       |> Enum.reject(fn ex -> ex.name == "" or ex.name == nil end)
 
-    case Fitconnex.Training.WorkoutPlan
-         |> Ash.Changeset.for_create(:create, %{
-           name: params["name"],
-           exercises: exercises,
-           member_id: params["member_id"],
-           gym_id: params["gym_id"],
-           trainer_id: gym_trainer && gym_trainer.id
-         })
-         |> Ash.create() do
+    actor = socket.assigns.current_user
+
+    case Fitconnex.Training.create_workout(%{
+      name: params["name"],
+      exercises: exercises,
+      member_id: params["member_id"],
+      gym_id: params["gym_id"],
+      trainer_id: gym_trainer && gym_trainer.id
+    }, actor: actor) do
       {:ok, _plan} ->
-        workouts =
-          Fitconnex.Training.WorkoutPlan
-          |> Ash.Query.filter(trainer_id in ^trainer_ids)
-          |> Ash.Query.load([:gym, member: [:user]])
-          |> Ash.read!()
+        workouts = case Fitconnex.Training.list_workouts_by_trainer(trainer_ids, actor: actor, load: [:gym, member: [:user]]) do
+          {:ok, workouts} -> workouts
+          _ -> []
+        end
 
         form = to_form(%{"name" => "", "member_id" => "", "gym_id" => ""}, as: "workout")
 
@@ -166,32 +161,25 @@ defmodule FitconnexWeb.Trainer.WorkoutsLive do
          )
          |> put_flash(:info, "Workout plan created successfully.")}
 
-      {:error, changeset} ->
-        {:noreply,
-         socket
-         |> put_flash(:error, "Failed to create workout plan: #{inspect(changeset.errors)}")}
+      {:error, error} ->
+        {:noreply, put_flash(socket, :error, AshErrorHelpers.user_friendly_message(error))}
     end
   end
 
   @impl true
   def handle_event("delete_workout", %{"id" => id}, socket) do
+    actor = socket.assigns.current_user
     trainer_ids = Enum.map(socket.assigns.gym_trainers, & &1.id)
 
-    workout =
-      Fitconnex.Training.WorkoutPlan
-      |> Ash.Query.filter(id == ^id)
-      |> Ash.Query.filter(trainer_id in ^trainer_ids)
-      |> Ash.read!()
-      |> List.first()
+    workout = Enum.find(socket.assigns.workouts, &(&1.id == id))
 
     if workout do
-      case Ash.destroy(workout) do
+      case Fitconnex.Training.destroy_workout(workout, actor: actor) do
         :ok ->
-          workouts =
-            Fitconnex.Training.WorkoutPlan
-            |> Ash.Query.filter(trainer_id in ^trainer_ids)
-            |> Ash.Query.load([:gym, member: [:user]])
-            |> Ash.read!()
+          workouts = case Fitconnex.Training.list_workouts_by_trainer(trainer_ids, actor: actor, load: [:gym, member: [:user]]) do
+            {:ok, workouts} -> workouts
+            _ -> []
+          end
 
           {:noreply,
            socket

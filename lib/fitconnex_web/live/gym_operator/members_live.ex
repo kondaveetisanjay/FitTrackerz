@@ -1,28 +1,23 @@
 defmodule FitconnexWeb.GymOperator.MembersLive do
   use FitconnexWeb, :live_view
 
-  require Ash.Query
+  alias FitconnexWeb.AshErrorHelpers
 
   @impl true
   def mount(_params, _session, socket) do
-    user = socket.assigns.current_user
+    actor = socket.assigns.current_user
 
-    case find_gym(user.id) do
-      {:ok, gym} ->
-        gid = gym.id
+    case Fitconnex.Gym.list_gyms_by_owner(actor.id, actor: actor) do
+      {:ok, [gym | _]} ->
+        members = case Fitconnex.Gym.list_members_by_gym(gym.id, actor: actor, load: [:user, assigned_trainer: [:user]]) do
+          {:ok, members} -> members
+          _ -> []
+        end
 
-        members =
-          Fitconnex.Gym.GymMember
-          |> Ash.Query.filter(gym_id == ^gid)
-          |> Ash.Query.load([:user, assigned_trainer: [:user]])
-          |> Ash.read!()
-
-        trainers =
-          Fitconnex.Gym.GymTrainer
-          |> Ash.Query.filter(gym_id == ^gid)
-          |> Ash.Query.filter(is_active == true)
-          |> Ash.Query.load([:user])
-          |> Ash.read!()
+        trainers = case Fitconnex.Gym.list_active_trainers_by_gym(gym.id, actor: actor, load: [:user]) do
+          {:ok, trainers} -> trainers
+          _ -> []
+        end
 
         invite_form = to_form(%{"email" => ""}, as: "invite")
 
@@ -37,7 +32,7 @@ defmodule FitconnexWeb.GymOperator.MembersLive do
            assign_member_id: nil
          )}
 
-      :no_gym ->
+      _ ->
         {:ok,
          assign(socket,
            page_title: "Members",
@@ -61,19 +56,15 @@ defmodule FitconnexWeb.GymOperator.MembersLive do
   end
 
   def handle_event("invite", %{"invite" => params}, socket) do
-    user = socket.assigns.current_user
+    actor = socket.assigns.current_user
     gym = socket.assigns.gym
     email = params["email"]
 
-    create_params = %{
+    case Fitconnex.Gym.create_member_invitation(%{
       invited_email: email,
       gym_id: gym.id,
-      invited_by_id: user.id
-    }
-
-    case Fitconnex.Gym.MemberInvitation
-         |> Ash.Changeset.for_create(:create, create_params)
-         |> Ash.create() do
+      invited_by_id: actor.id
+    }, actor: actor) do
       {:ok, _invitation} ->
         invite_form = to_form(%{"email" => ""}, as: "invite")
 
@@ -82,8 +73,8 @@ defmodule FitconnexWeb.GymOperator.MembersLive do
          |> put_flash(:info, "Invitation sent to #{email}!")
          |> assign(invite_form: invite_form, show_invite: false)}
 
-      {:error, _changeset} ->
-        {:noreply, put_flash(socket, :error, "Failed to send invitation. Please try again.")}
+      {:error, error} ->
+        {:noreply, put_flash(socket, :error, AshErrorHelpers.user_friendly_message(error))}
     end
   end
 
@@ -96,73 +87,54 @@ defmodule FitconnexWeb.GymOperator.MembersLive do
   end
 
   def handle_event("assign_trainer", %{"trainer_id" => trainer_id, "member_id" => member_id}, socket) do
-    user = socket.assigns.current_user
+    actor = socket.assigns.current_user
     gym = socket.assigns.gym
 
     if trainer_id == "" do
       {:noreply, put_flash(socket, :error, "Please select a trainer.")}
     else
-      case Fitconnex.Gym.ClientAssignmentRequest
-           |> Ash.Changeset.for_create(:create, %{
-             gym_id: gym.id,
-             member_id: member_id,
-             trainer_id: trainer_id,
-             requested_by_id: user.id
-           })
-           |> Ash.create() do
+      case Fitconnex.Gym.create_assignment_request(%{
+        gym_id: gym.id,
+        member_id: member_id,
+        trainer_id: trainer_id,
+        requested_by_id: actor.id
+      }, actor: actor) do
         {:ok, _request} ->
           {:noreply,
            socket
            |> put_flash(:info, "Client assignment request sent to trainer!")
            |> assign(assign_member_id: nil)}
 
-        {:error, _changeset} ->
-          {:noreply, put_flash(socket, :error, "Failed to send assignment request. Please try again.")}
+        {:error, error} ->
+          {:noreply, put_flash(socket, :error, AshErrorHelpers.user_friendly_message(error))}
       end
     end
   end
 
   def handle_event("toggle_active", %{"id" => id}, socket) do
+    actor = socket.assigns.current_user
     gym = socket.assigns.gym
-    gid = gym.id
 
-    member =
-      Fitconnex.Gym.GymMember
-      |> Ash.Query.filter(id == ^id)
-      |> Ash.Query.filter(gym_id == ^gid)
-      |> Ash.read!()
-      |> List.first()
+    case Fitconnex.Gym.get_gym_member(id, actor: actor) do
+      {:ok, member} ->
+        case Fitconnex.Gym.update_gym_member(member, %{is_active: !member.is_active}, actor: actor) do
+          {:ok, _updated} ->
+            members = case Fitconnex.Gym.list_members_by_gym(gym.id, actor: actor, load: [:user, assigned_trainer: [:user]]) do
+              {:ok, members} -> members
+              _ -> []
+            end
 
-    if member do
-      case member
-           |> Ash.Changeset.for_update(:update, %{is_active: !member.is_active})
-           |> Ash.update() do
-        {:ok, _updated} ->
-          members =
-            Fitconnex.Gym.GymMember
-            |> Ash.Query.filter(gym_id == ^gid)
-            |> Ash.Query.load([:user, assigned_trainer: [:user]])
-            |> Ash.read!()
+            {:noreply,
+             socket
+             |> put_flash(:info, "Member status updated.")
+             |> assign(members: members)}
 
-          {:noreply,
-           socket
-           |> put_flash(:info, "Member status updated.")
-           |> assign(members: members)}
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to update member status.")}
+        end
 
-        {:error, _} ->
-          {:noreply, put_flash(socket, :error, "Failed to update member status.")}
-      end
-    else
-      {:noreply, put_flash(socket, :error, "Member not found.")}
-    end
-  end
-
-  defp find_gym(user_id) do
-    case Fitconnex.Gym.Gym
-         |> Ash.Query.filter(owner_id == ^user_id)
-         |> Ash.read!() do
-      [gym | _] -> {:ok, gym}
-      [] -> :no_gym
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Member not found.")}
     end
   end
 

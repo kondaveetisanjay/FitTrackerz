@@ -22,7 +22,9 @@
       "Bash(wc:*)",
       "Bash(ls:*)",
       "Bash(mix test --help:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(mix deps.get:*)",
+      "Bash(mix test)"
     ]
   }
 }

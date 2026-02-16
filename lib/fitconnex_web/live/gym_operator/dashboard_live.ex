@@ -1,58 +1,63 @@
 defmodule FitconnexWeb.GymOperator.DashboardLive do
   use FitconnexWeb, :live_view
 
-  require Ash.Query
-
   @impl true
   def mount(_params, _session, socket) do
-    uid = socket.assigns.current_user.id
+    actor = socket.assigns.current_user
 
-    gyms =
-      Fitconnex.Gym.Gym
-      |> Ash.Query.filter(owner_id == ^uid)
-      |> Ash.Query.load([
-        :branches,
-        :gym_members,
-        :gym_trainers,
-        :member_invitations,
-        :trainer_invitations
-      ])
-      |> Ash.read!()
+    case Fitconnex.Gym.list_gyms_by_owner(actor.id, actor: actor) do
+      {:ok, gyms} ->
+        case gyms do
+          [gym | _] ->
+            member_count = length(gym.gym_members)
+            trainer_count = length(gym.gym_trainers)
 
-    case gyms do
-      [gym | _] ->
-        member_count = length(gym.gym_members)
-        trainer_count = length(gym.gym_trainers)
+            pending_member_invites =
+              Enum.count(gym.member_invitations, fn inv -> inv.status == :pending end)
 
-        pending_member_invites =
-          Enum.count(gym.member_invitations, fn inv -> inv.status == :pending end)
+            pending_trainer_invites =
+              Enum.count(gym.trainer_invitations, fn inv -> inv.status == :pending end)
 
-        pending_trainer_invites =
-          Enum.count(gym.trainer_invitations, fn inv -> inv.status == :pending end)
+            branch_ids = Enum.map(gym.branches, & &1.id)
 
-        scheduled_classes =
-          Fitconnex.Scheduling.ScheduledClass
-          |> Ash.Query.filter(status == :scheduled)
-          |> Ash.Query.load([:class_definition, :branch, :trainer])
-          |> Ash.read!()
-          |> Enum.filter(fn sc ->
-            Enum.any?(gym.branches, fn b -> b.id == sc.branch_id end)
-          end)
-          |> Enum.take(5)
+            scheduled_classes =
+              case Fitconnex.Scheduling.list_classes_by_branch(branch_ids, actor: actor) do
+                {:ok, classes} ->
+                  classes
+                  |> Enum.filter(fn sc -> sc.status == :scheduled end)
+                  |> Enum.take(5)
 
-        {:ok,
-         assign(socket,
-           page_title: "Gym Dashboard",
-           gym: gym,
-           has_gym: true,
-           member_count: member_count,
-           trainer_count: trainer_count,
-           pending_member_invites: pending_member_invites,
-           pending_trainer_invites: pending_trainer_invites,
-           scheduled_classes: scheduled_classes
-         )}
+                {:error, _} ->
+                  []
+              end
 
-      [] ->
+            {:ok,
+             assign(socket,
+               page_title: "Gym Dashboard",
+               gym: gym,
+               has_gym: true,
+               member_count: member_count,
+               trainer_count: trainer_count,
+               pending_member_invites: pending_member_invites,
+               pending_trainer_invites: pending_trainer_invites,
+               scheduled_classes: scheduled_classes
+             )}
+
+          [] ->
+            {:ok,
+             assign(socket,
+               page_title: "Gym Dashboard",
+               gym: nil,
+               has_gym: false,
+               member_count: 0,
+               trainer_count: 0,
+               pending_member_invites: 0,
+               pending_trainer_invites: 0,
+               scheduled_classes: []
+             )}
+        end
+
+      {:error, _} ->
         {:ok,
          assign(socket,
            page_title: "Gym Dashboard",

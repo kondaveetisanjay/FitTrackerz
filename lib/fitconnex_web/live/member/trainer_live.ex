@@ -1,18 +1,14 @@
 defmodule FitconnexWeb.Member.TrainerLive do
   use FitconnexWeb, :live_view
 
-  require Ash.Query
-
   @impl true
   def mount(_params, _session, socket) do
-    user = socket.assigns.current_user
+    actor = socket.assigns.current_user
 
-    memberships =
-      Fitconnex.Gym.GymMember
-      |> Ash.Query.filter(user_id == ^user.id)
-      |> Ash.Query.filter(is_active == true)
-      |> Ash.Query.load([:gym, assigned_trainer: [:user]])
-      |> Ash.read!()
+    memberships = case Fitconnex.Gym.list_active_memberships(actor.id, actor: actor, load: [:gym, assigned_trainer: [:user]]) do
+      {:ok, memberships} -> memberships
+      _ -> []
+    end
 
     {:ok,
      assign(socket,

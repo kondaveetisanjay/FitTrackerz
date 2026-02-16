@@ -1,45 +1,34 @@
 defmodule FitconnexWeb.Trainer.DashboardLive do
   use FitconnexWeb, :live_view
 
-  require Ash.Query
-
   @impl true
   def mount(_params, _session, socket) do
-    user = socket.assigns.current_user
+    actor = socket.assigns.current_user
 
-    {:ok, load_dashboard(socket, user)}
+    {:ok, load_dashboard(socket, actor)}
   end
 
-  defp load_dashboard(socket, user) do
-    uid = user.id
-    email = user.email
+  defp load_dashboard(socket, actor) do
+    pending_invitations = case Fitconnex.Gym.list_pending_trainer_invitations(actor.email, actor: actor, load: [:gym, :invited_by]) do
+      {:ok, invitations} -> invitations
+      _ -> []
+    end
 
-    pending_invitations =
-      Fitconnex.Gym.TrainerInvitation
-      |> Ash.Query.filter(invited_email == ^email)
-      |> Ash.Query.filter(status == :pending)
-      |> Ash.Query.load([:gym, :invited_by])
-      |> Ash.read!()
-
-    gym_trainers =
-      Fitconnex.Gym.GymTrainer
-      |> Ash.Query.filter(user_id == ^uid)
-      |> Ash.Query.filter(is_active == true)
-      |> Ash.Query.load([:gym])
-      |> Ash.read!()
+    gym_trainers = case Fitconnex.Gym.list_active_trainerships(actor.id, actor: actor, load: [:gym]) do
+      {:ok, trainers} -> trainers
+      _ -> []
+    end
 
     gym_trainer_ids = Enum.map(gym_trainers, & &1.id)
 
-    client_requests =
-      if gym_trainer_ids != [] do
-        Fitconnex.Gym.ClientAssignmentRequest
-        |> Ash.Query.filter(trainer_id in ^gym_trainer_ids)
-        |> Ash.Query.filter(status == :pending)
-        |> Ash.Query.load([:gym, :requested_by, member: [:user]])
-        |> Ash.read!()
-      else
-        []
+    client_requests = if gym_trainer_ids != [] do
+      case Fitconnex.Gym.list_pending_assignments_by_trainer(gym_trainer_ids, actor: actor, load: [:gym, :requested_by, member: [:user]]) do
+        {:ok, requests} -> requests
+        _ -> []
       end
+    else
+      []
+    end
 
     if gym_trainers == [] do
       socket
@@ -56,28 +45,25 @@ defmodule FitconnexWeb.Trainer.DashboardLive do
         upcoming_classes: []
       )
     else
-      clients =
-        Fitconnex.Gym.GymMember
-        |> Ash.Query.filter(assigned_trainer_id in ^gym_trainer_ids)
-        |> Ash.Query.load([:user, :gym])
-        |> Ash.read!()
+      clients = case Fitconnex.Gym.list_members_by_trainer(gym_trainer_ids, actor: actor, load: [:user, :gym]) do
+        {:ok, members} -> members
+        _ -> []
+      end
 
-      classes =
-        Fitconnex.Scheduling.ScheduledClass
-        |> Ash.Query.filter(trainer_id in ^gym_trainer_ids)
-        |> Ash.Query.filter(status == :scheduled)
-        |> Ash.Query.load([:class_definition, :branch])
-        |> Ash.read!()
+      classes = case Fitconnex.Scheduling.list_classes_by_trainer(gym_trainer_ids, actor: actor, load: [:class_definition, :branch]) do
+        {:ok, classes} -> classes
+        _ -> []
+      end
 
-      workout_count =
-        Fitconnex.Training.WorkoutPlan
-        |> Ash.Query.filter(trainer_id in ^gym_trainer_ids)
-        |> Ash.count!()
+      workouts = case Fitconnex.Training.list_workouts_by_trainer(gym_trainer_ids, actor: actor) do
+        {:ok, workouts} -> workouts
+        _ -> []
+      end
 
-      diet_count =
-        Fitconnex.Training.DietPlan
-        |> Ash.Query.filter(trainer_id in ^gym_trainer_ids)
-        |> Ash.count!()
+      diets = case Fitconnex.Training.list_diets_by_trainer(gym_trainer_ids, actor: actor) do
+        {:ok, diets} -> diets
+        _ -> []
+      end
 
       socket
       |> assign(
@@ -87,8 +73,8 @@ defmodule FitconnexWeb.Trainer.DashboardLive do
         client_requests: client_requests,
         client_count: length(clients),
         class_count: length(classes),
-        workout_count: workout_count,
-        diet_count: diet_count,
+        workout_count: length(workouts),
+        diet_count: length(diets),
         clients: Enum.take(clients, 5),
         upcoming_classes: Enum.take(classes, 5)
       )
@@ -97,16 +83,16 @@ defmodule FitconnexWeb.Trainer.DashboardLive do
 
   @impl true
   def handle_event("accept-invitation", %{"id" => id}, socket) do
-    case Ash.get(Fitconnex.Gym.TrainerInvitation, id, load: [:gym]) do
+    actor = socket.assigns.current_user
+
+    case Fitconnex.Gym.get_trainer_invitation(id, actor: actor, load: [:gym]) do
       {:ok, invitation} ->
-        case invitation
-             |> Ash.Changeset.for_update(:accept, %{})
-             |> Ash.update() do
+        case Fitconnex.Gym.accept_trainer_invitation(invitation, %{}, actor: actor) do
           {:ok, _} ->
             {:noreply,
              socket
              |> put_flash(:info, "Invitation accepted! You've been added to #{invitation.gym.name}.")
-             |> load_dashboard(socket.assigns.current_user)}
+             |> load_dashboard(actor)}
 
           {:error, _} ->
             {:noreply, put_flash(socket, :error, "Failed to accept invitation. Please try again.")}
@@ -118,16 +104,16 @@ defmodule FitconnexWeb.Trainer.DashboardLive do
   end
 
   def handle_event("accept-client-request", %{"id" => id}, socket) do
-    case Ash.get(Fitconnex.Gym.ClientAssignmentRequest, id, load: [:gym, member: [:user]]) do
+    actor = socket.assigns.current_user
+
+    case Fitconnex.Gym.get_assignment_request(id, actor: actor, load: [:gym, member: [:user]]) do
       {:ok, request} ->
-        case request
-             |> Ash.Changeset.for_update(:accept, %{})
-             |> Ash.update() do
+        case Fitconnex.Gym.accept_assignment_request(request, %{}, actor: actor) do
           {:ok, _} ->
             {:noreply,
              socket
              |> put_flash(:info, "Client assignment accepted! #{request.member.user.name} is now your client.")
-             |> load_dashboard(socket.assigns.current_user)}
+             |> load_dashboard(actor)}
 
           {:error, _} ->
             {:noreply, put_flash(socket, :error, "Failed to accept client assignment. Please try again.")}
@@ -139,16 +125,16 @@ defmodule FitconnexWeb.Trainer.DashboardLive do
   end
 
   def handle_event("reject-client-request", %{"id" => id}, socket) do
-    case Ash.get(Fitconnex.Gym.ClientAssignmentRequest, id) do
+    actor = socket.assigns.current_user
+
+    case Fitconnex.Gym.get_assignment_request(id, actor: actor) do
       {:ok, request} ->
-        case request
-             |> Ash.Changeset.for_update(:reject, %{})
-             |> Ash.update() do
+        case Fitconnex.Gym.reject_assignment_request(request, %{}, actor: actor) do
           {:ok, _} ->
             {:noreply,
              socket
              |> put_flash(:info, "Client assignment declined.")
-             |> load_dashboard(socket.assigns.current_user)}
+             |> load_dashboard(actor)}
 
           {:error, _} ->
             {:noreply, put_flash(socket, :error, "Failed to decline client assignment. Please try again.")}
@@ -161,16 +147,16 @@ defmodule FitconnexWeb.Trainer.DashboardLive do
 
   @impl true
   def handle_event("reject-invitation", %{"id" => id}, socket) do
-    case Ash.get(Fitconnex.Gym.TrainerInvitation, id) do
+    actor = socket.assigns.current_user
+
+    case Fitconnex.Gym.get_trainer_invitation(id, actor: actor) do
       {:ok, invitation} ->
-        case invitation
-             |> Ash.Changeset.for_update(:reject, %{})
-             |> Ash.update() do
+        case Fitconnex.Gym.reject_trainer_invitation(invitation, %{}, actor: actor) do
           {:ok, _} ->
             {:noreply,
              socket
              |> put_flash(:info, "Invitation declined.")
-             |> load_dashboard(socket.assigns.current_user)}
+             |> load_dashboard(actor)}
 
           {:error, _} ->
             {:noreply, put_flash(socket, :error, "Failed to decline invitation. Please try again.")}
