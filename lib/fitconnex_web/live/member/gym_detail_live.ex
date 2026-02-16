@@ -145,10 +145,8 @@ defmodule FitconnexWeb.Member.GymDetailLive do
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div class="card bg-base-200/50 border border-base-300/50">
               <div class="card-body p-4 text-center">
-                <div class="text-2xl font-black text-primary">
-                  {length(@gym_data.gym.branches)}
-                </div>
-                <div class="text-xs text-base-content/50">Branches</div>
+                <div class="text-2xl font-black text-primary">1</div>
+                <div class="text-xs text-base-content/50">Location</div>
               </div>
             </div>
 
@@ -188,12 +186,12 @@ defmodule FitconnexWeb.Member.GymDetailLive do
             </div>
           <% end %>
 
-          <%!-- Your Branch --%>
+          <%!-- Your Location --%>
           <%= if @gym_data.membership.branch do %>
             <div class="card bg-base-200/50 border border-primary/20">
               <div class="card-body p-5">
                 <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                  <.icon name="hero-map-pin-solid" class="size-5 text-primary" /> Your Branch
+                  <.icon name="hero-map-pin-solid" class="size-5 text-primary" /> Your Location
                 </h2>
 
                 <div class="flex items-start gap-4 p-4 rounded-xl bg-primary/5 border border-primary/20">
@@ -240,7 +238,7 @@ defmodule FitconnexWeb.Member.GymDetailLive do
             <div class="card bg-base-200/50 border border-base-300/50">
               <div class="card-body p-5">
                 <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                  <.icon name="hero-map-pin-solid" class="size-5 text-error" /> All Locations
+                  <.icon name="hero-map-pin-solid" class="size-5 text-error" /> Location
                 </h2>
 
                 <div class="space-y-3">

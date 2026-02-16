@@ -17,11 +17,6 @@ defmodule FitconnexWeb.GymOperator.MembersLive do
           |> Ash.Query.load([:user, assigned_trainer: [:user]])
           |> Ash.read!()
 
-        branches =
-          Fitconnex.Gym.GymBranch
-          |> Ash.Query.filter(gym_id == ^gid)
-          |> Ash.read!()
-
         trainers =
           Fitconnex.Gym.GymTrainer
           |> Ash.Query.filter(gym_id == ^gid)
@@ -29,14 +24,13 @@ defmodule FitconnexWeb.GymOperator.MembersLive do
           |> Ash.Query.load([:user])
           |> Ash.read!()
 
-        invite_form = to_form(%{"email" => "", "branch_id" => ""}, as: "invite")
+        invite_form = to_form(%{"email" => ""}, as: "invite")
 
         {:ok,
          assign(socket,
            page_title: "Members",
            gym: gym,
            members: members,
-           branches: branches,
            trainers: trainers,
            invite_form: invite_form,
            show_invite: false,
@@ -49,7 +43,6 @@ defmodule FitconnexWeb.GymOperator.MembersLive do
            page_title: "Members",
            gym: nil,
            members: [],
-           branches: [],
            trainers: [],
            invite_form: nil,
            show_invite: false,
@@ -71,7 +64,6 @@ defmodule FitconnexWeb.GymOperator.MembersLive do
     user = socket.assigns.current_user
     gym = socket.assigns.gym
     email = params["email"]
-    branch_id = params["branch_id"]
 
     create_params = %{
       invited_email: email,
@@ -79,16 +71,11 @@ defmodule FitconnexWeb.GymOperator.MembersLive do
       invited_by_id: user.id
     }
 
-    create_params =
-      if branch_id && branch_id != "",
-        do: Map.put(create_params, :branch_id, branch_id),
-        else: create_params
-
     case Fitconnex.Gym.MemberInvitation
          |> Ash.Changeset.for_create(:create, create_params)
          |> Ash.create() do
       {:ok, _invitation} ->
-        invite_form = to_form(%{"email" => "", "branch_id" => ""}, as: "invite")
+        invite_form = to_form(%{"email" => ""}, as: "invite")
 
         {:noreply,
          socket
@@ -239,27 +226,6 @@ defmodule FitconnexWeb.GymOperator.MembersLive do
                         placeholder="member@example.com"
                         required
                       />
-                    </div>
-
-                    <div class="flex-1">
-                      <label class="label" for="invite_branch_id">
-                        <span class="label-text">Branch</span>
-                      </label>
-
-                      <select
-                        name="invite[branch_id]"
-                        id="invite_branch_id"
-                        class="select select-bordered w-full select-sm"
-                      >
-                        <option value="">Select a branch</option>
-
-                        <%= for branch <- @branches do %>
-                          <option value={branch.id}>
-                            {branch.city}, {branch.state} — {branch.address}
-                            {if branch.is_primary, do: " (Primary)", else: ""}
-                          </option>
-                        <% end %>
-                      </select>
                     </div>
 
                     <div class="mb-2">

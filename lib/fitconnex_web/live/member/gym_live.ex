@@ -88,9 +88,7 @@ defmodule FitconnexWeb.Member.GymLive do
 
                   <div class="flex items-center gap-2 mt-2 text-sm text-base-content/50">
                     <.icon name="hero-building-office-mini" class="size-4" />
-                    <span>
-                      {length(gym.branches)} {if length(gym.branches) == 1, do: "branch", else: "branches"}
-                    </span>
+                    <span>1 location</span>
                   </div>
 
                   <div class="mt-3 text-xs text-primary font-semibold flex items-center gap-1">

@@ -167,9 +167,9 @@ defmodule FitconnexWeb.Admin.GymsLive do
 
                 <%!-- Stats Row --%>
                 <div class="grid grid-cols-3 gap-3">
-                  <div class="text-center p-2 rounded-lg bg-base-300/30" id={"gym-branches-#{gym.id}"}>
+                  <div class="text-center p-2 rounded-lg bg-base-300/30" id={"gym-location-#{gym.id}"}>
                     <p class="text-lg font-black">{count_loaded(gym.branches)}</p>
-                    <p class="text-xs text-base-content/40">Branches</p>
+                    <p class="text-xs text-base-content/40">Location</p>
                   </div>
                   <div class="text-center p-2 rounded-lg bg-base-300/30" id={"gym-members-#{gym.id}"}>
                     <p class="text-lg font-black">{count_loaded(gym.gym_members)}</p>

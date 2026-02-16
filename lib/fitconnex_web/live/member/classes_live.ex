@@ -244,7 +244,7 @@ defmodule FitconnexWeb.Member.ClassesLive do
                         <span>{sc.trainer.name}</span>
                       </div>
                     <% end %>
-                    <%!-- Branch --%>
+                    <%!-- Location --%>
                     <%= if sc.branch do %>
                       <div class="flex items-center gap-2 text-base-content/70">
                         <.icon name="hero-map-pin-mini" class="size-4 text-base-content/40" />

@@ -494,7 +494,7 @@ defmodule FitconnexWeb.Trainer.DashboardLive do
                           <tr class="text-base-content/40">
                             <th>Class</th>
 
-                            <th>Branch</th>
+                            <th>Location</th>
 
                             <th>Scheduled</th>
 

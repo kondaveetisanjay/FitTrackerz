@@ -46,7 +46,7 @@ defmodule Fitconnex.Gym.GymBranch do
     create :create do
       accept([
         :address, :city, :state, :postal_code, :latitude, :longitude,
-        :is_primary, :gym_id, :logo_url, :gallery_urls
+        :gym_id, :logo_url, :gallery_urls
       ])
 
       validate string_length(:address, min: 1, max: 500)
@@ -58,7 +58,7 @@ defmodule Fitconnex.Gym.GymBranch do
     update :update do
       accept([
         :address, :city, :state, :postal_code, :latitude, :longitude,
-        :is_primary, :logo_url, :gallery_urls
+        :logo_url, :gallery_urls
       ])
     end
   end

@@ -161,7 +161,7 @@ defmodule FitconnexWeb.Member.BookingsLive do
                       <tr class="text-base-content/40">
                         <th>Class</th>
                         <th>Trainer</th>
-                        <th>Branch</th>
+                        <th>Location</th>
                         <th>Date & Time</th>
                         <th>Status</th>
                         <th>Actions</th>

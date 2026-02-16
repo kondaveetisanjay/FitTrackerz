@@ -105,7 +105,6 @@ defmodule FitconnexWeb.Router do
 
       live "/dashboard", DashboardLive
       live "/setup", SetupLive
-      live "/branches", BranchesLive
       live "/members", MembersLive
       live "/trainers", TrainersLive
       live "/classes", ClassesLive

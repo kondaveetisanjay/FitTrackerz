@@ -212,7 +212,7 @@ defmodule FitconnexWeb.Trainer.ClassesLive do
                   <thead>
                     <tr class="text-base-content/40">
                       <th>Class Name</th>
-                      <th>Branch</th>
+                      <th>Location</th>
                       <th>Scheduled At</th>
                       <th>Duration</th>
                       <th>Status</th>

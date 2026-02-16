@@ -23,7 +23,6 @@ defmodule FitconnexWeb.GymOperator.DashboardLive do
       [gym | _] ->
         member_count = length(gym.gym_members)
         trainer_count = length(gym.gym_trainers)
-        branch_count = length(gym.branches)
 
         pending_member_invites =
           Enum.count(gym.member_invitations, fn inv -> inv.status == :pending end)
@@ -48,7 +47,6 @@ defmodule FitconnexWeb.GymOperator.DashboardLive do
            has_gym: true,
            member_count: member_count,
            trainer_count: trainer_count,
-           branch_count: branch_count,
            pending_member_invites: pending_member_invites,
            pending_trainer_invites: pending_trainer_invites,
            scheduled_classes: scheduled_classes
@@ -62,7 +60,6 @@ defmodule FitconnexWeb.GymOperator.DashboardLive do
            has_gym: false,
            member_count: 0,
            trainer_count: 0,
-           branch_count: 0,
            pending_member_invites: 0,
            pending_trainer_invites: 0,
            scheduled_classes: []
@@ -108,7 +105,7 @@ defmodule FitconnexWeb.GymOperator.DashboardLive do
             </div>
           </div>
           <%!-- Stats Grid --%>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <.link
               navigate="/gym/members"
               class="card bg-base-200/50 border border-base-300/50 hover:shadow-md"
@@ -153,29 +150,6 @@ defmodule FitconnexWeb.GymOperator.DashboardLive do
                 </div>
 
                 <p class="text-xs text-base-content/40 mt-2">On staff</p>
-              </div>
-            </.link>
-            <.link
-              navigate="/gym/branches"
-              class="card bg-base-200/50 border border-base-300/50 hover:shadow-md"
-              id="stat-branches"
-            >
-              <div class="card-body p-5">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
-                      Branches
-                    </p>
-
-                    <p class="text-3xl font-black mt-1">{@branch_count}</p>
-                  </div>
-
-                  <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
-                    <.icon name="hero-map-pin-solid" class="size-6 text-accent" />
-                  </div>
-                </div>
-
-                <p class="text-xs text-base-content/40 mt-2">Locations</p>
               </div>
             </.link>
             <.link
@@ -236,12 +210,6 @@ defmodule FitconnexWeb.GymOperator.DashboardLive do
                     class="btn btn-ghost bg-base-300/30 btn-sm w-full justify-start gap-3 font-medium"
                   >
                     <.icon name="hero-credit-card" class="size-4 text-warning" /> Manage Plans
-                  </.link>
-                  <.link
-                    navigate="/gym/branches"
-                    class="btn btn-ghost bg-base-300/30 btn-sm w-full justify-start gap-3 font-medium"
-                  >
-                    <.icon name="hero-map-pin" class="size-4 text-accent" /> Manage Branches
                   </.link>
                 </div>
               </div>

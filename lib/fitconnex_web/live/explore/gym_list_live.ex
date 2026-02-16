@@ -399,7 +399,7 @@ defmodule FitconnexWeb.Explore.GymListLive do
                     <% end %>
                     <span class="flex items-center gap-1">
                       <.icon name="hero-building-office-2-mini" class="size-3.5" />
-                      {length(entry.gym.branches)} branch(es)
+                      1 location
                     </span>
                     <span class="flex items-center gap-1">
                       <.icon name="hero-academic-cap-mini" class="size-3.5" />

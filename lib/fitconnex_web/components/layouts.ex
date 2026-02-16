@@ -200,7 +200,6 @@ defmodule FitconnexWeb.Layouts do
       Gym Management
     </p>
     <.nav_link href="/gym/setup" icon="hero-building-office-solid" label="My Gym" />
-    <.nav_link href="/gym/branches" icon="hero-map-pin-solid" label="Branches" />
     <.nav_link href="/gym/members" icon="hero-user-group-solid" label="Members" />
     <.nav_link href="/gym/trainers" icon="hero-academic-cap-solid" label="Trainers" />
 

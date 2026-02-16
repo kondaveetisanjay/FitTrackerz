@@ -16,11 +16,6 @@ defmodule FitconnexWeb.GymOperator.ClassesLive do
           |> Ash.Query.filter(gym_id == ^gid)
           |> Ash.read!()
 
-        branches =
-          Fitconnex.Gym.GymBranch
-          |> Ash.Query.filter(gym_id == ^gid)
-          |> Ash.read!()
-
         scheduled_classes =
           Fitconnex.Scheduling.ScheduledClass
           |> Ash.Query.filter(class_definition.gym_id == ^gid)
@@ -42,7 +37,6 @@ defmodule FitconnexWeb.GymOperator.ClassesLive do
           to_form(
             %{
               "class_definition_id" => "",
-              "branch_id" => "",
               "scheduled_at" => "",
               "duration_minutes" => "60"
             },
@@ -55,7 +49,6 @@ defmodule FitconnexWeb.GymOperator.ClassesLive do
            gym: gym,
            class_definitions: class_definitions,
            scheduled_classes: scheduled_classes,
-           branches: branches,
            def_form: def_form,
            schedule_form: schedule_form,
            active_tab: "definitions",
@@ -70,7 +63,6 @@ defmodule FitconnexWeb.GymOperator.ClassesLive do
            gym: nil,
            class_definitions: [],
            scheduled_classes: [],
-           branches: [],
            def_form: nil,
            schedule_form: nil,
            active_tab: "definitions",
@@ -149,10 +141,20 @@ defmodule FitconnexWeb.GymOperator.ClassesLive do
   end
 
   def handle_event("save_schedule", %{"schedule" => params}, socket) do
+    gym = socket.assigns.gym
+
+    branch =
+      Fitconnex.Gym.GymBranch
+      |> Ash.Query.filter(gym_id == ^gym.id)
+      |> Ash.read!()
+      |> List.first()
+
+    branch_id = if branch, do: branch.id, else: nil
+
     case Fitconnex.Scheduling.ScheduledClass
          |> Ash.Changeset.for_create(:create, %{
            class_definition_id: params["class_definition_id"],
-           branch_id: params["branch_id"],
+           branch_id: branch_id,
            scheduled_at: params["scheduled_at"],
            duration_minutes: String.to_integer(params["duration_minutes"])
          })
@@ -170,7 +172,6 @@ defmodule FitconnexWeb.GymOperator.ClassesLive do
           to_form(
             %{
               "class_definition_id" => "",
-              "branch_id" => "",
               "scheduled_at" => "",
               "duration_minutes" => "60"
             },
@@ -402,14 +403,6 @@ defmodule FitconnexWeb.GymOperator.ClassesLive do
                           required
                         />
                         <.input
-                          field={@schedule_form[:branch_id]}
-                          type="select"
-                          label="Branch"
-                          prompt="Select a branch"
-                          options={Enum.map(@branches, &{"#{&1.address}, #{&1.city}", &1.id})}
-                          required
-                        />
-                        <.input
                           field={@schedule_form[:scheduled_at]}
                           type="datetime-local"
                           label="Scheduled At"
@@ -462,7 +455,6 @@ defmodule FitconnexWeb.GymOperator.ClassesLive do
                         <thead>
                           <tr class="text-base-content/40">
                             <th>Class</th>
-                            <th>Branch</th>
                             <th>Scheduled At</th>
                             <th>Duration</th>
                             <th>Trainer</th>
@@ -473,7 +465,6 @@ defmodule FitconnexWeb.GymOperator.ClassesLive do
                           <%= for sc <- @scheduled_classes do %>
                             <tr id={"scheduled-#{sc.id}"}>
                               <td class="font-medium">{sc.class_definition.name}</td>
-                              <td>{sc.branch.city}</td>
                               <td>{Calendar.strftime(sc.scheduled_at, "%b %d, %Y %I:%M %p")}</td>
                               <td>{sc.duration_minutes} min</td>
                               <td>
