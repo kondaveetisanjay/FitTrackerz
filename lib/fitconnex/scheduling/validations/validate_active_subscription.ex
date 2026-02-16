@@ -2,6 +2,8 @@ defmodule Fitconnex.Scheduling.Validations.ValidateActiveSubscription do
   use Ash.Resource.Validation
   require Ash.Query
 
+  alias Fitconnex.Accounts.SystemActor
+
   @impl true
   def init(opts), do: {:ok, opts}
 
@@ -10,31 +12,34 @@ defmodule Fitconnex.Scheduling.Validations.ValidateActiveSubscription do
     member_id = Ash.Changeset.get_attribute(changeset, :member_id)
     scheduled_class_id = Ash.Changeset.get_attribute(changeset, :scheduled_class_id)
 
-    with true <- not is_nil(member_id) and not is_nil(scheduled_class_id),
-         {:ok, scheduled_class} <-
-           Ash.get(Fitconnex.Scheduling.ScheduledClass, scheduled_class_id),
-         {:ok, class_definition} <-
-           Ash.get(Fitconnex.Scheduling.ClassDefinition, scheduled_class.class_definition_id) do
-      gym_id = class_definition.gym_id
-
-      active_subs =
-        Fitconnex.Billing.MemberSubscription
-        |> Ash.Query.filter(member_id == ^member_id)
-        |> Ash.Query.filter(gym_id == ^gym_id)
-        |> Ash.Query.filter(status == :active)
-        |> Ash.Query.filter(payment_status == :paid)
-        |> Ash.read!()
-
-      if active_subs != [] do
-        :ok
-      else
-        {:error,
-         field: :member_id,
-         message: "Member does not have an active paid subscription at this gym."}
-      end
+    if is_nil(member_id) or is_nil(scheduled_class_id) do
+      :ok
     else
-      # If fields are missing or lookups fail, let other validations handle it
-      _ -> :ok
+      with {:ok, scheduled_class} <-
+             Ash.get(Fitconnex.Scheduling.ScheduledClass, scheduled_class_id, actor: SystemActor.system_actor()),
+           {:ok, class_definition} <-
+             Ash.get(Fitconnex.Scheduling.ClassDefinition, scheduled_class.class_definition_id, actor: SystemActor.system_actor()) do
+        gym_id = class_definition.gym_id
+
+        active_subs =
+          Fitconnex.Billing.MemberSubscription
+          |> Ash.Query.filter(member_id == ^member_id)
+          |> Ash.Query.filter(gym_id == ^gym_id)
+          |> Ash.Query.filter(status == :active)
+          |> Ash.Query.filter(payment_status == :paid)
+          |> Ash.read!(actor: SystemActor.system_actor())
+
+        if active_subs != [] do
+          :ok
+        else
+          {:error,
+           field: :member_id,
+           message: "Member does not have an active paid subscription at this gym."}
+        end
+      else
+        {:error, _} ->
+          {:error, field: :scheduled_class_id, message: "Could not verify subscription status."}
+      end
     end
   end
 end

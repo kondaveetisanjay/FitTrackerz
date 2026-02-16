@@ -139,7 +139,10 @@ defmodule FitconnexWeb.Router do
   # Member routes
   ash_authentication_live_session :member,
     otp_app: :fitconnex,
-    on_mount: [{FitconnexWeb.LiveUserAuth, :live_user_required}] do
+    on_mount: [
+      {FitconnexWeb.LiveUserAuth, :live_user_required},
+      {FitconnexWeb.LiveUserAuth, :live_member_required}
+    ] do
     scope "/member", FitconnexWeb.Member do
       pipe_through :browser
 

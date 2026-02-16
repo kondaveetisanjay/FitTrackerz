@@ -7,12 +7,12 @@ defmodule FitconnexWeb.GymOperator.InvitationsLive do
 
     case Fitconnex.Gym.list_gyms_by_owner(actor.id, actor: actor) do
       {:ok, [gym | _]} ->
-        member_invitations = case Fitconnex.Gym.list_pending_member_invitations(gym.id, actor: actor, load: [:invited_by]) do
+        member_invitations = case Fitconnex.Gym.list_pending_member_invitations_by_gym(gym.id, actor: actor, load: [:invited_by]) do
           {:ok, invitations} -> invitations
           _ -> []
         end
 
-        trainer_invitations = case Fitconnex.Gym.list_pending_trainer_invitations(gym.id, actor: actor, load: [:invited_by]) do
+        trainer_invitations = case Fitconnex.Gym.list_pending_trainer_invitations_by_gym(gym.id, actor: actor, load: [:invited_by]) do
           {:ok, invitations} -> invitations
           _ -> []
         end

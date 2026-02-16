@@ -92,4 +92,18 @@ defmodule FitconnexWeb.LiveUserAuth do
        |> redirect(to: "/dashboard")}
     end
   end
+
+  def on_mount(:live_member_required, _params, session, socket) do
+    user = get_current_user(socket, session)
+    role = get_user_role(user)
+
+    if user && role in [:platform_admin, :gym_operator, :trainer, :member] do
+      {:cont, socket}
+    else
+      {:halt,
+       socket
+       |> put_flash(:error, "You must be a member to access this page.")
+       |> redirect(to: "/dashboard")}
+    end
+  end
 end

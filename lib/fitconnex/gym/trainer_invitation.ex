@@ -8,6 +8,8 @@ defmodule Fitconnex.Gym.TrainerInvitation do
     table("trainer_invitations")
     repo(Fitconnex.Repo)
 
+    identity_wheres_to_sql unique_pending_invitation: "status = 'pending'"
+
     references do
       reference :gym, on_delete: :delete
       reference :invited_by, on_delete: :nilify
@@ -50,6 +52,12 @@ defmodule Fitconnex.Gym.TrainerInvitation do
     read :list_pending_by_email do
       argument :email, :ci_string, allow_nil?: false
       filter expr(invited_email == ^arg(:email) and status == :pending)
+      prepare build(load: [:gym, :invited_by])
+    end
+
+    read :list_pending_by_gym do
+      argument :gym_id, :uuid, allow_nil?: false
+      filter expr(gym_id == ^arg(:gym_id) and status == :pending)
       prepare build(load: [:gym, :invited_by])
     end
 

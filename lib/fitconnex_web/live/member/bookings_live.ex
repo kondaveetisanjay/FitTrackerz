@@ -23,7 +23,7 @@ defmodule FitconnexWeb.Member.BookingsLive do
       memberships ->
         mids = Enum.map(memberships, & &1.id)
 
-        bookings = case Fitconnex.Scheduling.list_bookings_by_member(mids, actor: actor, load: [scheduled_class: [:class_definition, :trainer, :branch]]) do
+        bookings = case Fitconnex.Scheduling.list_bookings_by_member(mids, actor: actor, load: [scheduled_class: [:class_definition, [trainer: [:user]], :branch]]) do
           {:ok, results} -> Enum.sort_by(results, & &1.inserted_at, {:desc, DateTime})
           _ -> []
         end
@@ -68,7 +68,7 @@ defmodule FitconnexWeb.Member.BookingsLive do
           {:ok, _updated} ->
             mids = Enum.map(socket.assigns.memberships, & &1.id)
 
-            bookings = case Fitconnex.Scheduling.list_bookings_by_member(mids, actor: actor, load: [scheduled_class: [:class_definition, :trainer, :branch]]) do
+            bookings = case Fitconnex.Scheduling.list_bookings_by_member(mids, actor: actor, load: [scheduled_class: [:class_definition, [trainer: [:user]], :branch]]) do
               {:ok, results} -> Enum.sort_by(results, & &1.inserted_at, {:desc, DateTime})
               _ -> []
             end
@@ -156,7 +156,7 @@ defmodule FitconnexWeb.Member.BookingsLive do
                         </td>
                         <td class="text-base-content/70">
                           <%= if booking.scheduled_class.trainer do %>
-                            {booking.scheduled_class.trainer.name}
+                            {booking.scheduled_class.trainer.user.name}
                           <% else %>
                             <span class="text-base-content/30">--</span>
                           <% end %>

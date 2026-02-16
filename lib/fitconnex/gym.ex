@@ -3,7 +3,7 @@ defmodule Fitconnex.Gym do
 
   authorization do
     authorize :by_default
-    require_actor? false
+    require_actor? true
   end
 
   resources do
@@ -48,6 +48,7 @@ defmodule Fitconnex.Gym do
     resource Fitconnex.Gym.MemberInvitation do
       define :get_member_invitation, args: [:id], action: :get_by_id
       define :list_pending_member_invitations, args: [:email], action: :list_pending_by_email
+      define :list_pending_member_invitations_by_gym, args: [:gym_id], action: :list_pending_by_gym
       define :create_member_invitation, action: :create
       define :accept_member_invitation, action: :accept
       define :reject_member_invitation, action: :reject
@@ -57,6 +58,7 @@ defmodule Fitconnex.Gym do
     resource Fitconnex.Gym.TrainerInvitation do
       define :get_trainer_invitation, args: [:id], action: :get_by_id
       define :list_pending_trainer_invitations, args: [:email], action: :list_pending_by_email
+      define :list_pending_trainer_invitations_by_gym, args: [:gym_id], action: :list_pending_by_gym
       define :create_trainer_invitation, action: :create
       define :accept_trainer_invitation, action: :accept
       define :reject_trainer_invitation, action: :reject

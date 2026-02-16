@@ -267,7 +267,7 @@ defmodule FitconnexWeb.GymOperator.DashboardLive do
                               <td class="font-medium">{sc.class_definition.name}</td>
 
                               <td class="text-base-content/60">
-                                {if sc.trainer, do: sc.trainer.name, else: "Unassigned"}
+                                {if sc.trainer, do: sc.trainer.user.name, else: "Unassigned"}
                               </td>
 
                               <td class="text-base-content/60">

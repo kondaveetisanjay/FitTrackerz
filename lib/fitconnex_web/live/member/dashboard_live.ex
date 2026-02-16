@@ -50,7 +50,7 @@ defmodule FitconnexWeb.Member.DashboardLive do
       end
 
       # Get bookings
-      bookings = case Fitconnex.Scheduling.list_bookings_by_member(member_ids, actor: actor, load: [scheduled_class: [:class_definition, :trainer, :branch]]) do
+      bookings = case Fitconnex.Scheduling.list_bookings_by_member(member_ids, actor: actor, load: [scheduled_class: [:class_definition, [trainer: [:user]], :branch]]) do
         {:ok, bookings} -> Enum.filter(bookings, &(&1.status == :confirmed))
         _ -> []
       end
@@ -473,7 +473,7 @@ defmodule FitconnexWeb.Member.DashboardLive do
 
                               <td class="text-base-content/60">
                                 {if booking.scheduled_class.trainer,
-                                  do: booking.scheduled_class.trainer.name,
+                                  do: booking.scheduled_class.trainer.user.name,
                                   else: "TBD"}
                               </td>
 

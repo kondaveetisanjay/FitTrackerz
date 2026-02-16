@@ -3,7 +3,7 @@ defmodule Fitconnex.Training do
 
   authorization do
     authorize :by_default
-    require_actor? false
+    require_actor? true
   end
 
   resources do

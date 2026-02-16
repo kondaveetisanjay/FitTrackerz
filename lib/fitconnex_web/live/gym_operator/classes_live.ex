@@ -21,7 +21,7 @@ defmodule FitconnexWeb.GymOperator.ClassesLive do
 
         branch_ids = Enum.map(branches, & &1.id)
 
-        scheduled_classes = case Fitconnex.Scheduling.list_classes_by_branch(branch_ids, actor: actor, load: [:class_definition, :branch, :trainer]) do
+        scheduled_classes = case Fitconnex.Scheduling.list_classes_by_branch(branch_ids, actor: actor, load: [:class_definition, :branch, [trainer: [:user]]]) do
           {:ok, classes} -> classes
           _ -> []
         end
@@ -107,10 +107,16 @@ defmodule FitconnexWeb.GymOperator.ClassesLive do
         :error -> nil
       end
 
+    duration =
+      case Integer.parse(params["default_duration_minutes"] || "") do
+        {n, _} -> n
+        :error -> 60
+      end
+
     case Fitconnex.Scheduling.create_class_definition(%{
       name: params["name"],
       class_type: params["class_type"],
-      default_duration_minutes: String.to_integer(params["default_duration_minutes"]),
+      default_duration_minutes: duration,
       max_participants: max_p,
       gym_id: gym.id
     }, actor: actor) do
@@ -152,11 +158,17 @@ defmodule FitconnexWeb.GymOperator.ClassesLive do
 
     branch_id = if branch, do: branch.id, else: nil
 
+    sched_duration =
+      case Integer.parse(params["duration_minutes"] || "") do
+        {n, _} -> n
+        :error -> 60
+      end
+
     case Fitconnex.Scheduling.create_scheduled_class(%{
       class_definition_id: params["class_definition_id"],
       branch_id: branch_id,
       scheduled_at: params["scheduled_at"],
-      duration_minutes: String.to_integer(params["duration_minutes"])
+      duration_minutes: sched_duration
     }, actor: actor) do
       {:ok, _class} ->
         branches = case Fitconnex.Gym.list_branches_by_gym(gym.id, actor: actor) do
@@ -166,7 +178,7 @@ defmodule FitconnexWeb.GymOperator.ClassesLive do
 
         branch_ids = Enum.map(branches, & &1.id)
 
-        scheduled_classes = case Fitconnex.Scheduling.list_classes_by_branch(branch_ids, actor: actor, load: [:class_definition, :branch, :trainer]) do
+        scheduled_classes = case Fitconnex.Scheduling.list_classes_by_branch(branch_ids, actor: actor, load: [:class_definition, :branch, [trainer: [:user]]]) do
           {:ok, classes} -> classes
           _ -> []
         end
@@ -462,7 +474,7 @@ defmodule FitconnexWeb.GymOperator.ClassesLive do
                               <td>{sc.duration_minutes} min</td>
                               <td>
                                 <%= if sc.trainer do %>
-                                  {sc.trainer.name}
+                                  {sc.trainer.user.name}
                                 <% else %>
                                   <span class="text-base-content/40">Unassigned</span>
                                 <% end %>

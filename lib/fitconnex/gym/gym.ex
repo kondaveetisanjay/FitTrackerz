@@ -9,7 +9,7 @@ defmodule Fitconnex.Gym.Gym do
     repo(Fitconnex.Repo)
 
     references do
-      reference :owner, on_delete: :delete
+      reference :owner, on_delete: :restrict
     end
   end
 

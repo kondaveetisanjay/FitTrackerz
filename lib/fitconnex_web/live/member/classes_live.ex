@@ -50,7 +50,7 @@ defmodule FitconnexWeb.Member.ClassesLive do
     if branch_ids == [] do
       []
     else
-      case Fitconnex.Scheduling.list_classes_by_branch(branch_ids, actor: actor, load: [:class_definition, :branch, :trainer, :bookings]) do
+      case Fitconnex.Scheduling.list_classes_by_branch(branch_ids, actor: actor, load: [:class_definition, :branch, [trainer: [:user]], :bookings]) do
         {:ok, classes} -> Enum.sort_by(classes, & &1.scheduled_at, DateTime)
         _ -> []
       end
@@ -93,6 +93,12 @@ defmodule FitconnexWeb.Member.ClassesLive do
 
   defp format_datetime(datetime) do
     Calendar.strftime(datetime, "%b %d, %Y at %I:%M %p")
+  end
+
+  defp membership_for_class(memberships, scheduled_class) do
+    gym_id = if scheduled_class.branch, do: scheduled_class.branch.gym_id, else: nil
+
+    Enum.find(memberships, List.first(memberships), fn m -> m.gym_id == gym_id end)
   end
 
   @impl true
@@ -197,7 +203,7 @@ defmodule FitconnexWeb.Member.ClassesLive do
                     <%= if sc.trainer do %>
                       <div class="flex items-center gap-2 text-base-content/70">
                         <.icon name="hero-user-mini" class="size-4 text-base-content/40" />
-                        <span>{sc.trainer.name}</span>
+                        <span>{sc.trainer.user.name}</span>
                       </div>
                     <% end %>
                     <%!-- Location --%>
@@ -219,12 +225,11 @@ defmodule FitconnexWeb.Member.ClassesLive do
                         Full
                       </button>
                     <% else %>
-                      <%!-- Use first membership's member_id for booking --%>
                       <button
                         class="btn btn-primary btn-sm gap-1"
                         phx-click="book_class"
                         phx-value-class-id={sc.id}
-                        phx-value-member-id={hd(@memberships).id}
+                        phx-value-member-id={membership_for_class(@memberships, sc).id}
                       >
                         <.icon name="hero-ticket-mini" class="size-4" /> Book
                       </button>

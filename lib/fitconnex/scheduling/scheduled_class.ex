@@ -47,13 +47,13 @@ defmodule Fitconnex.Scheduling.ScheduledClass do
     read :list_scheduled_by_trainer do
       argument :trainer_ids, {:array, :uuid}, allow_nil?: false
       filter expr(trainer_id in ^arg(:trainer_ids) and status == :scheduled)
-      prepare build(load: [:class_definition, :branch, :trainer])
+      prepare build(load: [:class_definition, :branch, [trainer: [:user]]])
     end
 
     read :list_scheduled_by_branch do
       argument :branch_ids, {:array, :uuid}, allow_nil?: false
       filter expr(branch_id in ^arg(:branch_ids) and status == :scheduled)
-      prepare build(load: [:class_definition, :branch, :trainer, :bookings])
+      prepare build(load: [:class_definition, :branch, [trainer: [:user]], :bookings])
     end
 
     create :create do

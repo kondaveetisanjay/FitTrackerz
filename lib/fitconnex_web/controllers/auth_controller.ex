@@ -2,8 +2,8 @@ defmodule FitconnexWeb.AuthController do
   use FitconnexWeb, :controller
   use AshAuthentication.Phoenix.Controller
 
-  def success(conn, _activity, user, token) do
-    {redirect_path, flash_msg} = redirect_for_user(user)
+  def success(conn, activity, user, token) do
+    {redirect_path, flash_msg} = redirect_for_user(user, activity)
 
     conn
     |> store_in_session(user)
@@ -52,17 +52,16 @@ defmodule FitconnexWeb.AuthController do
     |> redirect(to: ~p"/")
   end
 
-  defp redirect_for_user(user) do
-    if new_user?(user) do
+  defp redirect_for_user(user, activity) do
+    if registration?(activity) do
       {~p"/choose-role", "Account created! Please choose your role."}
     else
       {dashboard_path_for_role(user.role), "Welcome back, #{user.name}!"}
     end
   end
 
-  defp new_user?(user) do
-    user.role == :member && user.inserted_at == user.updated_at
-  end
+  defp registration?({_, :register_with_password}), do: true
+  defp registration?(_), do: false
 
   defp dashboard_path_for_role(:platform_admin), do: "/admin/dashboard"
   defp dashboard_path_for_role(:gym_operator), do: "/gym/dashboard"
