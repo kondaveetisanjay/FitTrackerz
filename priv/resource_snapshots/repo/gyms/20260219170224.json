@@ -21,12 +21,36 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "invited_email",
-      "type": "citext"
+      "source": "name",
+      "type": "text"
     },
     {
       "allow_nil?": false,
-      "default": "\"pending\"",
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "slug",
+      "type": "citext"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "description",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"pending_verification\"",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
@@ -35,6 +59,60 @@
       "size": null,
       "source": "status",
       "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "false",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "is_promoted",
+      "type": "boolean"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "phone",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "[]",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "equipment",
+      "type": [
+        "array",
+        "text"
+      ]
+    },
+    {
+      "allow_nil?": true,
+      "default": "[]",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "services",
+      "type": [
+        "array",
+        "text"
+      ]
     },
     {
       "allow_nil?": false,
@@ -79,39 +157,8 @@
           "global": null,
           "strategy": null
         },
-        "name": "trainer_invitations_gym_id_fkey",
-        "on_delete": "delete",
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "gyms"
-      },
-      "scale": null,
-      "size": null,
-      "source": "gym_id",
-      "type": "uuid"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": null,
-          "global": null,
-          "strategy": null
-        },
-        "name": "trainer_invitations_invited_by_id_fkey",
-        "on_delete": "nilify",
+        "name": "gyms_owner_id_fkey",
+        "on_delete": "restrict",
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
@@ -119,80 +166,31 @@
       },
       "scale": null,
       "size": null,
-      "source": "invited_by_id",
+      "source": "owner_id",
       "type": "uuid"
     }
   ],
   "base_filter": null,
   "check_constraints": [],
   "create_table_options": null,
-  "custom_indexes": [
-    {
-      "all_tenants?": false,
-      "concurrently": false,
-      "error_fields": [
-        "gym_id"
-      ],
-      "fields": [
-        {
-          "type": "atom",
-          "value": "gym_id"
-        }
-      ],
-      "include": null,
-      "message": null,
-      "name": null,
-      "nulls_distinct": true,
-      "prefix": null,
-      "table": null,
-      "unique": false,
-      "using": null,
-      "where": null
-    },
-    {
-      "all_tenants?": false,
-      "concurrently": false,
-      "error_fields": [
-        "invited_email"
-      ],
-      "fields": [
-        {
-          "type": "atom",
-          "value": "invited_email"
-        }
-      ],
-      "include": null,
-      "message": null,
-      "name": null,
-      "nulls_distinct": true,
-      "prefix": null,
-      "table": null,
-      "unique": false,
-      "using": null,
-      "where": null
-    }
-  ],
+  "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "8C78EABE957CBC3CF8805115D3415F3DF5FE8C3ECE97524A60E4113C6B8869F5",
+  "hash": "580EEBABA91591AEF6C72733B024B0711E9AE20D1788C682064D934CBBAC835E",
   "identities": [
     {
       "all_tenants?": false,
       "base_filter": null,
-      "index_name": "trainer_invitations_unique_pending_invitation_index",
+      "index_name": "gyms_unique_slug_index",
       "keys": [
         {
           "type": "atom",
-          "value": "gym_id"
-        },
-        {
-          "type": "atom",
-          "value": "invited_email"
+          "value": "slug"
         }
       ],
-      "name": "unique_pending_invitation",
+      "name": "unique_slug",
       "nils_distinct?": true,
-      "where": "status = 'pending'"
+      "where": null
     }
   ],
   "multitenancy": {
@@ -202,5 +200,5 @@
   },
   "repo": "Elixir.Fitconnex.Repo",
   "schema": null,
-  "table": "trainer_invitations"
+  "table": "gyms"
 }

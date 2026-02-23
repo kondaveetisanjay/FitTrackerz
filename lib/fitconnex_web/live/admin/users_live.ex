@@ -4,11 +4,10 @@ defmodule FitconnexWeb.Admin.UsersLive do
   @role_badge_classes %{
     platform_admin: "badge-error",
     gym_operator: "badge-primary",
-    trainer: "badge-secondary",
     member: "badge-accent"
   }
 
-  @valid_roles ~w(platform_admin gym_operator trainer member)a
+  @valid_roles ~w(platform_admin gym_operator member)a
 
   @impl true
   def mount(_params, _session, socket) do
@@ -110,7 +109,7 @@ defmodule FitconnexWeb.Admin.UsersLive do
           <div class="flex items-center gap-3">
             <Layouts.back_button />
             <div>
-              <h1 class="text-2xl sm:text-3xl font-black tracking-tight">Users</h1>
+              <h1 class="text-2xl sm:text-3xl font-brand">Users</h1>
               <p class="text-base-content/50 mt-1">
                 {length(@users)} total users on the platform
               </p>
@@ -181,9 +180,6 @@ defmodule FitconnexWeb.Admin.UsersLive do
                               </option>
                               <option value="gym_operator" selected={user.role == :gym_operator}>
                                 Gym Operator
-                              </option>
-                              <option value="trainer" selected={user.role == :trainer}>
-                                Trainer
                               </option>
                               <option value="member" selected={user.role == :member}>
                                 Member

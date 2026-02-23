@@ -11,11 +11,9 @@ defmodule Fitconnex.Scheduling.ScheduledClass do
     references do
       reference :class_definition, on_delete: :delete
       reference :branch, on_delete: :delete
-      reference :trainer, on_delete: :nilify
     end
 
     custom_indexes do
-      index([:trainer_id])
       index([:branch_id])
       index([:scheduled_at])
       index([:class_definition_id])
@@ -37,27 +35,20 @@ defmodule Fitconnex.Scheduling.ScheduledClass do
 
     policy action_type([:create, :update, :destroy]) do
       authorize_if actor_attribute_equals(:role, :gym_operator)
-      authorize_if actor_attribute_equals(:role, :trainer)
     end
   end
 
   actions do
     defaults([:read, :destroy])
 
-    read :list_scheduled_by_trainer do
-      argument :trainer_ids, {:array, :uuid}, allow_nil?: false
-      filter expr(trainer_id in ^arg(:trainer_ids) and status == :scheduled)
-      prepare build(load: [:class_definition, :branch, [trainer: [:user]]])
-    end
-
     read :list_scheduled_by_branch do
       argument :branch_ids, {:array, :uuid}, allow_nil?: false
       filter expr(branch_id in ^arg(:branch_ids) and status == :scheduled)
-      prepare build(load: [:class_definition, :branch, [trainer: [:user]], :bookings])
+      prepare build(load: [:class_definition, :branch, :bookings])
     end
 
     create :create do
-      accept([:scheduled_at, :duration_minutes, :class_definition_id, :branch_id, :trainer_id])
+      accept([:scheduled_at, :duration_minutes, :class_definition_id, :branch_id])
 
       validate numericality(:duration_minutes, greater_than: 0)
     end
@@ -105,8 +96,6 @@ defmodule Fitconnex.Scheduling.ScheduledClass do
     belongs_to :branch, Fitconnex.Gym.GymBranch do
       allow_nil?(false)
     end
-
-    belongs_to :trainer, Fitconnex.Gym.GymTrainer
 
     has_many :bookings, Fitconnex.Scheduling.ClassBooking
   end

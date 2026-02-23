@@ -520,7 +520,7 @@ defmodule FitconnexWeb.GymOperator.PlansLive do
             <Layouts.back_button />
           <% end %>
           <div>
-            <h1 class="text-2xl sm:text-3xl font-black tracking-tight">
+            <h1 class="text-2xl sm:text-3xl font-brand">
               <%= case @view do %>
                 <% :detail -> %>
                   {@selected_category}
@@ -751,7 +751,7 @@ defmodule FitconnexWeb.GymOperator.PlansLive do
               <%= if value == :general do %>
                 Standard gym membership with access to facilities.
               <% else %>
-                One-on-one training sessions with a personal trainer.
+                One-on-one personal training sessions.
               <% end %>
             </p>
           </div>

@@ -27,7 +27,7 @@ defmodule Fitconnex.Accounts.User do
       password :password do
         identity_field(:email)
         hash_provider(AshAuthentication.BcryptProvider)
-        confirmation_required?(false)
+        confirmation_required?(true)
 
         register_action_accept([:name])
       end
@@ -40,6 +40,15 @@ defmodule Fitconnex.Accounts.User do
     end
 
     bypass actor_attribute_equals(:role, :platform_admin) do
+      authorize_if always()
+    end
+
+    # Allow authentication actions (register/sign-in) without an actor
+    bypass action(:register_with_password) do
+      authorize_if always()
+    end
+
+    bypass action(:sign_in_with_password) do
       authorize_if always()
     end
 
@@ -91,7 +100,7 @@ defmodule Fitconnex.Accounts.User do
     end
 
     attribute :role, :atom do
-      constraints(one_of: [:platform_admin, :gym_operator, :trainer, :member])
+      constraints(one_of: [:platform_admin, :gym_operator, :member])
       allow_nil?(false)
       default(:member)
       public?(true)

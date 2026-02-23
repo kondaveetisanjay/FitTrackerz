@@ -19,10 +19,50 @@ defmodule FitconnexWeb.AuthController do
     |> redirect(to: redirect_path)
   end
 
-  def failure(conn, _activity, _reason) do
+  def failure(conn, activity, reason) do
+    {redirect_path, message} = failure_details(activity, reason)
+
     conn
-    |> put_flash(:error, "Invalid email or password.")
-    |> redirect(to: ~p"/sign-in")
+    |> put_flash(:error, message)
+    |> redirect(to: redirect_path)
+  end
+
+  defp failure_details(activity, reason) when is_tuple(activity) do
+    case activity do
+      {:password, :register} ->
+        message = extract_error_message(reason, "Registration failed. Please try again.")
+        {~p"/register", message}
+
+      _ ->
+        {~p"/sign-in", "Invalid email or password."}
+    end
+  end
+
+  defp failure_details(_activity, _reason) do
+    {~p"/sign-in", "Invalid email or password."}
+  end
+
+  defp extract_error_message(reason, default) do
+    errors =
+      case reason do
+        %{errors: errors} when is_list(errors) -> errors
+        _ -> []
+      end
+
+    cond do
+      Enum.any?(errors, fn e ->
+        match?(%{field: :email}, e) and
+          String.contains?(to_string(Map.get(e, :message, "")), "already")
+      end) ->
+        "An account with this email already exists. Please sign in instead."
+
+      match?([%{message: msg} | _] when is_binary(msg), errors) ->
+        [%{message: msg} | _] = errors
+        msg
+
+      true ->
+        default
+    end
   end
 
   def role_selected(conn, _params) do
@@ -40,7 +80,7 @@ defmodule FitconnexWeb.AuthController do
         "name" => user.name,
         "role" => to_string(user.role)
       })
-      |> put_flash(:info, "Role updated! Welcome to FitConnex.")
+      |> put_flash(:info, "Role updated! Welcome to FITTRACKRPRO.")
       |> redirect(to: dashboard_path_for_role(user.role))
     end
   end
@@ -60,12 +100,12 @@ defmodule FitconnexWeb.AuthController do
     end
   end
 
+  defp registration?({:password, :register}), do: true
   defp registration?({_, :register_with_password}), do: true
   defp registration?(_), do: false
 
   defp dashboard_path_for_role(:platform_admin), do: "/admin/dashboard"
   defp dashboard_path_for_role(:gym_operator), do: "/gym/dashboard"
-  defp dashboard_path_for_role(:trainer), do: "/trainer/dashboard"
   defp dashboard_path_for_role(:member), do: "/member/dashboard"
   defp dashboard_path_for_role(_), do: "/member/dashboard"
 end

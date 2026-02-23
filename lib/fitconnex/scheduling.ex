@@ -16,7 +16,6 @@ defmodule Fitconnex.Scheduling do
 
     resource Fitconnex.Scheduling.ScheduledClass do
       define :list_scheduled_classes, action: :read
-      define :list_classes_by_trainer, args: [:trainer_ids], action: :list_scheduled_by_trainer
       define :list_classes_by_branch, args: [:branch_ids], action: :list_scheduled_by_branch
       define :create_scheduled_class, action: :create
       define :update_scheduled_class, action: :update

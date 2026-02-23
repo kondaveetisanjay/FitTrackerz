@@ -29,7 +29,10 @@
       "Bash(find:*)",
       "Bash(done)",
       "Bash(while read f)",
-      "Bash(do grep -n \"Ash\\\\.\\\\\\(read\\\\|get\\\\|create\\\\|update\\\\|destroy\\\\\\)\" \"$f\")"
+      "Bash(do grep -n \"Ash\\\\.\\\\\\(read\\\\|get\\\\|create\\\\|update\\\\|destroy\\\\\\)\" \"$f\")",
+      "Bash(cmd.exe /C \"\"\"C:\\\\Program Files\\\\Microsoft Visual Studio\\\\2022\\\\Community\\\\VC\\\\Auxiliary\\\\Build\\\\vcvars64.bat\"\" && cd /d D:\\\\exp\\\\fitconnex && mix deps.compile bcrypt_elixir --force 2>&1\")",
+      "Bash(mix ash.migrate:*)",
+      "WebFetch(domain:daisyui.com)"
     ]
   }
 }

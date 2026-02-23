@@ -1,7 +1,7 @@
 defmodule FitconnexWeb.ChooseRoleLive do
   use FitconnexWeb, :live_view
 
-  @valid_roles ~w(member trainer gym_operator)
+  @valid_roles ~w(member gym_operator)
 
   @impl true
   def mount(_params, _session, socket) do
@@ -45,7 +45,6 @@ defmodule FitconnexWeb.ChooseRoleLive do
 
   defp dashboard_path_for_role(:platform_admin), do: "/admin/dashboard"
   defp dashboard_path_for_role(:gym_operator), do: "/gym/dashboard"
-  defp dashboard_path_for_role(:trainer), do: "/trainer/dashboard"
   defp dashboard_path_for_role(:member), do: "/member/dashboard"
   defp dashboard_path_for_role(_), do: "/member/dashboard"
 
@@ -59,18 +58,18 @@ defmodule FitconnexWeb.ChooseRoleLive do
           <div class="text-center">
             <div class="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full text-sm font-semibold mb-6">
               <.icon name="hero-sparkles-solid" class="size-4" />
-              <span>Welcome to FitConnex</span>
+              <span>Welcome to <span class="text-primary">FIT</span>TRACKRPRO</span>
             </div>
-            <h1 class="text-3xl sm:text-4xl font-black tracking-tight">
+            <h1 class="text-3xl sm:text-4xl font-brand">
               Choose Your <span class="text-primary">Role</span>
             </h1>
             <p class="text-base-content/50 mt-3 text-lg max-w-xl mx-auto">
-              Select how you'd like to use FitConnex. You can always change this later.
+              Select how you'd like to use FITTRACKRPRO. You can always change this later.
             </p>
           </div>
 
           <%!-- Role Cards --%>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="role-cards">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto" id="role-cards">
             <%!-- Member Card --%>
             <button
               phx-click="select_role"
@@ -94,29 +93,6 @@ defmodule FitconnexWeb.ChooseRoleLive do
               </div>
             </button>
 
-            <%!-- Trainer Card --%>
-            <button
-              phx-click="select_role"
-              phx-value-role="trainer"
-              class="card bg-base-200/50 border-2 border-base-300/50 hover:border-secondary/50 shadow-sm hover:shadow-xl hover:-translate-y-1 cursor-pointer text-left group"
-              id="role-trainer"
-            >
-              <div class="card-body items-center text-center p-8">
-                <div class="w-16 h-16 rounded-2xl bg-secondary/10 flex items-center justify-center mb-4 group-hover:bg-secondary/20 group-hover:scale-110">
-                  <.icon name="hero-academic-cap-solid" class="size-8 text-secondary" />
-                </div>
-                <h2 class="card-title text-xl">Trainer</h2>
-                <p class="text-base-content/50 text-sm mt-2 leading-relaxed">
-                  Manage clients, create workout and diet plans, schedule classes, and track progress.
-                </p>
-                <div class="mt-6">
-                  <span class="btn btn-secondary btn-sm font-semibold gap-2 group-hover:shadow-lg group-hover:shadow-secondary/25">
-                    <.icon name="hero-arrow-right-mini" class="size-4" /> Join as Trainer
-                  </span>
-                </div>
-              </div>
-            </button>
-
             <%!-- Gym Operator Card --%>
             <button
               phx-click="select_role"
@@ -130,7 +106,7 @@ defmodule FitconnexWeb.ChooseRoleLive do
                 </div>
                 <h2 class="card-title text-xl">Gym Operator</h2>
                 <p class="text-base-content/50 text-sm mt-2 leading-relaxed">
-                  Set up your gym, manage branches, invite trainers and members, create subscription plans.
+                  Set up your gym, manage branches, invite members, create subscription plans.
                 </p>
                 <div class="mt-6">
                   <span class="btn btn-accent btn-sm font-semibold gap-2 group-hover:shadow-lg group-hover:shadow-accent/25">

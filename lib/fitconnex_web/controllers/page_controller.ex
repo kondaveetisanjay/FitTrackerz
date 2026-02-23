@@ -13,10 +13,6 @@ defmodule FitconnexWeb.PageController do
     render(conn, :solutions_members)
   end
 
-  def solutions_trainers(conn, _params) do
-    render(conn, :solutions_trainers)
-  end
-
   def solutions_operators(conn, _params) do
     render(conn, :solutions_operators)
   end

@@ -5,7 +5,7 @@ defmodule FitconnexWeb.Member.SubscriptionLive do
   def mount(_params, _session, socket) do
     actor = socket.assigns.current_user
 
-    memberships = case Fitconnex.Gym.list_active_memberships(actor.id, actor: actor, load: [:gym, :assigned_trainer]) do
+    memberships = case Fitconnex.Gym.list_active_memberships(actor.id, actor: actor, load: [:gym]) do
       {:ok, memberships} -> memberships
       _ -> []
     end
@@ -92,7 +92,7 @@ defmodule FitconnexWeb.Member.SubscriptionLive do
           <div class="flex items-center gap-3">
             <Layouts.back_button />
             <div>
-              <h1 class="text-2xl sm:text-3xl font-black tracking-tight">My Subscriptions</h1>
+              <h1 class="text-2xl sm:text-3xl font-brand">My Subscriptions</h1>
               <p class="text-base-content/50 mt-1">Manage your gym subscriptions and billing.</p>
             </div>
           </div>

@@ -12,17 +12,11 @@ defmodule FitconnexWeb.GymOperator.InvitationsLive do
           _ -> []
         end
 
-        trainer_invitations = case Fitconnex.Gym.list_pending_trainer_invitations_by_gym(gym.id, actor: actor, load: [:invited_by]) do
-          {:ok, invitations} -> invitations
-          _ -> []
-        end
-
         {:ok,
          assign(socket,
            page_title: "Invitations",
            gym: gym,
-           member_invitations: member_invitations,
-           trainer_invitations: trainer_invitations
+           member_invitations: member_invitations
          )}
 
       _ ->
@@ -30,8 +24,7 @@ defmodule FitconnexWeb.GymOperator.InvitationsLive do
          assign(socket,
            page_title: "Invitations",
            gym: nil,
-           member_invitations: [],
-           trainer_invitations: []
+           member_invitations: []
          )}
     end
   end
@@ -56,8 +49,8 @@ defmodule FitconnexWeb.GymOperator.InvitationsLive do
         <div class="flex items-center gap-3">
           <Layouts.back_button />
           <div>
-            <h1 class="text-2xl sm:text-3xl font-black tracking-tight">Invitations</h1>
-            <p class="text-base-content/50 mt-1">Track all member and trainer invitations.</p>
+            <h1 class="text-2xl sm:text-3xl font-brand">Invitations</h1>
+            <p class="text-base-content/50 mt-1">Track all member invitations.</p>
           </div>
         </div>
 
@@ -124,54 +117,6 @@ defmodule FitconnexWeb.GymOperator.InvitationsLive do
             </div>
           </div>
 
-          <%!-- Trainer Invitations --%>
-          <div class="card bg-base-200/50 border border-base-300/50" id="trainer-invitations-card">
-            <div class="card-body p-6">
-              <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-bold flex items-center gap-2">
-                  <.icon name="hero-academic-cap-solid" class="size-5 text-secondary" />
-                  Trainer Invitations
-                  <span class="badge badge-neutral badge-sm">{length(@trainer_invitations)}</span>
-                </h2>
-                <a href="/gym/trainers" class="btn btn-ghost btn-xs gap-1">
-                  <.icon name="hero-plus-mini" class="size-3" /> Invite
-                </a>
-              </div>
-              <%= if @trainer_invitations == [] do %>
-                <div class="flex items-center gap-3 p-4 rounded-lg bg-base-300/20">
-                  <div class="w-2 h-2 rounded-full bg-base-content/20 shrink-0"></div>
-                  <p class="text-sm text-base-content/50">No trainer invitations sent yet.</p>
-                </div>
-              <% else %>
-                <div class="overflow-x-auto">
-                  <table class="table table-sm" id="trainer-invitations-table">
-                    <thead>
-                      <tr class="text-base-content/40">
-                        <th>Email</th>
-                        <th>Status</th>
-                        <th>Invited By</th>
-                        <th>Date</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <%= for inv <- @trainer_invitations do %>
-                        <tr id={"trainer-inv-#{inv.id}"}>
-                          <td class="font-medium">{inv.invited_email}</td>
-                          <td>
-                            <span class={"badge badge-sm #{status_badge_class(inv.status)}"}>
-                              {Phoenix.Naming.humanize(inv.status)}
-                            </span>
-                          </td>
-                          <td class="text-base-content/60">{inv.invited_by.name}</td>
-                          <td class="text-base-content/60 text-sm">{format_date(inv.inserted_at)}</td>
-                        </tr>
-                      <% end %>
-                    </tbody>
-                  </table>
-                </div>
-              <% end %>
-            </div>
-          </div>
         <% end %>
       </div>
     </Layouts.app>

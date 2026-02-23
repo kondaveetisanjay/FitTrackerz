@@ -4,8 +4,8 @@ defmodule FitconnexWeb.AuthOverrides do
 
   override Components.Banner do
     set(:image_url, nil)
-    set(:text_class, "text-3xl font-extrabold text-center tracking-tight")
-    set(:text, "FitConnex")
+    set(:text_class, "text-3xl font-brand text-center")
+    set(:text, "FITTRACKRPRO")
   end
 
   override Components.Password do

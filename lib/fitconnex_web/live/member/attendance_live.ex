@@ -5,7 +5,7 @@ defmodule FitconnexWeb.Member.AttendanceLive do
   def mount(_params, _session, socket) do
     actor = socket.assigns.current_user
 
-    memberships = case Fitconnex.Gym.list_active_memberships(actor.id, actor: actor, load: [:gym, :assigned_trainer]) do
+    memberships = case Fitconnex.Gym.list_active_memberships(actor.id, actor: actor, load: [:gym]) do
       {:ok, memberships} -> memberships
       _ -> []
     end
@@ -66,7 +66,7 @@ defmodule FitconnexWeb.Member.AttendanceLive do
           <div class="flex items-center gap-3">
             <Layouts.back_button />
             <div>
-              <h1 class="text-2xl sm:text-3xl font-black tracking-tight">Attendance History</h1>
+              <h1 class="text-2xl sm:text-3xl font-brand">Attendance History</h1>
               <p class="text-base-content/50 mt-1">Track your gym check-in history.</p>
             </div>
           </div>

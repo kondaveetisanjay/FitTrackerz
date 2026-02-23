@@ -21,7 +21,7 @@ defmodule FitconnexWeb.GymOperator.ClassesLive do
 
         branch_ids = Enum.map(branches, & &1.id)
 
-        scheduled_classes = case Fitconnex.Scheduling.list_classes_by_branch(branch_ids, actor: actor, load: [:class_definition, :branch, [trainer: [:user]]]) do
+        scheduled_classes = case Fitconnex.Scheduling.list_classes_by_branch(branch_ids, actor: actor, load: [:class_definition, :branch]) do
           {:ok, classes} -> classes
           _ -> []
         end
@@ -178,7 +178,7 @@ defmodule FitconnexWeb.GymOperator.ClassesLive do
 
         branch_ids = Enum.map(branches, & &1.id)
 
-        scheduled_classes = case Fitconnex.Scheduling.list_classes_by_branch(branch_ids, actor: actor, load: [:class_definition, :branch, [trainer: [:user]]]) do
+        scheduled_classes = case Fitconnex.Scheduling.list_classes_by_branch(branch_ids, actor: actor, load: [:class_definition, :branch]) do
           {:ok, classes} -> classes
           _ -> []
         end
@@ -221,7 +221,7 @@ defmodule FitconnexWeb.GymOperator.ClassesLive do
           <div class="flex items-center gap-3">
             <Layouts.back_button />
             <div>
-              <h1 class="text-2xl sm:text-3xl font-black tracking-tight">Classes</h1>
+              <h1 class="text-2xl sm:text-3xl font-brand">Classes</h1>
               <p class="text-base-content/50 mt-1">Manage class types and scheduled sessions.</p>
             </div>
           </div>
@@ -462,7 +462,6 @@ defmodule FitconnexWeb.GymOperator.ClassesLive do
                             <th>Class</th>
                             <th>Scheduled At</th>
                             <th>Duration</th>
-                            <th>Trainer</th>
                             <th>Status</th>
                           </tr>
                         </thead>
@@ -472,13 +471,6 @@ defmodule FitconnexWeb.GymOperator.ClassesLive do
                               <td class="font-medium">{sc.class_definition.name}</td>
                               <td>{Calendar.strftime(sc.scheduled_at, "%b %d, %Y %I:%M %p")}</td>
                               <td>{sc.duration_minutes} min</td>
-                              <td>
-                                <%= if sc.trainer do %>
-                                  {sc.trainer.user.name}
-                                <% else %>
-                                  <span class="text-base-content/40">Unassigned</span>
-                                <% end %>
-                              </td>
                               <td>
                                 <span class={"badge badge-sm #{schedule_status_class(sc.status)}"}>
                                   {Phoenix.Naming.humanize(sc.status)}

@@ -115,8 +115,5 @@ defmodule Fitconnex.Gym.GymBranch do
       destination_attribute(:branch_id)
     end
 
-    has_many :gym_trainers, Fitconnex.Gym.GymTrainer do
-      destination_attribute(:branch_id)
-    end
   end
 end

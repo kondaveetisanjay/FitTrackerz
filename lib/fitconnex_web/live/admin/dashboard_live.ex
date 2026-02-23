@@ -25,12 +25,6 @@ defmodule FitconnexWeb.Admin.DashboardLive do
 
     pending_count = length(pending_gyms)
 
-    trainer_count =
-      case Fitconnex.Accounts.list_users(actor: actor) do
-        {:ok, users} -> Enum.count(users, fn u -> u.role == :trainer end)
-        _ -> 0
-      end
-
     subscription_count =
       case Fitconnex.Billing.list_subscriptions(actor: actor) do
         {:ok, subs} -> length(subs)
@@ -43,7 +37,6 @@ defmodule FitconnexWeb.Admin.DashboardLive do
        user_count: user_count,
        gym_count: gym_count,
        pending_count: pending_count,
-       trainer_count: trainer_count,
        subscription_count: subscription_count,
        pending_gyms: pending_gyms
      )}
@@ -78,14 +71,14 @@ defmodule FitconnexWeb.Admin.DashboardLive do
       <div class="space-y-8">
         <%!-- Page Header --%>
         <div>
-          <h1 class="text-2xl sm:text-3xl font-black tracking-tight">Platform Admin</h1>
+          <h1 class="text-2xl sm:text-3xl font-brand">Platform Admin</h1>
 
           <p class="text-base-content/50 mt-1">
             Welcome back, {@current_user.name}. Here's your platform overview.
           </p>
         </div>
         <%!-- Stats Grid --%>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div class="card bg-base-200/50 border border-base-300/50" id="stat-users">
             <div class="card-body p-5">
               <div class="flex items-center justify-between">
@@ -133,26 +126,6 @@ defmodule FitconnexWeb.Admin.DashboardLive do
               >
                 Manage gyms <.icon name="hero-arrow-right-mini" class="size-3" />
               </.link>
-            </div>
-          </div>
-
-          <div class="card bg-base-200/50 border border-base-300/50" id="stat-trainers">
-            <div class="card-body p-5">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
-                    Trainers
-                  </p>
-
-                  <p class="text-3xl font-black mt-1">{@trainer_count}</p>
-                </div>
-
-                <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
-                  <.icon name="hero-academic-cap-solid" class="size-6 text-accent" />
-                </div>
-              </div>
-
-              <p class="text-xs text-base-content/40 mt-2">Across all gyms</p>
             </div>
           </div>
 

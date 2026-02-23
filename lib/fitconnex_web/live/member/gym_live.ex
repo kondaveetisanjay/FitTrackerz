@@ -32,7 +32,7 @@ defmodule FitconnexWeb.Member.GymLive do
     <Layouts.app flash={@flash} current_user={@current_user}>
       <div class="space-y-8">
         <div>
-          <h1 class="text-2xl sm:text-3xl font-black tracking-tight">My Gyms</h1>
+          <h1 class="text-2xl sm:text-3xl font-brand">My Gyms</h1>
           <p class="text-base-content/50 mt-1">Gyms you are a member of.</p>
         </div>
 
@@ -43,7 +43,7 @@ defmodule FitconnexWeb.Member.GymLive do
                 <.icon name="hero-building-office-2-solid" class="size-10 text-warning" />
               </div>
 
-              <h2 class="text-xl font-black tracking-tight">No Gym Membership</h2>
+              <h2 class="text-xl font-brand">No Gym Membership</h2>
 
               <p class="text-base-content/50 mt-3">
                 You haven't joined any gym yet. Ask a gym operator to invite you as a member.

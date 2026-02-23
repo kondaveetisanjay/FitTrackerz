@@ -7,7 +7,7 @@ defmodule FitconnexWeb.Member.DietLive do
   def mount(_params, _session, socket) do
     actor = socket.assigns.current_user
 
-    memberships = case Fitconnex.Gym.list_active_memberships(actor.id, actor: actor, load: [:gym, :assigned_trainer]) do
+    memberships = case Fitconnex.Gym.list_active_memberships(actor.id, actor: actor, load: [:gym]) do
       {:ok, memberships} -> memberships
       _ -> []
     end
@@ -29,7 +29,7 @@ defmodule FitconnexWeb.Member.DietLive do
       memberships ->
         mids = Enum.map(memberships, & &1.id)
 
-        diet_plans = case Fitconnex.Training.list_diets_by_member(mids, actor: actor, load: [:gym, trainer: [:user]]) do
+        diet_plans = case Fitconnex.Training.list_diets_by_member(mids, actor: actor, load: [:gym]) do
           {:ok, plans} -> plans
           _ -> []
         end
@@ -130,13 +130,13 @@ defmodule FitconnexWeb.Member.DietLive do
     mids = Enum.map(memberships, & &1.id)
 
     diet = Enum.find(socket.assigns.diet_plans, fn d ->
-      d.id == id && is_nil(d.trainer_id)
+      d.id == id
     end)
 
     if diet do
       case Fitconnex.Training.destroy_diet(diet, actor: actor) do
         :ok ->
-          diet_plans = case Fitconnex.Training.list_diets_by_member(mids, actor: actor, load: [:gym, trainer: [:user]]) do
+          diet_plans = case Fitconnex.Training.list_diets_by_member(mids, actor: actor, load: [:gym]) do
             {:ok, plans} -> plans
             _ -> []
           end
@@ -201,7 +201,7 @@ defmodule FitconnexWeb.Member.DietLive do
       {:ok, _plan} ->
         mids = Enum.map(memberships, & &1.id)
 
-        diet_plans = case Fitconnex.Training.list_diets_by_member(mids, actor: actor, load: [:gym, trainer: [:user]]) do
+        diet_plans = case Fitconnex.Training.list_diets_by_member(mids, actor: actor, load: [:gym]) do
           {:ok, plans} -> plans
           _ -> []
         end
@@ -288,7 +288,7 @@ defmodule FitconnexWeb.Member.DietLive do
           <div class="flex items-center gap-3">
             <Layouts.back_button />
             <div>
-              <h1 class="text-2xl sm:text-3xl font-black tracking-tight">My Diet Plans</h1>
+              <h1 class="text-2xl sm:text-3xl font-brand">My Diet Plans</h1>
               <p class="text-base-content/50 mt-1">
                 <%= if @plan_type == :general do %>
                   Create and manage your own nutrition programs.
@@ -524,7 +524,7 @@ defmodule FitconnexWeb.Member.DietLive do
                   <%= if @plan_type == :general do %>
                     Create your first diet plan to start your nutrition journey!
                   <% else %>
-                    Your trainer will create a nutrition plan based on your goals. Check back soon!
+                    Your gym operator will create a nutrition plan based on your goals. Check back soon!
                   <% end %>
                 </p>
               </div>
@@ -551,14 +551,7 @@ defmodule FitconnexWeb.Member.DietLive do
                             {plan.gym.name}
                           </span>
                         <% end %>
-                        <%= if plan.trainer do %>
-                          <span class="flex items-center gap-1">
-                            <.icon name="hero-academic-cap-mini" class="size-3" />
-                            Assigned by {plan.trainer.user.name}
-                          </span>
-                        <% else %>
-                          <span class="badge badge-ghost badge-xs">Self-created</span>
-                        <% end %>
+                        <span class="badge badge-ghost badge-xs">Self-created</span>
                       </div>
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
@@ -570,7 +563,7 @@ defmodule FitconnexWeb.Member.DietLive do
                           {plan.calorie_target} kcal/day
                         </span>
                       <% end %>
-                      <%= if @plan_type == :general and is_nil(plan.trainer_id) do %>
+                      <%= if @plan_type == :general do %>
                         <button
                           class="btn btn-ghost btn-xs text-error"
                           phx-click="delete_diet"

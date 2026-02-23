@@ -56,7 +56,7 @@ defmodule FitconnexWeb.GymOperator.AttendanceLive do
         <div class="flex items-center gap-3">
           <Layouts.back_button />
           <div>
-            <h1 class="text-2xl sm:text-3xl font-black tracking-tight">Attendance</h1>
+            <h1 class="text-2xl sm:text-3xl font-brand">Attendance</h1>
             <p class="text-base-content/50 mt-1">View attendance records for your gym.</p>
           </div>
         </div>

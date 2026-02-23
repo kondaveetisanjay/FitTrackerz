@@ -56,10 +56,8 @@ defmodule FitconnexWeb.Layouts do
                 <.icon name="hero-bars-3" class="size-5" />
               </label>
             </div>
-            <div class="flex-1 lg:flex-none">
-              <h1 class="text-lg font-bold lg:hidden">
-                Fit<span class="text-primary">Connex</span>
-              </h1>
+            <div class="flex-1 lg:flex-none lg:hidden">
+              <.brand_logo class="h-10 w-auto" />
             </div>
             <div class="flex-1 hidden lg:block"></div>
             <div class="flex-none flex items-center gap-3">
@@ -105,8 +103,8 @@ defmodule FitconnexWeb.Layouts do
           <aside class="w-72 min-h-full bg-base-200 border-r border-base-300/50 flex flex-col">
             <%!-- Sidebar Header --%>
             <div class="p-5 border-b border-base-300/50">
-              <a href="/dashboard" class="text-2xl font-extrabold tracking-tight">
-                Fit<span class="text-primary">Connex</span>
+              <a href="/dashboard">
+                <.brand_logo class="h-10 w-auto" />
               </a>
               <p class="text-xs text-base-content/40 mt-1">{format_role(@user_role)} Portal</p>
             </div>
@@ -137,14 +135,17 @@ defmodule FitconnexWeb.Layouts do
       <%!-- Public layout (no sidebar) --%>
       <header class="navbar px-4 sm:px-6 lg:px-8">
         <div class="flex-1">
-          <a href="/" class="flex-1 flex w-fit items-center gap-2 text-xl font-bold">
-            Fit<span class="text-primary">Connex</span>
+          <a href="/" class="flex-1 flex w-fit items-center gap-2">
+            <.brand_logo class="h-10 w-auto" />
           </a>
         </div>
         <div class="flex-none">
           <ul class="flex flex-column px-1 space-x-4 items-center">
             <li>
               <a href="/explore" class="btn btn-ghost btn-sm font-semibold">Explore Gyms</a>
+            </li>
+            <li>
+              <a href="/explore/contests" class="btn btn-ghost btn-sm font-semibold">Contests</a>
             </li>
             <li>
               <.theme_toggle />
@@ -201,7 +202,6 @@ defmodule FitconnexWeb.Layouts do
     </p>
     <.nav_link href="/gym/setup" icon="hero-building-office-solid" label="My Gym" />
     <.nav_link href="/gym/members" icon="hero-user-group-solid" label="Members" />
-    <.nav_link href="/gym/trainers" icon="hero-academic-cap-solid" label="Trainers" />
 
     <div class="divider my-3"></div>
     <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
@@ -211,41 +211,7 @@ defmodule FitconnexWeb.Layouts do
     <.nav_link href="/gym/plans" icon="hero-credit-card-solid" label="Plans & Billing" />
     <.nav_link href="/gym/invitations" icon="hero-envelope-solid" label="Invitations" />
     <.nav_link href="/gym/attendance" icon="hero-clipboard-document-check-solid" label="Attendance" />
-    """
-  end
-
-  def sidebar_nav(%{role: :trainer} = assigns) do
-    ~H"""
-    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
-      Overview
-    </p>
-    <.nav_link href="/trainer/dashboard" icon="hero-squares-2x2-solid" label="Dashboard" />
-    <.nav_link href="/trainer/gyms" icon="hero-building-office-2-solid" label="My Gyms" />
-
-    <div class="divider my-3"></div>
-    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
-      Clients
-    </p>
-    <.nav_link href="/trainer/clients" icon="hero-user-group-solid" label="My Clients" />
-    <.nav_link
-      href="/trainer/attendance"
-      icon="hero-clipboard-document-check-solid"
-      label="Attendance"
-    />
-
-    <div class="divider my-3"></div>
-    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
-      Programs
-    </p>
-    <.nav_link href="/trainer/workouts" icon="hero-fire-solid" label="Workout Plans" />
-    <.nav_link href="/trainer/diets" icon="hero-heart-solid" label="Diet Plans" />
-    <.nav_link href="/trainer/templates" icon="hero-document-duplicate-solid" label="Templates" />
-
-    <div class="divider my-3"></div>
-    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
-      Schedule
-    </p>
-    <.nav_link href="/trainer/classes" icon="hero-calendar-days-solid" label="My Classes" />
+    <.nav_link href="/gym/contests" icon="hero-trophy-solid" label="Contests" />
     """
   end
 
@@ -256,7 +222,6 @@ defmodule FitconnexWeb.Layouts do
     </p>
     <.nav_link href="/member/dashboard" icon="hero-squares-2x2-solid" label="Dashboard" />
     <.nav_link href="/member/gym" icon="hero-building-office-2-solid" label="My Gyms" />
-    <.nav_link href="/member/trainer" icon="hero-academic-cap-solid" label="My Trainer" />
 
     <div class="divider my-3"></div>
     <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
@@ -399,7 +364,6 @@ defmodule FitconnexWeb.Layouts do
 
   defp format_role(:platform_admin), do: "Platform Admin"
   defp format_role(:gym_operator), do: "Gym Operator"
-  defp format_role(:trainer), do: "Trainer"
   defp format_role(:member), do: "Member"
   defp format_role(_), do: "Member"
 end

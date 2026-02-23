@@ -2,49 +2,55 @@
 #
 #     mix run priv/repo/seeds.exs
 #
-# This script wipes all data and creates 4 users connected together.
+# This script wipes all data and creates 3 users connected together.
 
 alias Fitconnex.Accounts.User
-alias Fitconnex.Gym.{Gym, GymBranch, GymMember, GymTrainer}
+alias Fitconnex.Gym.{Gym, GymBranch, GymMember, Contest}
 alias Fitconnex.Billing.{SubscriptionPlan, MemberSubscription}
 
 require Ash.Query
 
 IO.puts("\n--- Wiping all existing data ---")
 
+# Use system actor to bypass authorization during seeding
+system_actor = Fitconnex.Accounts.SystemActor.system_actor()
+seed_opts = [actor: system_actor, authorize?: false]
+
 # Delete in dependency order to avoid FK violations
-Fitconnex.Billing.MemberSubscription |> Ash.read!() |> Enum.each(&Ash.destroy!/1)
-Fitconnex.Billing.SubscriptionPlan |> Ash.read!() |> Enum.each(&Ash.destroy!/1)
-Fitconnex.Training.AttendanceRecord |> Ash.read!() |> Enum.each(&Ash.destroy!/1)
-Fitconnex.Scheduling.ClassBooking |> Ash.read!() |> Enum.each(&Ash.destroy!/1)
-Fitconnex.Scheduling.ScheduledClass |> Ash.read!() |> Enum.each(&Ash.destroy!/1)
-Fitconnex.Scheduling.ClassDefinition |> Ash.read!() |> Enum.each(&Ash.destroy!/1)
-Fitconnex.Training.WorkoutPlan |> Ash.read!() |> Enum.each(&Ash.destroy!/1)
-Fitconnex.Training.DietPlan |> Ash.read!() |> Enum.each(&Ash.destroy!/1)
-Fitconnex.Training.WorkoutPlanTemplate |> Ash.read!() |> Enum.each(&Ash.destroy!/1)
-Fitconnex.Training.DietPlanTemplate |> Ash.read!() |> Enum.each(&Ash.destroy!/1)
-Fitconnex.Gym.MemberInvitation |> Ash.read!() |> Enum.each(&Ash.destroy!/1)
-Fitconnex.Gym.TrainerInvitation |> Ash.read!() |> Enum.each(&Ash.destroy!/1)
-Fitconnex.Gym.GymMember |> Ash.read!() |> Enum.each(&Ash.destroy!/1)
-Fitconnex.Gym.GymTrainer |> Ash.read!() |> Enum.each(&Ash.destroy!/1)
-Fitconnex.Gym.GymBranch |> Ash.read!() |> Enum.each(&Ash.destroy!/1)
-Fitconnex.Gym.Gym |> Ash.read!() |> Enum.each(&Ash.destroy!/1)
-Fitconnex.Accounts.Token |> Ash.read!() |> Enum.each(&Ash.destroy!/1)
-Fitconnex.Accounts.User |> Ash.read!() |> Enum.each(&Ash.destroy!/1)
+Fitconnex.Billing.MemberSubscription |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+Fitconnex.Billing.SubscriptionPlan |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+Fitconnex.Gym.Contest |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+Fitconnex.Training.AttendanceRecord |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+Fitconnex.Scheduling.ClassBooking |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+Fitconnex.Scheduling.ScheduledClass |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+Fitconnex.Scheduling.ClassDefinition |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+Fitconnex.Training.WorkoutPlan |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+Fitconnex.Training.DietPlan |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+Fitconnex.Training.WorkoutPlanTemplate |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+Fitconnex.Training.DietPlanTemplate |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+Fitconnex.Gym.MemberInvitation |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+Fitconnex.Gym.GymMember |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+Fitconnex.Gym.GymBranch |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+Fitconnex.Gym.Gym |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+Fitconnex.Accounts.Token |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+Fitconnex.Accounts.User |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
 
 IO.puts("All data wiped.\n")
 
 # --- Helper ---
 defmodule SeedHelper do
+  @system_actor Fitconnex.Accounts.SystemActor.system_actor()
+
   def create_user(email, password, name) do
     {:ok, user} =
       Fitconnex.Accounts.User
       |> Ash.Changeset.for_create(:register_with_password, %{
         email: email,
         password: password,
+        password_confirmation: password,
         name: name
       })
-      |> Ash.create()
+      |> Ash.create(actor: @system_actor, authorize?: false)
 
     user
   end
@@ -53,7 +59,7 @@ defmodule SeedHelper do
     {:ok, user} =
       user
       |> Ash.Changeset.for_update(:update, %{role: role})
-      |> Ash.update()
+      |> Ash.update(actor: @system_actor, authorize?: false)
 
     user
   end
@@ -72,10 +78,6 @@ operator = SeedHelper.create_user("operator@fitconnex.com", "Password123!", "Gym
 operator = SeedHelper.set_role(operator, :gym_operator)
 IO.puts("  Created: operator@fitconnex.com (gym_operator)")
 
-trainer = SeedHelper.create_user("trainer@fitconnex.com", "Password123!", "John Trainer")
-trainer = SeedHelper.set_role(trainer, :trainer)
-IO.puts("  Created: trainer@fitconnex.com (trainer)")
-
 member = SeedHelper.create_user("member@fitconnex.com", "Password123!", "Jane Member")
 member = SeedHelper.set_role(member, :member)
 IO.puts("  Created: member@fitconnex.com (member)")
@@ -90,16 +92,16 @@ IO.puts("\n--- Creating gym ---")
   |> Ash.Changeset.for_create(:create, %{
     name: "FitZone Gym",
     slug: "fitzone-gym",
-    description: "A premium fitness center with state-of-the-art equipment and expert trainers.",
+    description: "A premium fitness center with state-of-the-art equipment.",
     owner_id: operator.id
-  })
-  |> Ash.create()
+  }, seed_opts)
+  |> Ash.create(seed_opts)
 
 # Verify the gym (admin would do this)
 {:ok, gym} =
   gym
-  |> Ash.Changeset.for_update(:update, %{status: :verified})
-  |> Ash.update()
+  |> Ash.Changeset.for_update(:update, %{status: :verified}, seed_opts)
+  |> Ash.update(seed_opts)
 
 IO.puts("  Created gym: FitZone Gym (verified)")
 
@@ -108,38 +110,21 @@ IO.puts("  Created gym: FitZone Gym (verified)")
 # ============================
 IO.puts("\n--- Creating branch ---")
 
-{:ok, branch} =
+{:ok, _branch} =
   GymBranch
   |> Ash.Changeset.for_create(:create, %{
     address: "123 Fitness Street, Downtown",
     city: "Mumbai",
     state: "Maharashtra",
     postal_code: "400001",
-    is_primary: true,
     gym_id: gym.id
-  })
-  |> Ash.create()
+  }, seed_opts)
+  |> Ash.create(seed_opts)
 
 IO.puts("  Created branch: Mumbai, Maharashtra")
 
 # ============================
-# 4. Add trainer to gym
-# ============================
-IO.puts("\n--- Adding trainer to gym ---")
-
-{:ok, gym_trainer} =
-  GymTrainer
-  |> Ash.Changeset.for_create(:create, %{
-    user_id: trainer.id,
-    gym_id: gym.id,
-    specializations: ["Weight Training", "HIIT", "Yoga"]
-  })
-  |> Ash.create()
-
-IO.puts("  Added John Trainer to FitZone Gym")
-
-# ============================
-# 5. Add member to gym (assigned to trainer)
+# 4. Add member to gym
 # ============================
 IO.puts("\n--- Adding member to gym ---")
 
@@ -147,12 +132,11 @@ IO.puts("\n--- Adding member to gym ---")
   GymMember
   |> Ash.Changeset.for_create(:create, %{
     user_id: member.id,
-    gym_id: gym.id,
-    assigned_trainer_id: trainer.id
-  })
-  |> Ash.create()
+    gym_id: gym.id
+  }, seed_opts)
+  |> Ash.create(seed_opts)
 
-IO.puts("  Added Jane Member to FitZone Gym (trainer: John Trainer)")
+IO.puts("  Added Jane Member to FitZone Gym")
 
 # ============================
 # 6. Create a subscription plan
@@ -167,8 +151,8 @@ IO.puts("\n--- Creating subscription plan ---")
     duration: :monthly,
     price_in_paise: 299_900,
     gym_id: gym.id
-  })
-  |> Ash.create()
+  }, seed_opts)
+  |> Ash.create(seed_opts)
 
 IO.puts("  Created plan: Premium Monthly (Rs 2,999/month)")
 
@@ -189,10 +173,65 @@ ends_at = DateTime.add(now, 30 * 24 * 3600, :second)
     starts_at: now,
     ends_at: ends_at,
     payment_status: :paid
-  })
-  |> Ash.create()
+  }, seed_opts)
+  |> Ash.create(seed_opts)
 
 IO.puts("  Subscribed Jane Member to Premium Monthly plan")
+
+# ============================
+# 8. Create contests
+# ============================
+IO.puts("\n--- Creating contests ---")
+
+{:ok, _contest1} =
+  Contest
+  |> Ash.Changeset.for_create(:create, %{
+    title: "30-Day Weight Loss Challenge",
+    description: "Lose the most body fat percentage in 30 days. Weekly weigh-ins required. Top 3 winners get prizes!",
+    contest_type: :challenge,
+    status: :active,
+    starts_at: DateTime.add(now, -5 * 24 * 3600, :second),
+    ends_at: DateTime.add(now, 25 * 24 * 3600, :second),
+    max_participants: 50,
+    prize_description: "1st: 3 months free membership, 2nd: 1 month free, 3rd: FitZone merchandise",
+    gym_id: gym.id
+  }, seed_opts)
+  |> Ash.create(seed_opts)
+
+IO.puts("  Created contest: 30-Day Weight Loss Challenge (active)")
+
+{:ok, _contest2} =
+  Contest
+  |> Ash.Changeset.for_create(:create, %{
+    title: "Deadlift Championship 2026",
+    description: "Annual deadlift competition. Weight classes: Lightweight (<70kg), Middleweight (70-90kg), Heavyweight (>90kg).",
+    contest_type: :competition,
+    status: :upcoming,
+    starts_at: DateTime.add(now, 14 * 24 * 3600, :second),
+    ends_at: DateTime.add(now, 14 * 24 * 3600 + 8 * 3600, :second),
+    max_participants: 30,
+    prize_description: "Trophies + cash prizes for each weight class",
+    gym_id: gym.id
+  }, seed_opts)
+  |> Ash.create(seed_opts)
+
+IO.puts("  Created contest: Deadlift Championship 2026 (upcoming)")
+
+{:ok, _contest3} =
+  Contest
+  |> Ash.Changeset.for_create(:create, %{
+    title: "FitZone Marathon Prep Camp",
+    description: "8-week running preparation camp for the upcoming Mumbai Marathon. Includes 3 sessions per week with certified running coaches.",
+    contest_type: :event,
+    status: :upcoming,
+    starts_at: DateTime.add(now, 30 * 24 * 3600, :second),
+    ends_at: DateTime.add(now, 86 * 24 * 3600, :second),
+    prize_description: "Completion certificates and finisher medals",
+    gym_id: gym.id
+  }, seed_opts)
+  |> Ash.create(seed_opts)
+
+IO.puts("  Created contest: FitZone Marathon Prep Camp (upcoming)")
 
 # ============================
 # Summary
@@ -207,16 +246,15 @@ Login credentials (password for all: Password123!):
 
   Admin:        admin@fitconnex.com
   Gym Operator: operator@fitconnex.com
-  Trainer:      trainer@fitconnex.com
   Member:       member@fitconnex.com
 
 Connections:
   - FitZone Gym owned by Gym Operator (verified)
   - Branch: Mumbai, Maharashtra
-  - John Trainer -> FitZone Gym (specializations: Weight Training, HIIT, Yoga)
-  - Jane Member -> FitZone Gym (assigned to John Trainer)
+  - Jane Member -> FitZone Gym
   - Premium Monthly plan (Rs 2,999/month)
   - Jane Member subscribed (active, paid)
+  - 3 Contests: Weight Loss Challenge (active), Deadlift Championship (upcoming), Marathon Prep (upcoming)
 
 ========================================
 """)
