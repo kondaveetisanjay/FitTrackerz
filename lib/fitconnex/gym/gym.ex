@@ -48,7 +48,7 @@ defmodule Fitconnex.Gym.Gym do
     read :list_by_owner do
       argument :owner_id, :uuid, allow_nil?: false
       filter expr(owner_id == ^arg(:owner_id))
-      prepare build(load: [:branches, :gym_members, :gym_trainers, :member_invitations, :trainer_invitations])
+      prepare build(load: [:branches, :gym_members, :member_invitations])
     end
 
     read :list_pending_verification do
@@ -64,14 +64,14 @@ defmodule Fitconnex.Gym.Gym do
     end
 
     create :create do
-      accept([:name, :slug, :description, :owner_id])
+      accept([:name, :slug, :description, :owner_id, :phone, :equipment, :services])
 
       validate string_length(:name, min: 1, max: 255)
       validate string_length(:slug, min: 1, max: 255)
     end
 
     update :update do
-      accept([:name, :slug, :description, :status, :is_promoted])
+      accept([:name, :slug, :description, :status, :is_promoted, :phone, :equipment, :services])
     end
   end
 
@@ -103,6 +103,22 @@ defmodule Fitconnex.Gym.Gym do
       default(false)
     end
 
+    attribute :phone, :string do
+      constraints max_length: 20
+      allow_nil? true
+      public? true
+    end
+
+    attribute :equipment, {:array, :string} do
+      default []
+      public? true
+    end
+
+    attribute :services, {:array, :string} do
+      default []
+      public? true
+    end
+
     timestamps()
   end
 
@@ -113,9 +129,7 @@ defmodule Fitconnex.Gym.Gym do
 
     has_many :branches, Fitconnex.Gym.GymBranch
     has_many :gym_members, Fitconnex.Gym.GymMember
-    has_many :gym_trainers, Fitconnex.Gym.GymTrainer
     has_many :member_invitations, Fitconnex.Gym.MemberInvitation
-    has_many :trainer_invitations, Fitconnex.Gym.TrainerInvitation
   end
 
   identities do

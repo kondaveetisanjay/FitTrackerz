@@ -13,6 +13,66 @@
       "type": "uuid"
     },
     {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "name",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "plan_type",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "duration",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "price_in_paise",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "category",
+      "type": "text"
+    },
+    {
       "allow_nil?": true,
       "default": "[]",
       "generated?": false,
@@ -21,23 +81,11 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "specializations",
+      "source": "features",
       "type": [
         "array",
         "text"
       ]
-    },
-    {
-      "allow_nil?": false,
-      "default": "true",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": null,
-      "scale": null,
-      "size": null,
-      "source": "is_active",
-      "type": "boolean"
     },
     {
       "allow_nil?": false,
@@ -82,39 +130,8 @@
           "global": null,
           "strategy": null
         },
-        "name": "gym_trainers_user_id_fkey",
-        "on_delete": null,
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "users"
-      },
-      "scale": null,
-      "size": null,
-      "source": "user_id",
-      "type": "uuid"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": null,
-          "global": null,
-          "strategy": null
-        },
-        "name": "gym_trainers_gym_id_fkey",
-        "on_delete": null,
+        "name": "subscription_plans_gym_id_fkey",
+        "on_delete": "delete",
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
@@ -129,30 +146,34 @@
   "base_filter": null,
   "check_constraints": [],
   "create_table_options": null,
-  "custom_indexes": [],
-  "custom_statements": [],
-  "has_create_action": true,
-  "hash": "B80BF3F5214220D33FE819767DD413FC27653E5C71902050B23DAA422BB4DA2B",
-  "identities": [
+  "custom_indexes": [
     {
       "all_tenants?": false,
-      "base_filter": null,
-      "index_name": "gym_trainers_unique_trainer_gym_index",
-      "keys": [
-        {
-          "type": "atom",
-          "value": "user_id"
-        },
+      "concurrently": false,
+      "error_fields": [
+        "gym_id"
+      ],
+      "fields": [
         {
           "type": "atom",
           "value": "gym_id"
         }
       ],
-      "name": "unique_trainer_gym",
-      "nils_distinct?": true,
+      "include": null,
+      "message": null,
+      "name": null,
+      "nulls_distinct": true,
+      "prefix": null,
+      "table": null,
+      "unique": false,
+      "using": null,
       "where": null
     }
   ],
+  "custom_statements": [],
+  "has_create_action": true,
+  "hash": "B82B0F2C3488FFED11F9E24D04FF49AD6520D38F824611E1DFA02488A42140DC",
+  "identities": [],
   "multitenancy": {
     "attribute": null,
     "global": null,
@@ -160,5 +181,5 @@
   },
   "repo": "Elixir.Fitconnex.Repo",
   "schema": null,
-  "table": "gym_trainers"
+  "table": "subscription_plans"
 }

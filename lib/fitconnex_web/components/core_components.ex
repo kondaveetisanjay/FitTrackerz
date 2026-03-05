@@ -445,6 +445,36 @@ defmodule FitconnexWeb.CoreComponents do
     """
   end
 
+  @doc """
+  Renders the FITTRACKRPRO brand logo as an inline SVG using Gilroy font.
+
+  Uses daisyUI theme variables for automatic light/dark mode adaptation.
+
+  ## Examples
+
+      <.brand_logo class="h-8" />
+      <.brand_logo class="h-6" />
+  """
+  attr :class, :string, default: "h-8 w-auto"
+
+  def brand_logo(assigns) do
+    ~H"""
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 50" class={@class} role="img" aria-label="FITTRACKRPRO">
+      <text
+        x="0"
+        y="40"
+        font-family="'Gilroy', 'Impact', 'Arial Narrow', sans-serif"
+        font-weight="700"
+        font-size="44"
+        letter-spacing="1.5"
+      >
+        <tspan style="fill: var(--color-primary)">FIT</tspan><tspan style="fill: currentColor">TRACKRPRO</tspan>
+      </text>
+      <rect x="0" y="46" width="110" height="3.5" rx="1.75" style="fill: var(--color-secondary)" />
+    </svg>
+    """
+  end
+
   ## JS Commands
 
   def show(js \\ %JS{}, selector) do

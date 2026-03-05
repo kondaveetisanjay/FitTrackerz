@@ -7,7 +7,7 @@ defmodule FitconnexWeb.Member.ClassesLive do
   def mount(_params, _session, socket) do
     actor = socket.assigns.current_user
 
-    memberships = case Fitconnex.Gym.list_active_memberships(actor.id, actor: actor, load: [:gym, :assigned_trainer]) do
+    memberships = case Fitconnex.Gym.list_active_memberships(actor.id, actor: actor, load: [:gym]) do
       {:ok, memberships} -> memberships
       _ -> []
     end
@@ -50,7 +50,7 @@ defmodule FitconnexWeb.Member.ClassesLive do
     if branch_ids == [] do
       []
     else
-      case Fitconnex.Scheduling.list_classes_by_branch(branch_ids, actor: actor, load: [:class_definition, :branch, [trainer: [:user]], :bookings]) do
+      case Fitconnex.Scheduling.list_classes_by_branch(branch_ids, actor: actor, load: [:class_definition, :branch, :bookings]) do
         {:ok, classes} -> Enum.sort_by(classes, & &1.scheduled_at, DateTime)
         _ -> []
       end
@@ -133,7 +133,7 @@ defmodule FitconnexWeb.Member.ClassesLive do
           <div class="flex items-center gap-3">
             <Layouts.back_button />
             <div>
-              <h1 class="text-2xl sm:text-3xl font-black tracking-tight">Browse Classes</h1>
+              <h1 class="text-2xl sm:text-3xl font-brand">Browse Classes</h1>
               <p class="text-base-content/50 mt-1">Discover and book upcoming classes at your gyms.</p>
             </div>
           </div>
@@ -200,13 +200,6 @@ defmodule FitconnexWeb.Member.ClassesLive do
                       <.icon name="hero-arrow-path-mini" class="size-4 text-base-content/40" />
                       <span>{sc.duration_minutes} minutes</span>
                     </div>
-                    <%!-- Trainer --%>
-                    <%= if sc.trainer do %>
-                      <div class="flex items-center gap-2 text-base-content/70">
-                        <.icon name="hero-user-mini" class="size-4 text-base-content/40" />
-                        <span>{sc.trainer.user.name}</span>
-                      </div>
-                    <% end %>
                     <%!-- Location --%>
                     <%= if sc.branch do %>
                       <div class="flex items-center gap-2 text-base-content/70">

@@ -23,7 +23,7 @@ defmodule FitconnexWeb.Auth.SignInLive do
                 <.icon name="hero-bolt-solid" class="size-8 text-primary-content" />
               </div>
             </div>
-            <h1 class="text-5xl font-black tracking-tight">FitConnex</h1>
+            <.brand_logo class="h-20 w-auto mx-auto" />
             <p class="mt-4 text-lg text-base-content/60 leading-relaxed">
               Your all-in-one fitness platform. Discover gyms, book classes, and transform your fitness journey.
             </p>
@@ -34,7 +34,7 @@ defmodule FitconnexWeb.Auth.SignInLive do
               </div>
               <div>
                 <div class="text-2xl font-black text-primary">1K+</div>
-                <div class="text-xs text-base-content/40 mt-1">Trainers</div>
+                <div class="text-xs text-base-content/40 mt-1">Classes</div>
               </div>
               <div>
                 <div class="text-2xl font-black text-primary">50K+</div>
@@ -49,15 +49,12 @@ defmodule FitconnexWeb.Auth.SignInLive do
       <div class="flex-1 flex items-center justify-center p-6 sm:p-12 bg-base-100">
         <div class="w-full max-w-md">
           <%!-- Mobile Logo --%>
-          <div class="lg:hidden flex items-center justify-center gap-2 mb-8">
-            <div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-              <.icon name="hero-bolt-solid" class="size-5 text-primary-content" />
-            </div>
-            <span class="text-2xl font-black tracking-tight">FitConnex</span>
+          <div class="lg:hidden flex items-center justify-center mb-8">
+            <.brand_logo class="h-14 w-auto" />
           </div>
 
           <div class="text-center mb-8">
-            <h2 class="text-2xl sm:text-3xl font-black tracking-tight">Welcome back</h2>
+            <h2 class="text-2xl sm:text-3xl font-brand">Welcome back</h2>
             <p class="text-base-content/50 mt-2">Sign in to your account to continue</p>
           </div>
 

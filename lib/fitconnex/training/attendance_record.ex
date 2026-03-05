@@ -36,7 +36,6 @@ defmodule Fitconnex.Training.AttendanceRecord do
 
     policy action_type([:create, :destroy]) do
       authorize_if actor_attribute_equals(:role, :gym_operator)
-      authorize_if actor_attribute_equals(:role, :trainer)
     end
   end
 

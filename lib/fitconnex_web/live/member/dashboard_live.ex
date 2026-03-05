@@ -16,7 +16,7 @@ defmodule FitconnexWeb.Member.DashboardLive do
       _ -> []
     end
 
-    memberships = case Fitconnex.Gym.list_active_memberships(actor.id, actor: actor, load: [:gym, :assigned_trainer]) do
+    memberships = case Fitconnex.Gym.list_active_memberships(actor.id, actor: actor, load: [:gym]) do
       {:ok, memberships} -> memberships
       _ -> []
     end
@@ -50,7 +50,7 @@ defmodule FitconnexWeb.Member.DashboardLive do
       end
 
       # Get bookings
-      bookings = case Fitconnex.Scheduling.list_bookings_by_member(member_ids, actor: actor, load: [scheduled_class: [:class_definition, [trainer: [:user]], :branch]]) do
+      bookings = case Fitconnex.Scheduling.list_bookings_by_member(member_ids, actor: actor, load: [scheduled_class: [:class_definition, :branch]]) do
         {:ok, bookings} -> Enum.filter(bookings, &(&1.status == :confirmed))
         _ -> []
       end
@@ -145,7 +145,7 @@ defmodule FitconnexWeb.Member.DashboardLive do
               <div>
                 <p class="text-sm text-base-content/50 font-medium">Good to see you</p>
 
-                <h1 class="text-2xl sm:text-3xl font-black tracking-tight mt-1">
+                <h1 class="text-2xl sm:text-3xl font-brand mt-1">
                   {@current_user.name}
                 </h1>
 
@@ -230,7 +230,7 @@ defmodule FitconnexWeb.Member.DashboardLive do
                   <.icon name="hero-building-office-2-solid" class="size-10 text-warning" />
                 </div>
 
-                <h2 class="text-xl font-black tracking-tight">No Gym Membership</h2>
+                <h2 class="text-xl font-brand">No Gym Membership</h2>
 
                 <p class="text-base-content/50 mt-3">
                   You haven't joined any gym yet. Ask a gym operator to invite you as a member.
@@ -373,7 +373,7 @@ defmodule FitconnexWeb.Member.DashboardLive do
                       <p class="text-sm font-semibold">No Workout Plan Yet</p>
 
                       <p class="text-xs text-base-content/40 mt-1">
-                        Your trainer will assign a workout plan tailored for you.
+                        Your gym operator will assign a workout plan tailored for you.
                       </p>
                     </div>
                   <% end %>
@@ -413,7 +413,7 @@ defmodule FitconnexWeb.Member.DashboardLive do
                       <p class="text-sm font-semibold">No Diet Plan Yet</p>
 
                       <p class="text-xs text-base-content/40 mt-1">
-                        Your trainer will create a nutrition plan based on your goals.
+                        Your gym operator will create a nutrition plan based on your goals.
                       </p>
                     </div>
                   <% end %>
@@ -458,8 +458,6 @@ defmodule FitconnexWeb.Member.DashboardLive do
                           <tr class="text-base-content/40">
                             <th>Class</th>
 
-                            <th>Trainer</th>
-
                             <th>Date & Time</th>
                           </tr>
                         </thead>
@@ -469,12 +467,6 @@ defmodule FitconnexWeb.Member.DashboardLive do
                             <tr>
                               <td class="font-medium">
                                 {booking.scheduled_class.class_definition.name}
-                              </td>
-
-                              <td class="text-base-content/60">
-                                {if booking.scheduled_class.trainer,
-                                  do: booking.scheduled_class.trainer.user.name,
-                                  else: "TBD"}
                               </td>
 
                               <td class="text-base-content/60">

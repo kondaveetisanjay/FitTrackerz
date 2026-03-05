@@ -13,31 +13,112 @@
       "type": "uuid"
     },
     {
-      "allow_nil?": true,
-      "default": "[]",
+      "allow_nil?": false,
+      "default": "nil",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "specializations",
-      "type": [
-        "array",
-        "text"
-      ]
+      "source": "title",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "description",
+      "type": "text"
     },
     {
       "allow_nil?": false,
-      "default": "true",
+      "default": "nil",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
       "references": null,
       "scale": null,
       "size": null,
-      "source": "is_active",
-      "type": "boolean"
+      "source": "contest_type",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"upcoming\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "status",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "starts_at",
+      "type": "utc_datetime"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "ends_at",
+      "type": "utc_datetime"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "max_participants",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "prize_description",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "banner_url",
+      "type": "text"
     },
     {
       "allow_nil?": false,
@@ -82,38 +163,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "gym_trainers_user_id_fkey",
-        "on_delete": "delete",
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "users"
-      },
-      "scale": null,
-      "size": null,
-      "source": "user_id",
-      "type": "uuid"
-    },
-    {
-      "allow_nil?": false,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": null,
-          "global": null,
-          "strategy": null
-        },
-        "name": "gym_trainers_gym_id_fkey",
+        "name": "contests_gym_id_fkey",
         "on_delete": "delete",
         "on_update": null,
         "primary_key?": true,
@@ -144,7 +194,7 @@
           "global": null,
           "strategy": null
         },
-        "name": "gym_trainers_branch_id_fkey",
+        "name": "contests_branch_id_fkey",
         "on_delete": "nilify",
         "on_update": null,
         "primary_key?": true,
@@ -161,28 +211,6 @@
   "check_constraints": [],
   "create_table_options": null,
   "custom_indexes": [
-    {
-      "all_tenants?": false,
-      "concurrently": false,
-      "error_fields": [
-        "user_id"
-      ],
-      "fields": [
-        {
-          "type": "atom",
-          "value": "user_id"
-        }
-      ],
-      "include": null,
-      "message": null,
-      "name": null,
-      "nulls_distinct": true,
-      "prefix": null,
-      "table": null,
-      "unique": false,
-      "using": null,
-      "where": null
-    },
     {
       "all_tenants?": false,
       "concurrently": false,
@@ -209,12 +237,12 @@
       "all_tenants?": false,
       "concurrently": false,
       "error_fields": [
-        "branch_id"
+        "status"
       ],
       "fields": [
         {
           "type": "atom",
-          "value": "branch_id"
+          "value": "status"
         }
       ],
       "include": null,
@@ -230,27 +258,8 @@
   ],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "FEEBE519F871EBDC53C0F5203408FCEF3975847B026CDF5722158EB0DC4F7D24",
-  "identities": [
-    {
-      "all_tenants?": false,
-      "base_filter": null,
-      "index_name": "gym_trainers_unique_trainer_gym_index",
-      "keys": [
-        {
-          "type": "atom",
-          "value": "user_id"
-        },
-        {
-          "type": "atom",
-          "value": "gym_id"
-        }
-      ],
-      "name": "unique_trainer_gym",
-      "nils_distinct?": true,
-      "where": null
-    }
-  ],
+  "hash": "7AE1CEEBDE0A7125A0DCEF279532E3835C8261329269983D2DD6D94747DC9FBD",
+  "identities": [],
   "multitenancy": {
     "attribute": null,
     "global": null,
@@ -258,5 +267,5 @@
   },
   "repo": "Elixir.Fitconnex.Repo",
   "schema": null,
-  "table": "gym_trainers"
+  "table": "contests"
 }

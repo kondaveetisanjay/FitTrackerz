@@ -1,8 +1,8 @@
 <%!-- Navigation Bar --%>
-<nav class="navbar bg-base-100/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 border-b border-base-300/50 px-4 sm:px-6 lg:px-8">
+<nav class="navbar bg-base-100/90 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 border-b border-base-300/50 px-4 sm:px-6 lg:px-8">
   <div class="flex-1">
-    <a href="/" class="text-2xl font-extrabold tracking-tight">
-      Fit<span class="text-primary">Connex</span>
+    <a href="/">
+      <.brand_logo class="h-10 w-auto" />
     </a>
   </div>
   <div class="flex-none flex items-center gap-3">
@@ -14,7 +14,7 @@
       </label>
       <ul
         tabindex="0"
-        class="dropdown-content menu p-2 shadow-lg bg-base-100 rounded-box w-56 mt-1 border border-base-300/50"
+        class="dropdown-content menu p-2 shadow-lg bg-base-200 rounded-box w-56 mt-1 border border-base-300/50"
       >
         <li>
           <a href="/solutions/members" class="flex items-center gap-3 py-3">
@@ -22,15 +22,6 @@
             <div>
               <div class="font-semibold">For Members</div>
               <div class="text-xs text-base-content/60">Find your perfect gym</div>
-            </div>
-          </a>
-        </li>
-        <li>
-          <a href="/solutions/trainers" class="flex items-center gap-3 py-3">
-            <.icon name="hero-academic-cap-solid" class="size-5 text-secondary" />
-            <div>
-              <div class="font-semibold">For Trainers</div>
-              <div class="text-xs text-base-content/60">Grow your training business</div>
             </div>
           </a>
         </li>
@@ -65,7 +56,7 @@
       <span>For Members</span>
     </div>
 
-    <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-tight">
+    <h1 class="text-5xl sm:text-6xl lg:text-7xl font-brand leading-tight">
       Your Fitness Journey <span class="text-accent">Starts Here</span>
     </h1>
 
@@ -91,7 +82,7 @@
 <section class="py-24 px-4 sm:px-6 lg:px-8 bg-base-200/50">
   <div class="max-w-6xl mx-auto">
     <div class="text-center mb-16">
-      <h2 class="text-3xl sm:text-4xl font-black tracking-tight">
+      <h2 class="text-3xl sm:text-4xl font-brand">
         Everything You Need to <span class="text-accent">Succeed</span>
       </h2>
       <p class="mt-4 text-base-content/60 text-lg max-w-2xl mx-auto">
@@ -101,7 +92,7 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <%!-- Feature 1 --%>
-      <div class="card bg-base-100 shadow-sm hover:shadow-lg border border-base-300/50 p-6">
+      <div class="card bg-base-200 shadow-sm hover:shadow-lg border border-base-300/50 p-6">
         <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-4">
           <.icon name="hero-map-pin-solid" class="size-6 text-accent" />
         </div>
@@ -112,7 +103,7 @@
       </div>
 
       <%!-- Feature 2 --%>
-      <div class="card bg-base-100 shadow-sm hover:shadow-lg border border-base-300/50 p-6">
+      <div class="card bg-base-200 shadow-sm hover:shadow-lg border border-base-300/50 p-6">
         <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-4">
           <.icon name="hero-calendar-days-solid" class="size-6 text-accent" />
         </div>
@@ -123,18 +114,18 @@
       </div>
 
       <%!-- Feature 3 --%>
-      <div class="card bg-base-100 shadow-sm hover:shadow-lg border border-base-300/50 p-6">
+      <div class="card bg-base-200 shadow-sm hover:shadow-lg border border-base-300/50 p-6">
         <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-4">
           <.icon name="hero-fire-solid" class="size-6 text-accent" />
         </div>
         <h3 class="text-xl font-bold mb-3">Workout Plans</h3>
         <p class="text-base-content/60 leading-relaxed">
-          Access personalized workout plans from your trainer with exercises, sets, reps, and progress tracking.
+          Access personalized workout plans with exercises, sets, reps, and progress tracking.
         </p>
       </div>
 
       <%!-- Feature 4 --%>
-      <div class="card bg-base-100 shadow-sm hover:shadow-lg border border-base-300/50 p-6">
+      <div class="card bg-base-200 shadow-sm hover:shadow-lg border border-base-300/50 p-6">
         <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-4">
           <.icon name="hero-heart-solid" class="size-6 text-accent" />
         </div>
@@ -145,7 +136,7 @@
       </div>
 
       <%!-- Feature 5 --%>
-      <div class="card bg-base-100 shadow-sm hover:shadow-lg border border-base-300/50 p-6">
+      <div class="card bg-base-200 shadow-sm hover:shadow-lg border border-base-300/50 p-6">
         <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-4">
           <.icon name="hero-chart-bar-solid" class="size-6 text-accent" />
         </div>
@@ -156,7 +147,7 @@
       </div>
 
       <%!-- Feature 6 --%>
-      <div class="card bg-base-100 shadow-sm hover:shadow-lg border border-base-300/50 p-6">
+      <div class="card bg-base-200 shadow-sm hover:shadow-lg border border-base-300/50 p-6">
         <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-4">
           <.icon name="hero-credit-card-solid" class="size-6 text-accent" />
         </div>
@@ -173,7 +164,7 @@
 <section class="py-24 px-4 sm:px-6 lg:px-8">
   <div class="max-w-6xl mx-auto">
     <div class="text-center mb-16">
-      <h2 class="text-3xl sm:text-4xl font-black tracking-tight">
+      <h2 class="text-3xl sm:text-4xl font-brand">
         How It <span class="text-accent">Works</span>
       </h2>
       <p class="mt-4 text-base-content/60 text-lg">
@@ -233,7 +224,7 @@
 <section class="py-24 px-4 sm:px-6 lg:px-8 bg-base-200/50">
   <div class="max-w-6xl mx-auto">
     <div class="text-center mb-16">
-      <h2 class="text-3xl sm:text-4xl font-black tracking-tight">
+      <h2 class="text-3xl sm:text-4xl font-brand">
         Why Members <span class="text-accent">Love Us</span>
       </h2>
     </div>
@@ -268,9 +259,9 @@
           <.icon name="hero-check-circle-solid" class="size-8 text-accent" />
         </div>
         <div>
-          <h3 class="text-xl font-bold mb-2">Professional Trainers</h3>
+          <h3 class="text-xl font-bold mb-2">Personalized Plans</h3>
           <p class="text-base-content/60">
-            Get guidance from certified trainers with personalized workout and nutrition plans.
+            Get personalized workout and nutrition plans tailored to your fitness goals.
           </p>
         </div>
       </div>
@@ -294,11 +285,11 @@
 <section class="py-24 px-4 sm:px-6 lg:px-8">
   <div class="max-w-3xl mx-auto text-center">
     <div class="card bg-gradient-to-r from-accent/10 via-base-100 to-accent/10 border border-base-300 shadow-xl p-8 sm:p-12">
-      <h2 class="text-3xl sm:text-4xl font-black tracking-tight mb-4">
+      <h2 class="text-3xl sm:text-4xl font-brand mb-4">
         Ready to Start Your <span class="text-accent">Fitness Journey?</span>
       </h2>
       <p class="text-base-content/60 text-lg mb-8">
-        Join thousands of members who've transformed their lives with FitConnex.
+        Join thousands of members who've transformed their lives with FITTRACKRPRO.
       </p>
       <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
         <a
@@ -316,11 +307,11 @@
 <%!-- Footer --%>
 <footer class="py-12 px-4 sm:px-6 lg:px-8 border-t border-base-300">
   <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-    <div class="text-xl font-extrabold tracking-tight">
-      Fit<span class="text-primary">Connex</span>
+    <div>
+      <.brand_logo class="h-10 w-auto" />
     </div>
     <p class="text-sm text-base-content/40">
-      © 2026 FitConnex. All rights reserved.
+      © 2026 FITTRACKRPRO. All rights reserved.
     </p>
   </div>
 </footer>

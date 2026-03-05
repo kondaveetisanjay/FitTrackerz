@@ -7,7 +7,7 @@ defmodule FitconnexWeb.Member.WorkoutLive do
   def mount(_params, _session, socket) do
     actor = socket.assigns.current_user
 
-    memberships = case Fitconnex.Gym.list_active_memberships(actor.id, actor: actor, load: [:gym, :assigned_trainer]) do
+    memberships = case Fitconnex.Gym.list_active_memberships(actor.id, actor: actor, load: [:gym]) do
       {:ok, memberships} -> memberships
       _ -> []
     end
@@ -29,7 +29,7 @@ defmodule FitconnexWeb.Member.WorkoutLive do
       memberships ->
         mids = Enum.map(memberships, & &1.id)
 
-        workout_plans = case Fitconnex.Training.list_workouts_by_member(mids, actor: actor, load: [:gym, trainer: [:user]]) do
+        workout_plans = case Fitconnex.Training.list_workouts_by_member(mids, actor: actor, load: [:gym]) do
           {:ok, plans} -> plans
           _ -> []
         end
@@ -127,13 +127,13 @@ defmodule FitconnexWeb.Member.WorkoutLive do
     mids = Enum.map(memberships, & &1.id)
 
     workout = Enum.find(socket.assigns.workout_plans, fn w ->
-      w.id == id && is_nil(w.trainer_id)
+      w.id == id
     end)
 
     if workout do
       case Fitconnex.Training.destroy_workout(workout, actor: actor) do
         :ok ->
-          workout_plans = case Fitconnex.Training.list_workouts_by_member(mids, actor: actor, load: [:gym, trainer: [:user]]) do
+          workout_plans = case Fitconnex.Training.list_workouts_by_member(mids, actor: actor, load: [:gym]) do
             {:ok, plans} -> plans
             _ -> []
           end
@@ -181,7 +181,7 @@ defmodule FitconnexWeb.Member.WorkoutLive do
       {:ok, _plan} ->
         mids = Enum.map(memberships, & &1.id)
 
-        workout_plans = case Fitconnex.Training.list_workouts_by_member(mids, actor: actor, load: [:gym, trainer: [:user]]) do
+        workout_plans = case Fitconnex.Training.list_workouts_by_member(mids, actor: actor, load: [:gym]) do
           {:ok, plans} -> plans
           _ -> []
         end
@@ -234,7 +234,7 @@ defmodule FitconnexWeb.Member.WorkoutLive do
           <div class="flex items-center gap-3">
             <Layouts.back_button />
             <div>
-              <h1 class="text-2xl sm:text-3xl font-black tracking-tight">My Workout Plans</h1>
+              <h1 class="text-2xl sm:text-3xl font-brand">My Workout Plans</h1>
               <p class="text-base-content/50 mt-1">
                 <%= if @plan_type == :general do %>
                   Create and manage your own workout programs.
@@ -433,7 +433,7 @@ defmodule FitconnexWeb.Member.WorkoutLive do
                   <%= if @plan_type == :general do %>
                     Create your first workout plan to start your fitness journey!
                   <% else %>
-                    Your trainer will assign a workout plan tailored for you. Check back soon!
+                    Your gym operator will assign a workout plan tailored for you. Check back soon!
                   <% end %>
                 </p>
               </div>
@@ -460,21 +460,14 @@ defmodule FitconnexWeb.Member.WorkoutLive do
                             {plan.gym.name}
                           </span>
                         <% end %>
-                        <%= if plan.trainer do %>
-                          <span class="flex items-center gap-1">
-                            <.icon name="hero-academic-cap-mini" class="size-3" />
-                            Assigned by {plan.trainer.user.name}
-                          </span>
-                        <% else %>
-                          <span class="badge badge-ghost badge-xs">Self-created</span>
-                        <% end %>
+                        <span class="badge badge-ghost badge-xs">Self-created</span>
                       </div>
                     </div>
                     <div class="flex items-center gap-2">
                       <div class="badge badge-accent badge-outline badge-sm">
                         {length(plan.exercises || [])} exercises
                       </div>
-                      <%= if @plan_type == :general and is_nil(plan.trainer_id) do %>
+                      <%= if @plan_type == :general do %>
                         <button
                           class="btn btn-ghost btn-xs text-error"
                           phx-click="delete_workout"

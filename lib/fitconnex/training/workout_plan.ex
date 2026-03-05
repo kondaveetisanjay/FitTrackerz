@@ -11,13 +11,11 @@ defmodule Fitconnex.Training.WorkoutPlan do
     references do
       reference :member, on_delete: :delete
       reference :gym, on_delete: :delete
-      reference :trainer, on_delete: :nilify
       reference :template, on_delete: :nilify
     end
 
     custom_indexes do
       index([:member_id])
-      index([:trainer_id])
       index([:gym_id])
     end
   end
@@ -37,7 +35,6 @@ defmodule Fitconnex.Training.WorkoutPlan do
 
     policy action_type([:create, :update, :destroy]) do
       authorize_if actor_attribute_equals(:role, :gym_operator)
-      authorize_if actor_attribute_equals(:role, :trainer)
     end
   end
 
@@ -47,22 +44,17 @@ defmodule Fitconnex.Training.WorkoutPlan do
     read :list_by_member do
       argument :member_ids, {:array, :uuid}, allow_nil?: false
       filter expr(member_id in ^arg(:member_ids))
-      prepare build(load: [:gym, trainer: [:user]])
-    end
-
-    read :list_by_trainer do
-      argument :trainer_ids, {:array, :uuid}, allow_nil?: false
-      filter expr(trainer_id in ^arg(:trainer_ids))
+      prepare build(load: [:gym])
     end
 
     create :create do
-      accept([:name, :exercises, :member_id, :gym_id, :trainer_id, :template_id])
+      accept([:name, :exercises, :member_id, :gym_id, :template_id])
 
       validate string_length(:name, min: 1, max: 255)
     end
 
     create :create_from_template do
-      accept([:member_id, :gym_id, :trainer_id, :template_id])
+      accept([:member_id, :gym_id, :template_id])
 
       change(Fitconnex.Training.Changes.CopyFromWorkoutTemplate)
     end
@@ -97,8 +89,6 @@ defmodule Fitconnex.Training.WorkoutPlan do
     belongs_to :gym, Fitconnex.Gym.Gym do
       allow_nil?(false)
     end
-
-    belongs_to :trainer, Fitconnex.Gym.GymTrainer
 
     belongs_to :template, Fitconnex.Training.WorkoutPlanTemplate
   end

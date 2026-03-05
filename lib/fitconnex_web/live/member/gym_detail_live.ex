@@ -56,18 +56,11 @@ defmodule FitconnexWeb.Member.GymDetailLive do
           _ -> []
         end
 
-        trainers = case Fitconnex.Gym.list_active_trainers_by_gym(gym_id, actor: actor, load: [:user]) do
-          {:ok, trainers} -> trainers
-          _ -> []
-        end
-
         %{
           gym: gym,
           membership: membership,
           plans: plans,
-          class_defs: class_defs,
-          trainers: trainers,
-          trainer_count: length(trainers)
+          class_defs: class_defs
         }
 
       _ ->
@@ -115,7 +108,7 @@ defmodule FitconnexWeb.Member.GymDetailLive do
 
               <div>
                 <div class="flex items-center gap-3 flex-wrap">
-                  <h1 class="text-2xl sm:text-3xl font-black tracking-tight">
+                  <h1 class="text-2xl sm:text-3xl font-brand">
                     {@gym_data.gym.name}
                   </h1>
 
@@ -140,18 +133,11 @@ defmodule FitconnexWeb.Member.GymDetailLive do
           </div>
 
           <%!-- Quick Stats --%>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div class="card bg-base-200/50 border border-base-300/50">
               <div class="card-body p-4 text-center">
                 <div class="text-2xl font-black text-primary">1</div>
                 <div class="text-xs text-base-content/50">Location</div>
-              </div>
-            </div>
-
-            <div class="card bg-base-200/50 border border-base-300/50">
-              <div class="card-body p-4 text-center">
-                <div class="text-2xl font-black text-primary">{@gym_data.trainer_count}</div>
-                <div class="text-xs text-base-content/50">Trainers</div>
               </div>
             </div>
 
@@ -379,40 +365,6 @@ defmodule FitconnexWeb.Member.GymDetailLive do
             </div>
           <% end %>
 
-          <%!-- Trainers --%>
-          <%= if @gym_data.trainers != [] do %>
-            <div class="card bg-base-200/50 border border-base-300/50">
-              <div class="card-body p-5">
-                <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                  <.icon name="hero-academic-cap-solid" class="size-5 text-secondary" /> Trainers
-                </h2>
-
-                <div class="space-y-2">
-                  <%= for trainer <- @gym_data.trainers do %>
-                    <div class="flex items-center gap-3 p-3 rounded-lg bg-base-300/20">
-                      <div class="w-9 h-9 rounded-full bg-secondary/10 flex items-center justify-center shrink-0">
-                        <.icon name="hero-user-solid" class="size-4 text-secondary" />
-                      </div>
-
-                      <div class="flex-1 min-w-0">
-                        <p class="font-medium">{trainer.user.name}</p>
-
-                        <%= if trainer.specializations != [] do %>
-                          <div class="flex flex-wrap gap-1 mt-1">
-                            <%= for spec <- trainer.specializations do %>
-                              <span class="badge badge-outline badge-xs">
-                                {Phoenix.Naming.humanize(spec)}
-                              </span>
-                            <% end %>
-                          </div>
-                        <% end %>
-                      </div>
-                    </div>
-                  <% end %>
-                </div>
-              </div>
-            </div>
-          <% end %>
         </div>
       <% end %>
     </Layouts.app>

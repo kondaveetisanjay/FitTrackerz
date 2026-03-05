@@ -44,14 +44,14 @@ defmodule Fitconnex.Billing.SubscriptionPlan do
     end
 
     create :create do
-      accept([:name, :plan_type, :duration, :price_in_paise, :gym_id, :category])
+      accept([:name, :plan_type, :duration, :price_in_paise, :gym_id, :category, :features])
 
       validate string_length(:name, min: 1, max: 255)
       validate numericality(:price_in_paise, greater_than_or_equal_to: 0)
     end
 
     update :update do
-      accept([:name, :plan_type, :duration, :price_in_paise, :category])
+      accept([:name, :plan_type, :duration, :price_in_paise, :category, :features])
 
       validate string_length(:name, min: 1, max: 255)
       validate numericality(:price_in_paise, greater_than_or_equal_to: 0)
@@ -83,6 +83,11 @@ defmodule Fitconnex.Billing.SubscriptionPlan do
     attribute :category, :string do
       allow_nil?(true)
       constraints(max_length: 100)
+    end
+
+    attribute :features, {:array, :string} do
+      default []
+      public? true
     end
 
     timestamps()

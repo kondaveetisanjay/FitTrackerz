@@ -7,6 +7,9 @@
 @source "../../lib/fitconnex_web";
 @source "../../deps/ash_authentication_phoenix";
 
+/* Google Fonts – Oswald for brand headings */
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap');
+
 /* A Tailwind plugin that makes "hero-#{ICON}" classes available.
    The heroicons installation itself is managed by your mix.exs */
 @plugin "../vendor/heroicons";
@@ -18,32 +21,43 @@
   themes: false;
 }
 
-/* daisyUI theme plugin – Dark theme: deep charcoal with fiery orange accents */
+/* ============================================================
+   FITTRACKRPRO Brand Theme – Light (DEFAULT)
+   Indigo + Coral palette – Modern Fitness SaaS
+   Clean whites with cool undertones
+   ============================================================ */
 @plugin "../vendor/daisyui-theme" {
-  name: "dark";
-  default: false;
-  prefersdark: true;
-  color-scheme: "dark";
-  --color-base-100: oklch(20% 0.01 260);
-  --color-base-200: oklch(16% 0.008 260);
-  --color-base-300: oklch(13% 0.006 260);
-  --color-base-content: oklch(95% 0.01 260);
-  --color-primary: oklch(72% 0.19 50);
-  --color-primary-content: oklch(15% 0.02 50);
-  --color-secondary: oklch(65% 0.15 280);
-  --color-secondary-content: oklch(95% 0.02 280);
-  --color-accent: oklch(75% 0.18 155);
-  --color-accent-content: oklch(15% 0.02 155);
-  --color-neutral: oklch(30% 0.015 260);
-  --color-neutral-content: oklch(90% 0.005 260);
-  --color-info: oklch(65% 0.18 240);
-  --color-info-content: oklch(95% 0.01 240);
-  --color-success: oklch(68% 0.16 155);
-  --color-success-content: oklch(15% 0.02 155);
-  --color-warning: oklch(78% 0.17 75);
-  --color-warning-content: oklch(15% 0.02 75);
-  --color-error: oklch(62% 0.24 25);
-  --color-error-content: oklch(95% 0.02 25);
+  name: "light";
+  default: true;
+  prefersdark: false;
+  color-scheme: "light";
+  /* Base surfaces – clean white with cool undertones */
+  --color-base-100: oklch(100% 0 0);
+  --color-base-200: oklch(97% 0.003 280);
+  --color-base-300: oklch(92% 0.005 280);
+  --color-base-content: oklch(18% 0.005 280);
+  /* Indigo – rich purple-blue, trust & professionalism */
+  --color-primary: oklch(40% 0.22 280);
+  --color-primary-content: oklch(100% 0 0);
+  /* Coral – energy & motivation */
+  --color-secondary: oklch(68% 0.18 25);
+  --color-secondary-content: oklch(100% 0 0);
+  /* Amber – warm supporting accent */
+  --color-accent: oklch(72% 0.15 75);
+  --color-accent-content: oklch(18% 0.02 75);
+  /* Neutral – cool charcoal */
+  --color-neutral: oklch(28% 0.01 280);
+  --color-neutral-content: oklch(98% 0 0);
+  /* Semantic colors */
+  --color-info: oklch(52% 0.15 250);
+  --color-info-content: oklch(98% 0.005 250);
+  --color-success: oklch(55% 0.16 155);
+  --color-success-content: oklch(98% 0.005 155);
+  --color-warning: oklch(72% 0.14 82);
+  --color-warning-content: oklch(18% 0.02 82);
+  --color-error: oklch(50% 0.20 25);
+  --color-error-content: oklch(98% 0.005 25);
+  /* Shape */
   --radius-selector: 0.5rem;
   --radius-field: 0.5rem;
   --radius-box: 0.75rem;
@@ -54,32 +68,42 @@
   --noise: 0;
 }
 
-/* daisyUI theme plugin – Light theme: clean white with vibrant orange energy */
+/* ============================================================
+   FITTRACKRPRO Brand Theme – Dark variant
+   Indigo + Coral on dark surfaces
+   ============================================================ */
 @plugin "../vendor/daisyui-theme" {
-  name: "light";
-  default: true;
-  prefersdark: false;
-  color-scheme: "light";
-  --color-base-100: oklch(98% 0.002 90);
-  --color-base-200: oklch(93% 0.006 90);
-  --color-base-300: oklch(86% 0.01 90);
-  --color-base-content: oklch(20% 0.015 260);
-  --color-primary: oklch(65% 0.22 45);
-  --color-primary-content: oklch(99% 0.01 90);
-  --color-secondary: oklch(48% 0.16 280);
-  --color-secondary-content: oklch(98% 0.01 280);
-  --color-accent: oklch(58% 0.2 155);
-  --color-accent-content: oklch(98% 0.01 155);
-  --color-neutral: oklch(30% 0.025 260);
-  --color-neutral-content: oklch(98% 0 0);
-  --color-info: oklch(55% 0.22 240);
-  --color-info-content: oklch(97% 0.01 240);
-  --color-success: oklch(55% 0.19 155);
-  --color-success-content: oklch(98% 0.01 155);
-  --color-warning: oklch(72% 0.18 75);
-  --color-warning-content: oklch(18% 0.02 75);
-  --color-error: oklch(55% 0.27 25);
-  --color-error-content: oklch(97% 0.01 25);
+  name: "dark";
+  default: false;
+  prefersdark: true;
+  color-scheme: "dark";
+  /* Base surfaces – deep indigo-blacks */
+  --color-base-100: oklch(8% 0.005 280);
+  --color-base-200: oklch(15% 0.005 280);
+  --color-base-300: oklch(22% 0.005 280);
+  --color-base-content: oklch(94% 0 0);
+  /* Indigo – brighter for dark bg readability */
+  --color-primary: oklch(55% 0.22 280);
+  --color-primary-content: oklch(100% 0 0);
+  /* Coral – brighter on dark */
+  --color-secondary: oklch(72% 0.18 25);
+  --color-secondary-content: oklch(100% 0 0);
+  /* Amber – brighter on dark */
+  --color-accent: oklch(78% 0.15 75);
+  --color-accent-content: oklch(14% 0.02 75);
+  /* Neutral tones – cool */
+  --color-neutral: oklch(25% 0.005 280);
+  --color-neutral-content: oklch(90% 0 0);
+  /* Semantic colors */
+  --color-info: oklch(62% 0.16 250);
+  --color-info-content: oklch(95% 0.01 250);
+  --color-success: oklch(65% 0.14 155);
+  --color-success-content: oklch(15% 0.02 155);
+  --color-warning: oklch(80% 0.16 82);
+  --color-warning-content: oklch(14% 0.02 82);
+  --color-error: oklch(55% 0.20 25);
+  --color-error-content: oklch(95% 0.02 25);
+  /* Shape */
   --radius-selector: 0.5rem;
   --radius-field: 0.5rem;
   --radius-box: 0.75rem;
@@ -101,27 +125,183 @@
 /* Make LiveView wrapper divs transparent for layout */
 [data-phx-session], [data-phx-teleported-src] { display: contents }
 
-/* Smooth transitions globally */
-*, *::before, *::after {
+/* ============================================================
+   Brand Typography – Gilroy
+   ============================================================ */
+
+@font-face {
+  font-family: 'Gilroy';
+  src: url('/fonts/Gilroy-Bold.woff2') format('woff2'),
+       url('/fonts/Gilroy-Bold.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Gilroy';
+  src: url('/fonts/Gilroy-SemiBold.woff2') format('woff2'),
+       url('/fonts/Gilroy-SemiBold.woff') format('woff');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Gilroy';
+  src: url('/fonts/Gilroy-Medium.woff2') format('woff2'),
+       url('/fonts/Gilroy-Medium.woff') format('woff');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Gilroy';
+  src: url('/fonts/Gilroy-Regular.woff2') format('woff2'),
+       url('/fonts/Gilroy-Regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Brand heading font – Gilroy Bold */
+.font-brand {
+  font-family: 'Gilroy', 'Impact', 'Arial Narrow', sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* Smooth transitions on interactive elements only */
+a, button, .btn, .card, .badge, .collapse, input, select, textarea,
+[class*="hover:"] {
   transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
 }
 
+/* Brand button hover effects */
+.btn-primary:hover {
+  filter: brightness(0.85);
+}
+
+/* ============================================================
+   Animation Keyframes
+   ============================================================ */
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 8px 2px oklch(40% 0.22 280 / 0.3); }
+  50% { box-shadow: 0 0 20px 6px oklch(40% 0.22 280 / 0.5); }
+}
+
+@keyframes marqueeLeft {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes marqueeRight {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* ============================================================
+   Animation Utility Classes
+   ============================================================ */
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float 4s ease-in-out infinite 1.5s;
+}
+
+.animate-float-slow {
+  animation: float 8s ease-in-out infinite;
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.6s ease-out both;
+}
+
+.animate-glow-pulse {
+  animation: glowPulse 2.5s ease-in-out infinite;
+}
+
+.animate-marquee-left {
+  animation: marqueeLeft 30s linear infinite;
+}
+
+.animate-marquee-right {
+  animation: marqueeRight 30s linear infinite;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.4s ease-out both;
+}
+
+/* Pause marquee on mobile for accessibility */
+@media (max-width: 768px) {
+  .animate-marquee-left,
+  .animate-marquee-right {
+    animation-play-state: paused;
+  }
+}
+
+/* ============================================================
+   Glass Card Utility
+   ============================================================ */
+
+.glass-card {
+  background: oklch(100% 0 0 / 0.60);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-radius: 1rem;
+  border: 1px solid oklch(92% 0.005 280 / 0.30);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.glass-card:hover {
+  box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  transform: translateY(-2px);
+}
+
+:where([data-theme=dark]) .glass-card {
+  background: oklch(15% 0 0 / 0.60);
+  border-color: oklch(22% 0 0 / 0.40);
+}
+
 /* Google Places autocomplete dropdown styling */
 .pac-container {
   z-index: 10000 !important;
-  background-color: oklch(20% 0.01 260);
-  border: 1px solid oklch(30% 0.015 260);
+  background-color: oklch(100% 0 0);
+  border: 1px solid oklch(90% 0.005 280);
   border-radius: 0.5rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   margin-top: 4px;
 }
 
 .pac-item {
   padding: 8px 12px;
-  color: oklch(90% 0.01 260);
-  border-top: 1px solid oklch(25% 0.01 260);
+  color: oklch(25% 0.005 280);
+  border-top: 1px solid oklch(94% 0.003 280);
   cursor: pointer;
 }
 
@@ -130,11 +310,11 @@
 }
 
 .pac-item:hover, .pac-item-selected {
-  background-color: oklch(25% 0.015 260);
+  background-color: oklch(97% 0.003 280);
 }
 
 .pac-item-query {
-  color: oklch(72% 0.19 50);
+  color: oklch(40% 0.22 280);
   font-weight: 600;
 }
 
@@ -143,10 +323,29 @@
 }
 
 .pac-matched {
-  color: oklch(72% 0.19 50);
+  color: oklch(40% 0.22 280);
 }
 
-/* Scrollbar styling for dark theme */
+/* Dark theme overrides for PAC container */
+:where([data-theme=dark]) .pac-container {
+  background-color: oklch(15% 0 0);
+  border-color: oklch(22% 0 0);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+:where([data-theme=dark]) .pac-item {
+  color: oklch(90% 0 0);
+  border-top-color: oklch(22% 0 0);
+}
+:where([data-theme=dark]) .pac-item:hover,
+:where([data-theme=dark]) .pac-item-selected {
+  background-color: oklch(22% 0 0);
+}
+:where([data-theme=dark]) .pac-item-query,
+:where([data-theme=dark]) .pac-matched {
+  color: oklch(55% 0.22 280);
+}
+
+/* Scrollbar styling */
 :where([data-theme=dark]) {
-  scrollbar-color: oklch(35% 0.015 260) transparent;
+  scrollbar-color: oklch(25% 0 0) transparent;
 }

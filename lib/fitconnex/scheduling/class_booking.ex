@@ -34,7 +34,6 @@ defmodule Fitconnex.Scheduling.ClassBooking do
 
     policy action_type([:create, :update, :destroy]) do
       authorize_if actor_attribute_equals(:role, :gym_operator)
-      authorize_if actor_attribute_equals(:role, :trainer)
       authorize_if actor_attribute_equals(:role, :member)
     end
   end
@@ -45,7 +44,7 @@ defmodule Fitconnex.Scheduling.ClassBooking do
     read :list_by_member do
       argument :member_ids, {:array, :uuid}, allow_nil?: false
       filter expr(member_id in ^arg(:member_ids))
-      prepare build(load: [scheduled_class: [:class_definition, :trainer, :branch]])
+      prepare build(load: [scheduled_class: [:class_definition, :branch]])
     end
 
     create :create do

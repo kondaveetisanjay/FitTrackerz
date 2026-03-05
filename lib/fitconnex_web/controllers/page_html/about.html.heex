@@ -1,8 +1,8 @@
 <%!-- Navigation Bar --%>
-<nav class="navbar bg-base-100/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 border-b border-base-300/50 px-4 sm:px-6 lg:px-8">
+<nav class="navbar bg-base-100/90 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 border-b border-base-300/50 px-4 sm:px-6 lg:px-8">
   <div class="flex-1">
-    <a href="/" class="text-2xl font-extrabold tracking-tight">
-      Fit<span class="text-primary">Connex</span>
+    <a href="/">
+      <.brand_logo class="h-10 w-auto" />
     </a>
   </div>
   <div class="flex-none flex items-center gap-3">
@@ -14,7 +14,7 @@
       </label>
       <ul
         tabindex="0"
-        class="dropdown-content menu p-2 shadow-lg bg-base-100 rounded-box w-56 mt-1 border border-base-300/50"
+        class="dropdown-content menu p-2 shadow-lg bg-base-200 rounded-box w-56 mt-1 border border-base-300/50"
       >
         <li>
           <a href="/solutions/members" class="flex items-center gap-3 py-3">
@@ -22,15 +22,6 @@
             <div>
               <div class="font-semibold">For Members</div>
               <div class="text-xs text-base-content/60">Find your perfect gym</div>
-            </div>
-          </a>
-        </li>
-        <li>
-          <a href="/solutions/trainers" class="flex items-center gap-3 py-3">
-            <.icon name="hero-academic-cap-solid" class="size-5 text-secondary" />
-            <div>
-              <div class="font-semibold">For Trainers</div>
-              <div class="text-xs text-base-content/60">Grow your training business</div>
             </div>
           </a>
         </li>
@@ -66,12 +57,12 @@
       <span>Our Story</span>
     </div>
 
-    <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-tight">
-      About <span class="text-primary">FitConnex</span>
+    <h1 class="text-5xl sm:text-6xl lg:text-7xl font-brand leading-tight">
+      About <span class="text-primary">FITTRACKRPRO</span>
     </h1>
 
     <p class="mt-6 text-lg sm:text-xl text-base-content/60 max-w-2xl mx-auto leading-relaxed">
-      Revolutionizing the fitness industry by connecting gyms, trainers, and members in one seamless platform.
+      Revolutionizing the fitness industry by connecting gyms and members in one seamless platform.
     </p>
   </div>
 </section>
@@ -99,8 +90,8 @@
         </div>
         <h2 class="text-3xl font-black mb-4">Our Vision</h2>
         <p class="text-base-content/70 text-lg leading-relaxed">
-          To become the world's leading fitness ecosystem, creating a connected community where gyms thrive,
-          trainers excel, and members achieve their health and wellness goals through personalized experiences.
+          To become the world's leading fitness ecosystem, creating a connected community where gyms thrive
+          and members achieve their health and wellness goals through personalized experiences.
         </p>
       </div>
     </div>
@@ -111,13 +102,13 @@
 <section class="py-24 px-4 sm:px-6 lg:px-8 bg-base-200/50">
   <div class="max-w-4xl mx-auto">
     <div class="text-center mb-16">
-      <h2 class="text-3xl sm:text-4xl font-black tracking-tight mb-6">
+      <h2 class="text-3xl sm:text-4xl font-brand mb-6">
         How It All <span class="text-primary">Started</span>
       </h2>
       <p class="text-base-content/70 text-lg leading-relaxed">
-        FitConnex was born from a simple observation: the fitness industry needed a unified platform that could
-        bring together gym operators, trainers, and members in a meaningful way. We saw gym owners struggling with
-        outdated management systems, trainers juggling multiple tools, and members searching for the right fitness
+        FITTRACKRPRO was born from a simple observation: the fitness industry needed a unified platform that could
+        bring together gym operators and members in a meaningful way. We saw gym owners struggling with
+        outdated management systems and members searching for the right fitness
         partner without proper guidance.
       </p>
     </div>
@@ -129,8 +120,8 @@
         fitness journey.
       </p>
       <p>
-        Today, FitConnex serves hundreds of gyms, thousands of trainers, and tens of thousands of members across
-        the region. We've automated gym management, simplified trainer-client relationships, and made discovering
+        Today, FITTRACKRPRO serves hundreds of gyms and tens of thousands of members across
+        the region. We've automated gym management and made discovering
         the perfect gym as easy as a few clicks.
       </p>
       <p>
@@ -145,14 +136,14 @@
 <section class="py-24 px-4 sm:px-6 lg:px-8">
   <div class="max-w-6xl mx-auto">
     <div class="text-center mb-16">
-      <h2 class="text-3xl sm:text-4xl font-black tracking-tight">
+      <h2 class="text-3xl sm:text-4xl font-brand">
         Our Core <span class="text-primary">Values</span>
       </h2>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
       <%!-- Value 1 --%>
-      <div class="card bg-base-100 border border-base-300/50 p-6 hover:shadow-lg transition-shadow">
+      <div class="card bg-base-200 border border-base-300/50 p-6 hover:shadow-lg transition-shadow">
         <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
           <.icon name="hero-heart-solid" class="size-6 text-primary" />
         </div>
@@ -163,7 +154,7 @@
       </div>
 
       <%!-- Value 2 --%>
-      <div class="card bg-base-100 border border-base-300/50 p-6 hover:shadow-lg transition-shadow">
+      <div class="card bg-base-200 border border-base-300/50 p-6 hover:shadow-lg transition-shadow">
         <div class="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center mb-4">
           <.icon name="hero-light-bulb-solid" class="size-6 text-secondary" />
         </div>
@@ -174,7 +165,7 @@
       </div>
 
       <%!-- Value 3 --%>
-      <div class="card bg-base-100 border border-base-300/50 p-6 hover:shadow-lg transition-shadow">
+      <div class="card bg-base-200 border border-base-300/50 p-6 hover:shadow-lg transition-shadow">
         <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-4">
           <.icon name="hero-shield-check-solid" class="size-6 text-accent" />
         </div>
@@ -185,7 +176,7 @@
       </div>
 
       <%!-- Value 4 --%>
-      <div class="card bg-base-100 border border-base-300/50 p-6 hover:shadow-lg transition-shadow">
+      <div class="card bg-base-200 border border-base-300/50 p-6 hover:shadow-lg transition-shadow">
         <div class="w-12 h-12 rounded-xl bg-success/10 flex items-center justify-center mb-4">
           <.icon name="hero-users-solid" class="size-6 text-success" />
         </div>
@@ -196,7 +187,7 @@
       </div>
 
       <%!-- Value 5 --%>
-      <div class="card bg-base-100 border border-base-300/50 p-6 hover:shadow-lg transition-shadow">
+      <div class="card bg-base-200 border border-base-300/50 p-6 hover:shadow-lg transition-shadow">
         <div class="w-12 h-12 rounded-xl bg-warning/10 flex items-center justify-center mb-4">
           <.icon name="hero-chart-bar-square-solid" class="size-6 text-warning" />
         </div>
@@ -207,7 +198,7 @@
       </div>
 
       <%!-- Value 6 --%>
-      <div class="card bg-base-100 border border-base-300/50 p-6 hover:shadow-lg transition-shadow">
+      <div class="card bg-base-200 border border-base-300/50 p-6 hover:shadow-lg transition-shadow">
         <div class="w-12 h-12 rounded-xl bg-info/10 flex items-center justify-center mb-4">
           <.icon name="hero-bolt-solid" class="size-6 text-info" />
         </div>
@@ -224,7 +215,7 @@
 <section class="py-24 px-4 sm:px-6 lg:px-8 bg-base-200/50">
   <div class="max-w-6xl mx-auto">
     <div class="text-center mb-16">
-      <h2 class="text-3xl sm:text-4xl font-black tracking-tight mb-4">
+      <h2 class="text-3xl sm:text-4xl font-brand mb-4">
         Meet Our <span class="text-primary">Team</span>
       </h2>
       <p class="text-base-content/60 text-lg max-w-2xl mx-auto">
@@ -235,7 +226,7 @@
     <div class="text-center">
       <p class="text-base-content/70 text-lg leading-relaxed mb-8">
         Our team combines decades of experience in fitness management, software development, and user experience
-        design. We're gym enthusiasts, former trainers, competitive athletes, and tech innovators united by a
+        design. We're gym enthusiasts, competitive athletes, and tech innovators united by a
         common goal: making fitness better for everyone.
       </p>
       <div class="inline-flex items-center gap-2 text-primary">
@@ -250,11 +241,11 @@
 <section class="py-24 px-4 sm:px-6 lg:px-8">
   <div class="max-w-3xl mx-auto text-center">
     <div class="card bg-gradient-to-r from-primary/10 via-base-100 to-secondary/10 border border-base-300 shadow-xl p-8 sm:p-12">
-      <h2 class="text-3xl sm:text-4xl font-black tracking-tight mb-4">
-        Join the FitConnex <span class="text-primary">Community</span>
+      <h2 class="text-3xl sm:text-4xl font-brand mb-4">
+        Join the FITTRACKRPRO <span class="text-primary">Community</span>
       </h2>
       <p class="text-base-content/60 text-lg mb-8">
-        Whether you're a gym operator, trainer, or fitness enthusiast, we have the perfect solution for you.
+        Whether you're a gym operator or fitness enthusiast, we have the perfect solution for you.
       </p>
       <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
         <a
@@ -272,11 +263,11 @@
 <%!-- Footer --%>
 <footer class="py-12 px-4 sm:px-6 lg:px-8 border-t border-base-300">
   <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-    <div class="text-xl font-extrabold tracking-tight">
-      Fit<span class="text-primary">Connex</span>
+    <div>
+      <.brand_logo class="h-10 w-auto" />
     </div>
     <p class="text-sm text-base-content/40">
-      © 2026 FitConnex. All rights reserved.
+      © 2026 FITTRACKRPRO. All rights reserved.
     </p>
   </div>
 </footer>

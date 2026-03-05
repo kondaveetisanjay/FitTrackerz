@@ -11,7 +11,6 @@ defmodule Fitconnex.Gym.GymMember do
     references do
       reference :gym, on_delete: :delete
       reference :user, on_delete: :delete
-      reference :assigned_trainer, on_delete: :nilify
       reference :branch, on_delete: :nilify
     end
 
@@ -19,7 +18,6 @@ defmodule Fitconnex.Gym.GymMember do
       index([:user_id])
       index([:gym_id])
       index([:branch_id])
-      index([:assigned_trainer_id])
     end
   end
 
@@ -38,7 +36,6 @@ defmodule Fitconnex.Gym.GymMember do
 
     policy action_type([:create, :update, :destroy]) do
       authorize_if actor_attribute_equals(:role, :gym_operator)
-      authorize_if actor_attribute_equals(:role, :trainer)
     end
   end
 
@@ -54,27 +51,21 @@ defmodule Fitconnex.Gym.GymMember do
     read :list_active_by_user do
       argument :user_id, :uuid, allow_nil?: false
       filter expr(user_id == ^arg(:user_id) and is_active == true)
-      prepare build(load: [:gym, :assigned_trainer, :branch])
+      prepare build(load: [:gym, :branch])
     end
 
     read :list_by_gym do
       argument :gym_id, :uuid, allow_nil?: false
       filter expr(gym_id == ^arg(:gym_id))
-      prepare build(load: [:user, assigned_trainer: [:user]])
-    end
-
-    read :list_by_assigned_trainer do
-      argument :trainer_ids, {:array, :uuid}, allow_nil?: false
-      filter expr(assigned_trainer_id in ^arg(:trainer_ids))
-      prepare build(load: [:user, :gym])
+      prepare build(load: [:user])
     end
 
     create :create do
-      accept([:user_id, :gym_id, :assigned_trainer_id, :branch_id])
+      accept([:user_id, :gym_id, :branch_id])
     end
 
     update :update do
-      accept([:assigned_trainer_id, :is_active, :branch_id])
+      accept([:is_active, :branch_id])
     end
   end
 
@@ -97,8 +88,6 @@ defmodule Fitconnex.Gym.GymMember do
     belongs_to :gym, Fitconnex.Gym.Gym do
       allow_nil?(false)
     end
-
-    belongs_to :assigned_trainer, Fitconnex.Gym.GymTrainer
 
     belongs_to :branch, Fitconnex.Gym.GymBranch
   end

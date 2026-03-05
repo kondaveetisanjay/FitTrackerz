@@ -1,16 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content={get_csrf_token()} />
     <meta
       name="description"
-      content="FitConnex - The all-in-one platform connecting gyms, trainers, and members."
+      content="FITTRACKRPRO - The all-in-one platform connecting gyms and members."
     />
-    <.live_title default="FitConnex" suffix=" · FitConnex">
+    <.live_title default="FITTRACKRPRO" suffix=" · FITTRACKRPRO">
       {assigns[:page_title]}
     </.live_title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
     <script defer phx-track-static type="text/javascript" src={~p"/assets/js/app.js"}>
     </script>

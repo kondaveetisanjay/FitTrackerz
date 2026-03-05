@@ -5,7 +5,7 @@ defmodule FitconnexWeb.Member.BookingsLive do
   def mount(_params, _session, socket) do
     actor = socket.assigns.current_user
 
-    memberships = case Fitconnex.Gym.list_active_memberships(actor.id, actor: actor, load: [:gym, :assigned_trainer]) do
+    memberships = case Fitconnex.Gym.list_active_memberships(actor.id, actor: actor, load: [:gym]) do
       {:ok, memberships} -> memberships
       _ -> []
     end
@@ -23,7 +23,7 @@ defmodule FitconnexWeb.Member.BookingsLive do
       memberships ->
         mids = Enum.map(memberships, & &1.id)
 
-        bookings = case Fitconnex.Scheduling.list_bookings_by_member(mids, actor: actor, load: [scheduled_class: [:class_definition, [trainer: [:user]], :branch]]) do
+        bookings = case Fitconnex.Scheduling.list_bookings_by_member(mids, actor: actor, load: [scheduled_class: [:class_definition, :branch]]) do
           {:ok, results} -> Enum.sort_by(results, & &1.inserted_at, {:desc, DateTime})
           _ -> []
         end
@@ -68,7 +68,7 @@ defmodule FitconnexWeb.Member.BookingsLive do
           {:ok, _updated} ->
             mids = Enum.map(socket.assigns.memberships, & &1.id)
 
-            bookings = case Fitconnex.Scheduling.list_bookings_by_member(mids, actor: actor, load: [scheduled_class: [:class_definition, [trainer: [:user]], :branch]]) do
+            bookings = case Fitconnex.Scheduling.list_bookings_by_member(mids, actor: actor, load: [scheduled_class: [:class_definition, :branch]]) do
               {:ok, results} -> Enum.sort_by(results, & &1.inserted_at, {:desc, DateTime})
               _ -> []
             end
@@ -94,7 +94,7 @@ defmodule FitconnexWeb.Member.BookingsLive do
           <div class="flex items-center gap-3">
             <Layouts.back_button />
             <div>
-              <h1 class="text-2xl sm:text-3xl font-black tracking-tight">My Bookings</h1>
+              <h1 class="text-2xl sm:text-3xl font-brand">My Bookings</h1>
               <p class="text-base-content/50 mt-1">Track your class bookings and their status.</p>
             </div>
           </div>
@@ -142,7 +142,6 @@ defmodule FitconnexWeb.Member.BookingsLive do
                     <thead>
                       <tr class="text-base-content/40">
                         <th>Class</th>
-                        <th>Trainer</th>
                         <th>Location</th>
                         <th>Date & Time</th>
                         <th>Status</th>
@@ -153,13 +152,6 @@ defmodule FitconnexWeb.Member.BookingsLive do
                       <tr :for={booking <- @bookings} id={"booking-#{booking.id}"}>
                         <td class="font-medium">
                           {booking.scheduled_class.class_definition.name}
-                        </td>
-                        <td class="text-base-content/70">
-                          <%= if booking.scheduled_class.trainer do %>
-                            {booking.scheduled_class.trainer.user.name}
-                          <% else %>
-                            <span class="text-base-content/30">--</span>
-                          <% end %>
                         </td>
                         <td class="text-base-content/70">
                           <%= if booking.scheduled_class.branch do %>

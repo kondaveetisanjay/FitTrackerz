@@ -21,7 +21,6 @@ defmodule Fitconnex.Training do
 
     resource Fitconnex.Training.WorkoutPlan do
       define :list_workouts_by_member, args: [:member_ids], action: :list_by_member
-      define :list_workouts_by_trainer, args: [:trainer_ids], action: :list_by_trainer
       define :create_workout, action: :create
       define :create_workout_from_template, action: :create_from_template
       define :update_workout, action: :update
@@ -37,7 +36,6 @@ defmodule Fitconnex.Training do
 
     resource Fitconnex.Training.DietPlan do
       define :list_diets_by_member, args: [:member_ids], action: :list_by_member
-      define :list_diets_by_trainer, args: [:trainer_ids], action: :list_by_trainer
       define :create_diet, action: :create
       define :create_diet_from_template, action: :create_from_template
       define :update_diet, action: :update

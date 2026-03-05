@@ -30,19 +30,9 @@ defmodule Fitconnex.Gym do
       define :get_gym_member, args: [:id], action: :get_by_id
       define :list_active_memberships, args: [:user_id], action: :list_active_by_user
       define :list_members_by_gym, args: [:gym_id], action: :list_by_gym
-      define :list_members_by_trainer, args: [:trainer_ids], action: :list_by_assigned_trainer
       define :create_gym_member, action: :create
       define :update_gym_member, action: :update
       define :destroy_gym_member, action: :destroy
-    end
-
-    resource Fitconnex.Gym.GymTrainer do
-      define :list_active_trainerships, args: [:user_id], action: :list_active_by_user
-      define :list_trainers_by_gym, args: [:gym_id], action: :list_by_gym
-      define :list_active_trainers_by_gym, args: [:gym_id], action: :list_active_by_gym
-      define :create_gym_trainer, action: :create
-      define :update_gym_trainer, action: :update
-      define :destroy_gym_trainer, action: :destroy
     end
 
     resource Fitconnex.Gym.MemberInvitation do
@@ -55,22 +45,13 @@ defmodule Fitconnex.Gym do
       define :expire_member_invitation, action: :expire
     end
 
-    resource Fitconnex.Gym.TrainerInvitation do
-      define :get_trainer_invitation, args: [:id], action: :get_by_id
-      define :list_pending_trainer_invitations, args: [:email], action: :list_pending_by_email
-      define :list_pending_trainer_invitations_by_gym, args: [:gym_id], action: :list_pending_by_gym
-      define :create_trainer_invitation, action: :create
-      define :accept_trainer_invitation, action: :accept
-      define :reject_trainer_invitation, action: :reject
-      define :expire_trainer_invitation, action: :expire
-    end
-
-    resource Fitconnex.Gym.ClientAssignmentRequest do
-      define :get_assignment_request, args: [:id], action: :get_by_id
-      define :list_pending_assignments_by_trainer, args: [:trainer_ids], action: :list_pending_by_trainer
-      define :create_assignment_request, action: :create
-      define :accept_assignment_request, action: :accept
-      define :reject_assignment_request, action: :reject
+    resource Fitconnex.Gym.Contest do
+      define :list_public_contests, action: :list_public
+      define :get_contest, args: [:id], action: :get_by_id
+      define :list_contests_by_gym, args: [:gym_id], action: :list_by_gym
+      define :create_contest, action: :create
+      define :update_contest, action: :update
+      define :destroy_contest, action: :destroy
     end
   end
 end

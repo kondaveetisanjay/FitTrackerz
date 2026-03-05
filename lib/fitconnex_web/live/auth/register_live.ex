@@ -23,9 +23,10 @@ defmodule FitconnexWeb.Auth.RegisterLive do
                 <.icon name="hero-bolt-solid" class="size-8 text-primary-content" />
               </div>
             </div>
-            <h1 class="text-5xl font-black tracking-tight">Join FitConnex</h1>
+            <.brand_logo class="h-20 w-auto mx-auto" />
+            <h1 class="text-3xl font-brand mt-4">Join Us</h1>
             <p class="mt-4 text-lg text-base-content/60 leading-relaxed">
-              Whether you're a gym owner, trainer, or fitness enthusiast — there's a place for you here.
+              Whether you're a gym owner or fitness enthusiast — there's a place for you here.
             </p>
             <div class="mt-10 space-y-4 text-left max-w-sm mx-auto">
               <div class="flex items-start gap-3">
@@ -52,8 +53,22 @@ defmodule FitconnexWeb.Auth.RegisterLive do
                 </div>
                 <div>
                   <p class="font-semibold text-sm">Track Progress</p>
-                  <p class="text-xs text-base-content/50">Get personalized workouts and diet plans from top trainers.</p>
+                  <p class="text-xs text-base-content/50">Get personalized workouts and diet plans to achieve your goals.</p>
                 </div>
+              </div>
+            </div>
+            <div class="mt-8 space-y-3">
+              <div class="flex items-center gap-2 text-base-content/70">
+                <.icon name="hero-check-circle-solid" class="size-5 text-success" />
+                <span class="text-sm">Free to register</span>
+              </div>
+              <div class="flex items-center gap-2 text-base-content/70">
+                <.icon name="hero-check-circle-solid" class="size-5 text-success" />
+                <span class="text-sm">No credit card required</span>
+              </div>
+              <div class="flex items-center gap-2 text-base-content/70">
+                <.icon name="hero-check-circle-solid" class="size-5 text-success" />
+                <span class="text-sm">Instant access</span>
               </div>
             </div>
           </div>
@@ -64,15 +79,12 @@ defmodule FitconnexWeb.Auth.RegisterLive do
       <div class="flex-1 flex items-center justify-center p-6 sm:p-12 bg-base-100">
         <div class="w-full max-w-md">
           <%!-- Mobile Logo --%>
-          <div class="lg:hidden flex items-center justify-center gap-2 mb-8">
-            <div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-              <.icon name="hero-bolt-solid" class="size-5 text-primary-content" />
-            </div>
-            <span class="text-2xl font-black tracking-tight">FitConnex</span>
+          <div class="lg:hidden flex items-center justify-center mb-8">
+            <.brand_logo class="h-14 w-auto" />
           </div>
 
           <div class="text-center mb-8">
-            <h2 class="text-2xl sm:text-3xl font-black tracking-tight">Create your account</h2>
+            <h2 class="text-2xl sm:text-3xl font-brand">Create your account</h2>
             <p class="text-base-content/50 mt-2">Start your fitness journey today</p>
           </div>
 
@@ -139,6 +151,9 @@ defmodule FitconnexWeb.Auth.RegisterLive do
                   class="grow"
                   autocomplete="new-password"
                 />
+                <button type="button" onclick="togglePasswordVisibility('user_password', this)" class="btn btn-ghost btn-xs btn-circle">
+                  <.icon name="hero-eye-mini" class="size-4 opacity-40" />
+                </button>
               </label>
               <p class="text-xs text-base-content/40 mt-1.5">Must be at least 8 characters</p>
             </div>
@@ -157,8 +172,24 @@ defmodule FitconnexWeb.Auth.RegisterLive do
                   class="grow"
                   autocomplete="new-password"
                 />
+                <button type="button" onclick="togglePasswordVisibility('user_password_confirmation', this)" class="btn btn-ghost btn-xs btn-circle">
+                  <.icon name="hero-eye-mini" class="size-4 opacity-40" />
+                </button>
               </label>
             </div>
+
+            <script>
+              function togglePasswordVisibility(inputId, btn) {
+                const input = document.getElementById(inputId);
+                if (input.type === 'password') {
+                  input.type = 'text';
+                  btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-4 opacity-40"><path fill-rule="evenodd" d="M3.28 2.22a.75.75 0 0 0-1.06 1.06l14.5 14.5a.75.75 0 1 0 1.06-1.06l-1.745-1.745a10.029 10.029 0 0 0 3.3-4.38 1.651 1.651 0 0 0 0-1.185A10.004 10.004 0 0 0 9.999 3a9.956 9.956 0 0 0-4.744 1.194L3.28 2.22ZM7.752 6.69l1.092 1.092a2.5 2.5 0 0 1 3.374 3.373l1.092 1.092a4 4 0 0 0-5.558-5.558Z" clip-rule="evenodd" /><path d="M10.748 13.93l2.523 2.523a9.987 9.987 0 0 1-3.27.547c-4.258 0-7.894-2.66-9.337-6.41a1.651 1.651 0 0 1 0-1.186A10.007 10.007 0 0 1 2.839 6.02L6.07 9.252a4 4 0 0 0 4.678 4.678Z" /></svg>';
+                } else {
+                  input.type = 'password';
+                  btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-4 opacity-40"><path d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" /><path fill-rule="evenodd" d="M.664 10.59a1.651 1.651 0 0 1 0-1.186A10.004 10.004 0 0 1 10 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0 1 10 17c-4.257 0-7.893-2.66-9.336-6.41Z" clip-rule="evenodd" /></svg>';
+                }
+              }
+            </script>
 
             <button type="submit" class="btn btn-primary w-full gap-2 font-semibold text-base mt-2">
               <.icon name="hero-rocket-launch-mini" class="size-5" />

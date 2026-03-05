@@ -26,7 +26,10 @@ defmodule FitconnexWeb.Explore.GymListLive do
        city_filter: "",
        user_lat: nil,
        user_lng: nil,
-       place_name: nil
+       place_name: nil,
+       sort_by: "distance",
+       page: 1,
+       per_page: 9
      )}
   end
 
@@ -87,13 +90,25 @@ defmodule FitconnexWeb.Explore.GymListLive do
      put_flash(socket, :error, "Could not detect your location. Please allow location access.")}
   end
 
+  def handle_event("sort", %{"sort" => sort_by}, socket) do
+    {:noreply,
+     socket
+     |> assign(sort_by: sort_by, page: 1)
+     |> apply_filters()}
+  end
+
+  def handle_event("change_page", %{"page" => page}, socket) do
+    {:noreply, assign(socket, :page, String.to_integer(page))}
+  end
+
   defp apply_filters(socket) do
     %{
       all_entries: all_entries,
       search_query: query,
       city_filter: city,
       user_lat: lat,
-      user_lng: lng
+      user_lng: lng,
+      sort_by: sort_by
     } = socket.assigns
 
     filtered =
@@ -101,9 +116,27 @@ defmodule FitconnexWeb.Explore.GymListLive do
       |> maybe_filter_search(query)
       |> maybe_filter_city(city)
 
-    sorted = Geo.sort_by_nearest(filtered, lat, lng)
+    sorted = sort_entries(filtered, sort_by, lat, lng)
 
-    assign(socket, sorted_entries: sorted)
+    assign(socket, sorted_entries: sorted, page: 1)
+  end
+
+  defp sort_entries(entries, "distance", lat, lng) do
+    Geo.sort_by_nearest(entries, lat, lng)
+  end
+
+  defp sort_entries(entries, "price_low", _lat, _lng) do
+    Enum.map(entries, fn entry -> {entry, nil} end)
+    |> Enum.sort_by(fn {entry, _} -> entry.cheapest_monthly || 999_999_999 end, :asc)
+  end
+
+  defp sort_entries(entries, "price_high", _lat, _lng) do
+    Enum.map(entries, fn entry -> {entry, nil} end)
+    |> Enum.sort_by(fn {entry, _} -> entry.cheapest_monthly || 0 end, :desc)
+  end
+
+  defp sort_entries(entries, _default, lat, lng) do
+    Geo.sort_by_nearest(entries, lat, lng)
   end
 
   defp maybe_filter_search(entries, ""), do: entries
@@ -146,17 +179,10 @@ defmodule FitconnexWeb.Explore.GymListLive do
           {:error, _} -> []
         end
 
-      trainer_count =
-        case Fitconnex.Gym.list_active_trainers_by_gym(gym_id, actor: actor) do
-          {:ok, result} -> length(result)
-          {:error, _} -> 0
-        end
-
       %{
         gym: gym,
         plans: plans,
         class_defs: class_defs,
-        trainer_count: trainer_count,
         cheapest_monthly: cheapest_monthly_price(plans),
         class_types: class_defs |> Enum.map(& &1.class_type) |> Enum.uniq() |> Enum.sort(),
         primary_city: primary_city(gym.branches)
@@ -211,8 +237,8 @@ defmodule FitconnexWeb.Explore.GymListLive do
     <Layouts.app flash={@flash} current_user={@current_user}>
       <div class="space-y-6">
         <%!-- Page Header --%>
-        <div>
-          <h1 class="text-2xl sm:text-3xl font-black tracking-tight">Explore Gyms</h1>
+        <div class="bg-gradient-to-r from-primary/5 via-base-100 to-secondary/5 rounded-2xl p-6 mb-2">
+          <h1 class="text-2xl sm:text-3xl font-brand">Explore Gyms</h1>
           <p class="text-base-content/50 mt-1">
             Discover gyms near you, compare prices & services — all in one place.
           </p>
@@ -229,7 +255,7 @@ defmodule FitconnexWeb.Explore.GymListLive do
         <% end %>
 
         <%!-- Search & Filters Bar --%>
-        <div class="card bg-base-200/50 border border-base-300/50">
+        <div class="glass-card">
           <div class="card-body p-4">
             <div class="flex flex-col sm:flex-row gap-3">
               <%!-- Search --%>
@@ -257,6 +283,17 @@ defmodule FitconnexWeb.Explore.GymListLive do
                     <%= for city <- @cities do %>
                       <option value={city} selected={@city_filter == city}>{city}</option>
                     <% end %>
+                  </select>
+                </form>
+              </div>
+
+              <%!-- Sort --%>
+              <div class="w-full sm:w-48">
+                <form phx-change="sort">
+                  <select name="sort" class="select select-bordered select-sm w-full">
+                    <option value="distance" selected={@sort_by == "distance"}>Nearest</option>
+                    <option value="price_low" selected={@sort_by == "price_low"}>Price: Low to High</option>
+                    <option value="price_high" selected={@sort_by == "price_high"}>Price: High to Low</option>
                   </select>
                 </form>
               </div>
@@ -329,9 +366,11 @@ defmodule FitconnexWeb.Explore.GymListLive do
 
         <%!-- Gym Cards Grid --%>
         <%= if @sorted_entries == [] do %>
-          <div class="card bg-base-200/50 border border-base-300/50">
+          <div class="glass-card relative">
             <div class="card-body p-8 text-center">
               <.icon name="hero-building-office-2-solid" class="size-16 text-base-content/20 mx-auto" />
+              <div class="absolute top-6 right-6 w-16 h-16 border-2 border-primary/10 rounded-full"></div>
+              <div class="absolute bottom-6 left-6 w-12 h-12 border-2 border-secondary/10 rounded-lg rotate-45"></div>
               <h2 class="text-lg font-bold mt-4">No Gyms Found</h2>
               <p class="text-base-content/50 mt-1">
                 <%= if @search_query != "" or @city_filter != "" do %>
@@ -343,11 +382,12 @@ defmodule FitconnexWeb.Explore.GymListLive do
             </div>
           </div>
         <% else %>
+          <% page_entries = @sorted_entries |> Enum.drop((@page - 1) * @per_page) |> Enum.take(@per_page) %>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="gym-list">
-            <%= for {entry, distance} <- @sorted_entries do %>
+            <%= for {entry, distance} <- page_entries do %>
               <a
                 href={"/explore/#{entry.gym.slug}"}
-                class="card bg-base-200/50 border border-base-300/50 hover:border-primary/30 hover:shadow-xl hover:-translate-y-0.5 transition-all cursor-pointer overflow-hidden group"
+                class="glass-card cursor-pointer overflow-hidden group"
                 id={"gym-card-#{entry.gym.id}"}
               >
                 <%!-- Image --%>
@@ -359,8 +399,14 @@ defmodule FitconnexWeb.Explore.GymListLive do
                       class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   <% else %>
-                    <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-base-300/50">
-                      <.icon name="hero-building-office-2-solid" class="size-12 text-base-content/15" />
+                    <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 via-base-200 to-secondary/5 relative overflow-hidden">
+                      <div class="absolute top-3 right-3 w-16 h-16 border-2 border-primary/10 rounded-full"></div>
+                      <div class="absolute bottom-3 left-3 w-10 h-10 border-2 border-secondary/10 rounded-lg rotate-45"></div>
+                      <div class="text-center">
+                        <div class="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mx-auto border border-primary/15">
+                          <.icon name="hero-building-office-2-solid" class="size-7 text-primary/40" />
+                        </div>
+                      </div>
                     </div>
                   <% end %>
                 </figure>
@@ -390,8 +436,8 @@ defmodule FitconnexWeb.Explore.GymListLive do
                       1 location
                     </span>
                     <span class="flex items-center gap-1">
-                      <.icon name="hero-academic-cap-mini" class="size-3.5" />
-                      {entry.trainer_count} trainer(s)
+                      <.icon name="hero-calendar-days-mini" class="size-3.5" />
+                      {length(entry.class_defs)} class type(s)
                     </span>
                   </div>
 
@@ -414,22 +460,75 @@ defmodule FitconnexWeb.Explore.GymListLive do
                       </span>
                     <% end %>
                   </div>
+
+                  <%!-- Service Tags --%>
+                  <%= if entry.gym.services && entry.gym.services != [] do %>
+                    <div class="flex flex-wrap gap-1 mt-2">
+                      <%= for service <- Enum.take(entry.gym.services, 3) do %>
+                        <span class="badge badge-outline badge-xs">{service}</span>
+                      <% end %>
+                    </div>
+                  <% end %>
                 </div>
               </a>
             <% end %>
           </div>
         <% end %>
 
+        <%!-- Pagination --%>
+        <% total_pages = max(ceil(length(@sorted_entries) / @per_page), 1) %>
+        <%= if total_pages > 1 do %>
+          <div class="flex justify-center gap-2 mt-8">
+            <button
+              phx-click="change_page"
+              phx-value-page={max(@page - 1, 1)}
+              class="btn btn-sm btn-ghost"
+              disabled={@page == 1}
+            >
+              <.icon name="hero-chevron-left-mini" class="size-4" /> Previous
+            </button>
+            <%= for p <- 1..total_pages do %>
+              <button
+                phx-click="change_page"
+                phx-value-page={p}
+                class={["btn btn-sm", if(p == @page, do: "btn-primary", else: "btn-ghost")]}
+              >
+                {p}
+              </button>
+            <% end %>
+            <button
+              phx-click="change_page"
+              phx-value-page={min(@page + 1, total_pages)}
+              class="btn btn-sm btn-ghost"
+              disabled={@page == total_pages}
+            >
+              Next <.icon name="hero-chevron-right-mini" class="size-4" />
+            </button>
+          </div>
+        <% end %>
+
         <%!-- Sign Up CTA --%>
         <%= if @current_user == nil do %>
-          <div class="card bg-primary/5 border border-primary/20">
-            <div class="card-body p-6 text-center">
+          <div class="glass-card mt-4 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+            <div class="absolute bottom-0 left-0 w-20 h-20 bg-secondary/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
+            <div class="card-body p-6 text-center relative z-10">
+              <div class="flex justify-center mb-2">
+                <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                  <.icon name="hero-rocket-launch-solid" class="size-5 text-primary" />
+                </div>
+              </div>
               <h2 class="text-lg font-bold">Ready to start your fitness journey?</h2>
               <p class="text-base-content/60 mt-1">
                 Sign up to join a gym, book classes, and track your progress.
               </p>
+              <div class="flex flex-wrap justify-center gap-3 mt-3 text-xs text-base-content/50">
+                <span class="flex items-center gap-1"><.icon name="hero-check-circle-solid" class="size-3 text-success" /> Free signup</span>
+                <span class="flex items-center gap-1"><.icon name="hero-check-circle-solid" class="size-3 text-success" /> No credit card</span>
+                <span class="flex items-center gap-1"><.icon name="hero-check-circle-solid" class="size-3 text-success" /> Instant access</span>
+              </div>
               <div class="mt-4">
-                <a href="/register" class="btn btn-primary btn-sm gap-2">
+                <a href="/register" class="btn btn-primary btn-sm gap-2 animate-glow-pulse">
                   <.icon name="hero-user-plus-mini" class="size-4" /> Create Free Account
                 </a>
               </div>

@@ -26,7 +26,10 @@ defmodule FitconnexWeb.GymOperator.SetupLive do
            editing_location: false,
            location_form: build_location_form(branch),
            existing_logo: if(branch, do: branch.logo_url, else: nil),
-           existing_gallery: if(branch, do: branch.gallery_urls || [], else: [])
+           existing_gallery: if(branch, do: branch.gallery_urls || [], else: []),
+           current_step: 1,
+           selected_equipment: gym.equipment || [],
+           selected_services: gym.services || []
          )
          |> allow_upload(:logo,
            accept: ~w(.jpg .jpeg .png .webp),
@@ -53,7 +56,10 @@ defmodule FitconnexWeb.GymOperator.SetupLive do
            editing_location: false,
            location_form: build_location_form(nil),
            existing_logo: nil,
-           existing_gallery: []
+           existing_gallery: [],
+           current_step: 1,
+           selected_equipment: [],
+           selected_services: []
          )
          |> allow_upload(:logo,
            accept: ~w(.jpg .jpeg .png .webp),
@@ -68,9 +74,66 @@ defmodule FitconnexWeb.GymOperator.SetupLive do
     end
   end
 
-  # ── Gym Events ──
+  # ── Step Navigation Events ──
 
   @impl true
+  def handle_event("next_step", _params, socket) do
+    {:noreply, assign(socket, :current_step, min(socket.assigns.current_step + 1, 3))}
+  end
+
+  def handle_event("prev_step", _params, socket) do
+    {:noreply, assign(socket, :current_step, max(socket.assigns.current_step - 1, 1))}
+  end
+
+  def handle_event("go_to_step", %{"step" => step}, socket) do
+    step = String.to_integer(step)
+    {:noreply, assign(socket, :current_step, step)}
+  end
+
+  def handle_event("toggle_equipment", %{"item" => item}, socket) do
+    current = socket.assigns.selected_equipment
+
+    updated =
+      if item in current,
+        do: List.delete(current, item),
+        else: current ++ [item]
+
+    {:noreply, assign(socket, :selected_equipment, updated)}
+  end
+
+  def handle_event("toggle_service", %{"item" => item}, socket) do
+    current = socket.assigns.selected_services
+
+    updated =
+      if item in current,
+        do: List.delete(current, item),
+        else: current ++ [item]
+
+    {:noreply, assign(socket, :selected_services, updated)}
+  end
+
+  def handle_event("save_equipment_services", _params, socket) do
+    gym = socket.assigns.gym
+    actor = socket.assigns.current_user
+
+    case Fitconnex.Gym.update_gym(
+           gym,
+           %{equipment: socket.assigns.selected_equipment, services: socket.assigns.selected_services},
+           actor: actor
+         ) do
+      {:ok, updated_gym} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "Equipment and services saved!")
+         |> assign(gym: updated_gym)}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Failed to save equipment and services.")}
+    end
+  end
+
+  # ── Gym Events ──
+
   def handle_event("validate", %{"gym" => _params}, socket) do
     {:noreply, socket}
   end
@@ -338,6 +401,16 @@ defmodule FitconnexWeb.GymOperator.SetupLive do
   defp status_badge_class(:suspended), do: "badge-error"
   defp status_badge_class(_), do: "badge-neutral"
 
+  defp equipment_options do
+    ["Cardio Machines", "Free Weights", "CrossFit Zone", "Swimming Pool",
+     "Sauna", "Locker Rooms", "Juice Bar", "Parking", "AC", "Steam Room"]
+  end
+
+  defp services_options do
+    ["Personal Training", "Group Classes", "Yoga", "Zumba", "Boxing",
+     "Martial Arts", "Pilates", "HIIT", "Spinning", "Dance"]
+  end
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -347,7 +420,7 @@ defmodule FitconnexWeb.GymOperator.SetupLive do
         <div class="flex items-center gap-3">
           <Layouts.back_button />
           <div>
-            <h1 class="text-2xl sm:text-3xl font-black tracking-tight">
+            <h1 class="text-2xl sm:text-3xl font-brand">
               {if @gym, do: "My Gym", else: "Setup Your Gym"}
             </h1>
             <p class="text-base-content/50 mt-1">
@@ -359,12 +432,43 @@ defmodule FitconnexWeb.GymOperator.SetupLive do
         </div>
 
         <%= if @gym do %>
-          <%!-- Gym Details Card --%>
+          <%!-- Progress Steps --%>
+          <div class="flex items-center justify-center gap-2 mb-2">
+            <%= for {label, step_num} <- [{"Basics", 1}, {"Location", 2}, {"Photos & Details", 3}] do %>
+              <div class="flex items-center gap-2">
+                <button
+                  phx-click="go_to_step"
+                  phx-value-step={step_num}
+                  class={[
+                    "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold cursor-pointer",
+                    if(@current_step >= step_num, do: "bg-primary text-primary-content", else: "bg-base-300 text-base-content/50")
+                  ]}
+                >
+                  {step_num}
+                </button>
+                <span class={[
+                  "text-sm font-medium hidden sm:inline",
+                  if(@current_step >= step_num, do: "text-primary", else: "text-base-content/50")
+                ]}>
+                  {label}
+                </span>
+                <%= if step_num < 3 do %>
+                  <div class={[
+                    "w-12 h-0.5",
+                    if(@current_step > step_num, do: "bg-primary", else: "bg-base-300")
+                  ]} />
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+
+          <%!-- STEP 1: Gym Details --%>
+          <%= if @current_step == 1 do %>
           <div class="card bg-base-200/50 border border-base-300/50" id="gym-details-card">
             <div class="card-body p-6">
               <div class="flex items-center justify-between mb-4">
                 <h2 class="text-lg font-bold flex items-center gap-2">
-                  <.icon name="hero-building-office-solid" class="size-5 text-primary" /> Gym Profile
+                  <.icon name="hero-building-office-solid" class="size-5 text-primary" /> Step 1: Gym Profile
                 </h2>
                 <div class="flex items-center gap-3">
                   <span class={"badge #{status_badge_class(@gym.status)}"}>
@@ -438,15 +542,24 @@ defmodule FitconnexWeb.GymOperator.SetupLive do
                   </div>
                 </div>
               <% end %>
+
+              <%!-- Step Navigation --%>
+              <div class="flex justify-end mt-6 pt-4 border-t border-base-300/30">
+                <button phx-click="next_step" class="btn btn-primary btn-sm gap-2">
+                  Next: Location <.icon name="hero-arrow-right-mini" class="size-4" />
+                </button>
+              </div>
             </div>
           </div>
+          <% end %>
 
-          <%!-- Location Card --%>
+          <%!-- STEP 2: Location Card --%>
+          <%= if @current_step == 2 do %>
           <div class="card bg-base-200/50 border border-base-300/50" id="location-card">
             <div class="card-body p-6">
               <div class="flex items-center justify-between mb-4">
                 <h2 class="text-lg font-bold flex items-center gap-2">
-                  <.icon name="hero-map-pin-solid" class="size-5 text-accent" /> Location
+                  <.icon name="hero-map-pin-solid" class="size-5 text-accent" /> Step 2: Location
                 </h2>
                 <%= unless @editing_location do %>
                   <button
@@ -725,8 +838,106 @@ defmodule FitconnexWeb.GymOperator.SetupLive do
                   </div>
                 <% end %>
               <% end %>
+
+              <%!-- Step Navigation --%>
+              <div class="flex justify-between mt-6 pt-4 border-t border-base-300/30">
+                <button phx-click="prev_step" class="btn btn-ghost btn-sm gap-2">
+                  <.icon name="hero-arrow-left-mini" class="size-4" /> Back: Basics
+                </button>
+                <button phx-click="next_step" class="btn btn-primary btn-sm gap-2">
+                  Next: Photos & Details <.icon name="hero-arrow-right-mini" class="size-4" />
+                </button>
+              </div>
             </div>
           </div>
+          <% end %>
+
+          <%!-- STEP 3: Photos & Equipment/Services --%>
+          <%= if @current_step == 3 do %>
+          <div class="card bg-base-200/50 border border-base-300/50" id="photos-details-card">
+            <div class="card-body p-6">
+              <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
+                <.icon name="hero-photo-solid" class="size-5 text-info" /> Step 3: Photos & Details
+              </h2>
+
+              <%!-- Gallery images display --%>
+              <%= if @existing_gallery != [] do %>
+                <div class="mb-4">
+                  <label class="label"><span class="label-text font-semibold">Current Gallery</span></label>
+                  <div class="flex flex-wrap gap-3">
+                    <%= for url <- @existing_gallery do %>
+                      <img src={url} class="w-20 h-20 rounded-lg object-cover" alt="Gallery" />
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+
+              <p class="text-sm text-base-content/60 mb-6">
+                To update photos, go to the Location step and click Edit.
+              </p>
+
+              <%!-- Equipment & Amenities --%>
+              <div class="mb-6">
+                <label class="label"><span class="label-text font-semibold text-base">Equipment & Amenities</span></label>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mt-2">
+                  <%= for item <- equipment_options() do %>
+                    <label
+                      class={[
+                        "label cursor-pointer justify-start gap-2 p-2 rounded-lg border",
+                        if(item in @selected_equipment, do: "border-primary bg-primary/5", else: "border-base-300 bg-base-300/20")
+                      ]}
+                      phx-click="toggle_equipment"
+                      phx-value-item={item}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={item in @selected_equipment}
+                        class="checkbox checkbox-primary checkbox-sm"
+                        readonly
+                      />
+                      <span class="label-text text-sm">{item}</span>
+                    </label>
+                  <% end %>
+                </div>
+              </div>
+
+              <%!-- Services Offered --%>
+              <div class="mb-6">
+                <label class="label"><span class="label-text font-semibold text-base">Services Offered</span></label>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mt-2">
+                  <%= for item <- services_options() do %>
+                    <label
+                      class={[
+                        "label cursor-pointer justify-start gap-2 p-2 rounded-lg border",
+                        if(item in @selected_services, do: "border-primary bg-primary/5", else: "border-base-300 bg-base-300/20")
+                      ]}
+                      phx-click="toggle_service"
+                      phx-value-item={item}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={item in @selected_services}
+                        class="checkbox checkbox-primary checkbox-sm"
+                        readonly
+                      />
+                      <span class="label-text text-sm">{item}</span>
+                    </label>
+                  <% end %>
+                </div>
+              </div>
+
+              <%!-- Step Navigation --%>
+              <div class="flex justify-between mt-6 pt-4 border-t border-base-300/30">
+                <button phx-click="prev_step" class="btn btn-ghost btn-sm gap-2">
+                  <.icon name="hero-arrow-left-mini" class="size-4" /> Back: Location
+                </button>
+                <button phx-click="save_equipment_services" class="btn btn-primary btn-sm gap-2">
+                  <.icon name="hero-check-mini" class="size-4" /> Save & Complete Setup
+                </button>
+              </div>
+            </div>
+          </div>
+          <% end %>
         <% else %>
           <%!-- Create Gym Form --%>
           <div class="card bg-base-200/50 border border-base-300/50" id="create-gym-card">

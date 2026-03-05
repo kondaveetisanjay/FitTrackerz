@@ -12,7 +12,7 @@ defmodule FitconnexWeb.Admin.GymsLive do
     actor = socket.assigns.current_user
 
     gyms =
-      case Fitconnex.Gym.list_gyms(actor: actor, load: [:owner, :branches, :gym_members, :gym_trainers]) do
+      case Fitconnex.Gym.list_gyms(actor: actor, load: [:owner, :branches, :gym_members]) do
         {:ok, gyms} -> gyms
         _ -> []
       end
@@ -76,7 +76,7 @@ defmodule FitconnexWeb.Admin.GymsLive do
     actor = socket.assigns.current_user
 
     gyms =
-      case Fitconnex.Gym.list_gyms(actor: actor, load: [:owner, :branches, :gym_members, :gym_trainers]) do
+      case Fitconnex.Gym.list_gyms(actor: actor, load: [:owner, :branches, :gym_members]) do
         {:ok, gyms} -> gyms
         _ -> []
       end
@@ -112,7 +112,7 @@ defmodule FitconnexWeb.Admin.GymsLive do
           <div class="flex items-center gap-3">
             <Layouts.back_button />
             <div>
-              <h1 class="text-2xl sm:text-3xl font-black tracking-tight">Gyms</h1>
+              <h1 class="text-2xl sm:text-3xl font-brand">Gyms</h1>
               <p class="text-base-content/50 mt-1">
                 {length(@gyms)} total gyms on the platform
               </p>
@@ -172,7 +172,7 @@ defmodule FitconnexWeb.Admin.GymsLive do
                 </div>
 
                 <%!-- Stats Row --%>
-                <div class="grid grid-cols-3 gap-3">
+                <div class="grid grid-cols-2 gap-3">
                   <div class="text-center p-2 rounded-lg bg-base-300/30" id={"gym-location-#{gym.id}"}>
                     <p class="text-lg font-black">{count_loaded(gym.branches)}</p>
                     <p class="text-xs text-base-content/40">Location</p>
@@ -180,10 +180,6 @@ defmodule FitconnexWeb.Admin.GymsLive do
                   <div class="text-center p-2 rounded-lg bg-base-300/30" id={"gym-members-#{gym.id}"}>
                     <p class="text-lg font-black">{count_loaded(gym.gym_members)}</p>
                     <p class="text-xs text-base-content/40">Members</p>
-                  </div>
-                  <div class="text-center p-2 rounded-lg bg-base-300/30" id={"gym-trainers-#{gym.id}"}>
-                    <p class="text-lg font-black">{count_loaded(gym.gym_trainers)}</p>
-                    <p class="text-xs text-base-content/40">Trainers</p>
                   </div>
                 </div>
 
