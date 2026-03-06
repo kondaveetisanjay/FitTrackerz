@@ -258,7 +258,7 @@
     "global": null,
     "strategy": null
   },
-  "repo": "Elixir.Fitconnex.Repo",
+  "repo": "Elixir.FitTrackerz.Repo",
   "schema": null,
   "table": "member_subscriptions"
 }

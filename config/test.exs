@@ -5,29 +5,29 @@ import Config
 # The MIX_TEST_PARTITION environment variable can be used
 # to provide built-in test partitioning in CI environment.
 # Run `mix help test` for more information.
-config :fitconnex, Fitconnex.Repo,
+config :fit_trackerz, FitTrackerz.Repo,
   username: "postgres",
   password: "postgres",
   hostname: "localhost",
-  database: "fitconnex_test#{System.get_env("MIX_TEST_PARTITION")}",
+  database: "fit_trackerz_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: System.schedulers_online() * 2
 
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
-config :fitconnex, FitconnexWeb.Endpoint,
+config :fit_trackerz, FitTrackerzWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: 4002],
   secret_key_base: "JN/wkjAi3sNnMfF3fwhWqtpivOkXbRJ1aHF6rhLgGUo6NJ7Y2i0nGTh3abIx22wr",
   server: false
 
 # In test we don't send emails
-config :fitconnex, Fitconnex.Mailer, adapter: Swoosh.Adapters.Test
+config :fit_trackerz, FitTrackerz.Mailer, adapter: Swoosh.Adapters.Test
 
 # Disable swoosh api client as it is only required for production adapters
 config :swoosh, :api_client, false
 
 # Token signing secret for AshAuthentication
-config :fitconnex,
+config :fit_trackerz,
        :token_signing_secret,
        "test-only-token-signing-secret-at-least-32-chars-long!!"
 

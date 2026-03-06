@@ -1,4 +1,4 @@
-defmodule Fitconnex.Repo.Migrations.RemoveTrainerFunctionality do
+defmodule FitTrackerz.Repo.Migrations.RemoveTrainerFunctionality do
   @moduledoc """
   Remove all trainer-related tables, columns, and data.
   Updates existing trainer users to member role.

@@ -1,4 +1,4 @@
-defmodule Fitconnex.Repo.Migrations.FixGymOwnerCascadeDelete do
+defmodule FitTrackerz.Repo.Migrations.FixGymOwnerCascadeDelete do
   @moduledoc """
   Updates resources based on their most recent snapshots.
 

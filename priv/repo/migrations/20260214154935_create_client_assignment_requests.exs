@@ -1,4 +1,4 @@
-defmodule Fitconnex.Repo.Migrations.CreateClientAssignmentRequests do
+defmodule FitTrackerz.Repo.Migrations.CreateClientAssignmentRequests do
   @moduledoc """
   Updates resources based on their most recent snapshots.
 

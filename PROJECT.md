@@ -1,8 +1,8 @@
-# FitConnex - Fitness Platform
+# Fit Trackerz - Fitness Platform
 
 ## Overview
 
-FitConnex is a comprehensive fitness management platform built with **Elixir**, **Phoenix Framework 1.8**, and **Ash Framework 3.0**. It connects gyms, trainers, and members through a single unified platform for managing memberships, scheduling classes, tracking workouts, creating diet plans, and handling billing.
+Fit Trackerz is a comprehensive fitness management platform built with **Elixir**, **Phoenix Framework 1.8**, and **Ash Framework 3.0**. It connects gyms, trainers, and members through a single unified platform for managing memberships, scheduling classes, tracking workouts, creating diet plans, and handling billing.
 
 ---
 
@@ -30,7 +30,7 @@ FitConnex is a comprehensive fitness management platform built with **Elixir**, 
 The application is organized into **5 bounded contexts (domains)**, each encapsulating related business logic:
 
 ```
-Fitconnex
+FitTrackerz
   |-- Accounts     (Users, Tokens, Authentication)
   |-- Gym          (Gyms, Branches, Members, Trainers, Invitations)
   |-- Billing      (Subscription Plans, Member Subscriptions)
@@ -41,9 +41,9 @@ Fitconnex
 ### Directory Structure
 
 ```
-fitconnex/
+fit_trackerz/
   lib/
-    fitconnex/                        # Backend (Business Logic)
+    fit_trackerz/                        # Backend (Business Logic)
       accounts/                       # User management & auth
         user.ex                       # User resource
         token.ex                      # JWT token resource
@@ -83,7 +83,7 @@ fitconnex/
       application.ex                  # OTP application
       repo.ex                         # Ecto repository
       mailer.ex                       # Email service
-    fitconnex_web/                    # Frontend (Web Interface)
+    fit_trackerz_web/                    # Frontend (Web Interface)
       controllers/
         page_controller.ex            # Landing page
         auth_controller.ex            # Auth callbacks
@@ -516,10 +516,10 @@ iex -S mix
 ### LiveView Pages
 
 Each role has a dedicated dashboard LiveView:
-- `FitconnexWeb.Admin.DashboardLive` - Platform statistics and management
-- `FitconnexWeb.GymOperator.DashboardLive` - Gym management hub
-- `FitconnexWeb.Trainer.DashboardLive` - Client and class management
-- `FitconnexWeb.Member.DashboardLive` - Personal fitness dashboard
+- `FitTrackerzWeb.Admin.DashboardLive` - Platform statistics and management
+- `FitTrackerzWeb.GymOperator.DashboardLive` - Gym management hub
+- `FitTrackerzWeb.Trainer.DashboardLive` - Client and class management
+- `FitTrackerzWeb.Member.DashboardLive` - Personal fitness dashboard
 
 ---
 

@@ -1,4 +1,4 @@
-defmodule Fitconnex.Repo.Migrations.AddCategoryToSubscriptionPlans do
+defmodule FitTrackerz.Repo.Migrations.AddCategoryToSubscriptionPlans do
   @moduledoc """
   Updates resources based on their most recent snapshots.
 

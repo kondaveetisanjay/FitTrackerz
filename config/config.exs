@@ -7,26 +7,26 @@
 # General application configuration
 import Config
 
-config :fitconnex,
-  ecto_repos: [Fitconnex.Repo],
+config :fit_trackerz,
+  ecto_repos: [FitTrackerz.Repo],
   generators: [timestamp_type: :utc_datetime],
   ash_domains: [
-    Fitconnex.Accounts,
-    Fitconnex.Gym,
-    Fitconnex.Billing,
-    Fitconnex.Training,
-    Fitconnex.Scheduling
+    FitTrackerz.Accounts,
+    FitTrackerz.Gym,
+    FitTrackerz.Billing,
+    FitTrackerz.Training,
+    FitTrackerz.Scheduling
   ]
 
 # Configure the endpoint
-config :fitconnex, FitconnexWeb.Endpoint,
+config :fit_trackerz, FitTrackerzWeb.Endpoint,
   url: [host: "localhost"],
   adapter: Bandit.PhoenixAdapter,
   render_errors: [
-    formats: [html: FitconnexWeb.ErrorHTML, json: FitconnexWeb.ErrorJSON],
+    formats: [html: FitTrackerzWeb.ErrorHTML, json: FitTrackerzWeb.ErrorJSON],
     layout: false
   ],
-  pubsub_server: Fitconnex.PubSub,
+  pubsub_server: FitTrackerz.PubSub,
   live_view: [signing_salt: "PL6nmFr2"]
 
 # Configure the mailer
@@ -36,12 +36,12 @@ config :fitconnex, FitconnexWeb.Endpoint,
 #
 # For production it's recommended to configure a different adapter
 # at the `config/runtime.exs`.
-config :fitconnex, Fitconnex.Mailer, adapter: Swoosh.Adapters.Local
+config :fit_trackerz, FitTrackerz.Mailer, adapter: Swoosh.Adapters.Local
 
 # Configure esbuild (the version is required)
 config :esbuild,
   version: "0.25.4",
-  fitconnex: [
+  fit_trackerz: [
     args:
       ~w(js/app.js --bundle --target=es2022 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/* --alias:@=.),
     cd: Path.expand("../assets", __DIR__),
@@ -51,7 +51,7 @@ config :esbuild,
 # Configure tailwind (the version is required)
 config :tailwind,
   version: "4.1.12",
-  fitconnex: [
+  fit_trackerz: [
     args: ~w(
       --input=assets/css/app.css
       --output=priv/static/assets/css/app.css
@@ -68,7 +68,7 @@ config :logger, :default_formatter,
 config :phoenix, :json_library, Jason
 
 # Token signing secret for AshAuthentication
-config :fitconnex, :token_signing_secret, "dev-only-token-signing-secret-at-least-32-chars-long!!"
+config :fit_trackerz, :token_signing_secret, "dev-only-token-signing-secret-at-least-32-chars-long!!"
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

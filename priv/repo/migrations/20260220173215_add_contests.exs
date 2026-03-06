@@ -1,4 +1,4 @@
-defmodule Fitconnex.Repo.Migrations.AddContests do
+defmodule FitTrackerz.Repo.Migrations.AddContests do
   @moduledoc """
   Updates resources based on their most recent snapshots.
 

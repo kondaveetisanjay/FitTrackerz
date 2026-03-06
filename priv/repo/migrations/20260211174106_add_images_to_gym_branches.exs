@@ -1,4 +1,4 @@
-defmodule Fitconnex.Repo.Migrations.AddImagesToGymBranches do
+defmodule FitTrackerz.Repo.Migrations.AddImagesToGymBranches do
   @moduledoc """
   Updates resources based on their most recent snapshots.
 

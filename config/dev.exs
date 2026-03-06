@@ -1,11 +1,11 @@
 import Config
 
 # Configure your database
-config :fitconnex, Fitconnex.Repo,
+config :fit_trackerz, FitTrackerz.Repo,
   username: "postgres",
   password: "postgres",
   hostname: "localhost",
-  database: "fitconnex_dev",
+  database: "fit_trackerz_dev",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
@@ -16,7 +16,7 @@ config :fitconnex, Fitconnex.Repo,
 # The watchers configuration can be used to run external
 # watchers to your application. For example, we can use it
 # to bundle .js and .css sources.
-config :fitconnex, FitconnexWeb.Endpoint,
+config :fit_trackerz, FitTrackerzWeb.Endpoint,
   # Binding to loopback ipv4 address prevents access from other machines.
   # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
   http: [ip: {127, 0, 0, 1}],
@@ -25,8 +25,8 @@ config :fitconnex, FitconnexWeb.Endpoint,
   debug_errors: true,
   secret_key_base: "rcnUTnG3gfAJ/v5EegSp+ALsbBNjaePHf4o6SINkZ9IztB7IBoqcteMOVxOTV1kA",
   watchers: [
-    esbuild: {Esbuild, :install_and_run, [:fitconnex, ~w(--sourcemap=inline --watch)]},
-    tailwind: {Tailwind, :install_and_run, [:fitconnex, ~w(--watch)]}
+    esbuild: {Esbuild, :install_and_run, [:fit_trackerz, ~w(--sourcemap=inline --watch)]},
+    tailwind: {Tailwind, :install_and_run, [:fit_trackerz, ~w(--watch)]}
   ]
 
 # ## SSL Support
@@ -53,7 +53,7 @@ config :fitconnex, FitconnexWeb.Endpoint,
 # different ports.
 
 # Reload browser tabs when matching files change.
-config :fitconnex, FitconnexWeb.Endpoint,
+config :fit_trackerz, FitTrackerzWeb.Endpoint,
   live_reload: [
     web_console_logger: true,
     patterns: [
@@ -62,13 +62,13 @@ config :fitconnex, FitconnexWeb.Endpoint,
       # Gettext translations
       ~r"priv/gettext/.*\.po$",
       # Router, Controllers, LiveViews and LiveComponents
-      ~r"lib/fitconnex_web/router\.ex$",
-      ~r"lib/fitconnex_web/(controllers|live|components)/.*\.(ex|heex)$"
+      ~r"lib/fit_trackerz_web/router\.ex$",
+      ~r"lib/fit_trackerz_web/(controllers|live|components)/.*\.(ex|heex)$"
     ]
   ]
 
 # Enable dev routes for dashboard and mailbox
-config :fitconnex, dev_routes: true
+config :fit_trackerz, dev_routes: true
 
 # Do not include metadata nor timestamps in development logs
 config :logger, :default_formatter, format: "[$level] $message\n"
@@ -91,3 +91,6 @@ config :phoenix_live_view,
 
 # Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false
+
+# Use polling backend on Windows to avoid inotifywait.exe permission issues
+config :phoenix_live_reload, backend: :fs_poll

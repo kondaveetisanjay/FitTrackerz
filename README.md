@@ -1,6 +1,6 @@
-# FitConnex
+# Fit Trackerz
 
-**FitConnex** is a comprehensive gym management and discovery platform built with **Phoenix LiveView** and **Ash Framework 3.0**. It connects gym operators, trainers, and fitness enthusiasts in one unified ecosystem — eliminating the hassle of visiting multiple gyms to compare prices and services.
+**Fit Trackerz** is a comprehensive gym management and discovery platform built with **Phoenix LiveView** and **Ash Framework 3.0**. It connects gym operators, trainers, and fitness enthusiasts in one unified ecosystem — eliminating the hassle of visiting multiple gyms to compare prices and services.
 
 ## 🎯 Features
 
@@ -81,8 +81,8 @@
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/jkreddy020203/fitconnex.git
-cd fitconnex
+git clone https://github.com/jkreddy020203/fit_trackerz.git
+cd fit_trackerz
 ```
 
 2. Install dependencies:
@@ -93,7 +93,7 @@ mix setup
 3. Configure environment variables:
 ```bash
 # config/dev.exs or config/runtime.exs
-config :fitconnex, :google_maps_api_key, "YOUR_GOOGLE_MAPS_API_KEY"
+config :fit_trackerz, :google_maps_api_key, "YOUR_GOOGLE_MAPS_API_KEY"
 ```
 
 4. Create and migrate the database:
@@ -128,15 +128,15 @@ mix run priv/repo/seeds.exs
 ## 🗂️ Project Structure
 
 ```
-fitconnex/
+fit_trackerz/
 ├── lib/
-│   ├── fitconnex/              # Business logic domains
+│   ├── fit_trackerz/              # Business logic domains
 │   │   ├── accounts/           # User auth & roles
 │   │   ├── gym/                # Gyms, branches, members, trainers
 │   │   ├── billing/            # Plans & subscriptions
 │   │   ├── scheduling/         # Classes & bookings
 │   │   └── training/           # Workout & diet plans
-│   └── fitconnex_web/          # Web interface
+│   └── fit_trackerz_web/          # Web interface
 │       ├── live/               # LiveView pages
 │       │   ├── admin/          # Admin dashboard
 │       │   ├── gym_operator/   # Gym operator portal
@@ -205,13 +205,13 @@ fitconnex/
 Create a `.env` file or set in `config/runtime.exs`:
 
 ```elixir
-config :fitconnex, :google_maps_api_key, System.get_env("GOOGLE_MAPS_API_KEY")
+config :fit_trackerz, :google_maps_api_key, System.get_env("GOOGLE_MAPS_API_KEY")
 
-config :fitconnex, Fitconnex.Repo,
+config :fit_trackerz, FitTrackerz.Repo,
   url: System.get_env("DATABASE_URL"),
   pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
 
-config :fitconnex, FitconnexWeb.Endpoint,
+config :fit_trackerz, FitTrackerzWeb.Endpoint,
   secret_key_base: System.get_env("SECRET_KEY_BASE")
 ```
 
@@ -247,4 +247,4 @@ Built with:
 
 ---
 
-**FitConnex** — Connecting fitness, one gym at a time. 💪
+**Fit Trackerz** — Connecting fitness, one gym at a time. 💪

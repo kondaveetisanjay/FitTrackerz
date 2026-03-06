@@ -1,2 +1,2 @@
 ExUnit.start()
-Ecto.Adapters.SQL.Sandbox.mode(Fitconnex.Repo, :manual)
+Ecto.Adapters.SQL.Sandbox.mode(FitTrackerz.Repo, :manual)

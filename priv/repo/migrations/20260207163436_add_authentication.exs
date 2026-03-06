@@ -1,4 +1,4 @@
-defmodule Fitconnex.Repo.Migrations.AddAuthentication do
+defmodule FitTrackerz.Repo.Migrations.AddAuthentication do
   @moduledoc """
   Updates resources based on their most recent snapshots.
 

@@ -4,7 +4,7 @@
 @import "tailwindcss" source(none);
 @source "../css";
 @source "../js";
-@source "../../lib/fitconnex_web";
+@source "../../lib/fit_trackerz_web";
 @source "../../deps/ash_authentication_phoenix";
 
 /* Google Fonts – Oswald for brand headings */
@@ -22,7 +22,7 @@
 }
 
 /* ============================================================
-   FITTRACKRPRO Brand Theme – Light (DEFAULT)
+   FitTrackerz Brand Theme – Light (DEFAULT)
    Indigo + Coral palette – Modern Fitness SaaS
    Clean whites with cool undertones
    ============================================================ */
@@ -69,13 +69,13 @@
 }
 
 /* ============================================================
-   FITTRACKRPRO Brand Theme – Dark variant
+   FitTrackerz Brand Theme – Dark variant
    Indigo + Coral on dark surfaces
    ============================================================ */
 @plugin "../vendor/daisyui-theme" {
   name: "dark";
   default: false;
-  prefersdark: true;
+  prefersdark: false;
   color-scheme: "dark";
   /* Base surfaces – deep indigo-blacks */
   --color-base-100: oklch(8% 0.005 280);

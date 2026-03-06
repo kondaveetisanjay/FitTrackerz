@@ -1,4 +1,4 @@
-defmodule Fitconnex.Repo.Migrations.AddBranchToMemberInvitations do
+defmodule FitTrackerz.Repo.Migrations.AddBranchToMemberInvitations do
   @moduledoc """
   Updates resources based on their most recent snapshots.
 

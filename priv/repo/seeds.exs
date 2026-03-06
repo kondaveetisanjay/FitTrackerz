@@ -4,46 +4,46 @@
 #
 # This script wipes all data and creates 3 users connected together.
 
-alias Fitconnex.Accounts.User
-alias Fitconnex.Gym.{Gym, GymBranch, GymMember, Contest}
-alias Fitconnex.Billing.{SubscriptionPlan, MemberSubscription}
+alias FitTrackerz.Accounts.User
+alias FitTrackerz.Gym.{Gym, GymBranch, GymMember, Contest}
+alias FitTrackerz.Billing.{SubscriptionPlan, MemberSubscription}
 
 require Ash.Query
 
 IO.puts("\n--- Wiping all existing data ---")
 
 # Use system actor to bypass authorization during seeding
-system_actor = Fitconnex.Accounts.SystemActor.system_actor()
+system_actor = FitTrackerz.Accounts.SystemActor.system_actor()
 seed_opts = [actor: system_actor, authorize?: false]
 
 # Delete in dependency order to avoid FK violations
-Fitconnex.Billing.MemberSubscription |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
-Fitconnex.Billing.SubscriptionPlan |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
-Fitconnex.Gym.Contest |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
-Fitconnex.Training.AttendanceRecord |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
-Fitconnex.Scheduling.ClassBooking |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
-Fitconnex.Scheduling.ScheduledClass |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
-Fitconnex.Scheduling.ClassDefinition |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
-Fitconnex.Training.WorkoutPlan |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
-Fitconnex.Training.DietPlan |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
-Fitconnex.Training.WorkoutPlanTemplate |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
-Fitconnex.Training.DietPlanTemplate |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
-Fitconnex.Gym.MemberInvitation |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
-Fitconnex.Gym.GymMember |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
-Fitconnex.Gym.GymBranch |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
-Fitconnex.Gym.Gym |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
-Fitconnex.Accounts.Token |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
-Fitconnex.Accounts.User |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+FitTrackerz.Billing.MemberSubscription |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+FitTrackerz.Billing.SubscriptionPlan |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+FitTrackerz.Gym.Contest |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+FitTrackerz.Training.AttendanceRecord |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+FitTrackerz.Scheduling.ClassBooking |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+FitTrackerz.Scheduling.ScheduledClass |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+FitTrackerz.Scheduling.ClassDefinition |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+FitTrackerz.Training.WorkoutPlan |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+FitTrackerz.Training.DietPlan |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+FitTrackerz.Training.WorkoutPlanTemplate |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+FitTrackerz.Training.DietPlanTemplate |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+FitTrackerz.Gym.MemberInvitation |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+FitTrackerz.Gym.GymMember |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+FitTrackerz.Gym.GymBranch |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+FitTrackerz.Gym.Gym |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+FitTrackerz.Accounts.Token |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
+FitTrackerz.Accounts.User |> Ash.read!(seed_opts) |> Enum.each(&Ash.destroy!(&1, seed_opts))
 
 IO.puts("All data wiped.\n")
 
 # --- Helper ---
 defmodule SeedHelper do
-  @system_actor Fitconnex.Accounts.SystemActor.system_actor()
+  @system_actor FitTrackerz.Accounts.SystemActor.system_actor()
 
   def create_user(email, password, name) do
     {:ok, user} =
-      Fitconnex.Accounts.User
+      FitTrackerz.Accounts.User
       |> Ash.Changeset.for_create(:register_with_password, %{
         email: email,
         password: password,
@@ -70,17 +70,17 @@ end
 # ============================
 IO.puts("--- Creating users ---")
 
-admin = SeedHelper.create_user("admin@fitconnex.com", "Password123!", "Admin User")
+admin = SeedHelper.create_user("admin@fit_trackerz.com", "Password123!", "Admin User")
 admin = SeedHelper.set_role(admin, :platform_admin)
-IO.puts("  Created: admin@fitconnex.com (platform_admin)")
+IO.puts("  Created: admin@fit_trackerz.com (platform_admin)")
 
-operator = SeedHelper.create_user("operator@fitconnex.com", "Password123!", "Gym Operator")
+operator = SeedHelper.create_user("operator@fit_trackerz.com", "Password123!", "Gym Operator")
 operator = SeedHelper.set_role(operator, :gym_operator)
-IO.puts("  Created: operator@fitconnex.com (gym_operator)")
+IO.puts("  Created: operator@fit_trackerz.com (gym_operator)")
 
-member = SeedHelper.create_user("member@fitconnex.com", "Password123!", "Jane Member")
+member = SeedHelper.create_user("member@fit_trackerz.com", "Password123!", "Jane Member")
 member = SeedHelper.set_role(member, :member)
-IO.puts("  Created: member@fitconnex.com (member)")
+IO.puts("  Created: member@fit_trackerz.com (member)")
 
 # ============================
 # 2. Create Gym (owned by operator)
@@ -244,9 +244,9 @@ IO.puts("""
 
 Login credentials (password for all: Password123!):
 
-  Admin:        admin@fitconnex.com
-  Gym Operator: operator@fitconnex.com
-  Member:       member@fitconnex.com
+  Admin:        admin@fit_trackerz.com
+  Gym Operator: operator@fit_trackerz.com
+  Member:       member@fit_trackerz.com
 
 Connections:
   - FitZone Gym owned by Gym Operator (verified)

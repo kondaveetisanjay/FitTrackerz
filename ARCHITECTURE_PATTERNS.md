@@ -1,6 +1,6 @@
-# FitConnex Architecture Patterns
+# Fit Trackerz Architecture Patterns
 
-> Adopted from the NexProp Portal project architecture. This document serves as the reference guide for all backend coding patterns used in FitConnex.
+> Adopted from the NexProp Portal project architecture. This document serves as the reference guide for all backend coding patterns used in Fit Trackerz.
 
 ---
 
@@ -38,8 +38,8 @@ Domains declare typed wrapper functions using `define` inside the `resources` bl
 ### Example
 
 ```elixir
-# lib/fitconnex/gym.ex (domain)
-defmodule Fitconnex.Gym do
+# lib/fit_trackerz/gym.ex (domain)
+defmodule FitTrackerz.Gym do
   use Ash.Domain
 
   authorization do
@@ -48,7 +48,7 @@ defmodule Fitconnex.Gym do
   end
 
   resources do
-    resource Fitconnex.Gym.Gym do
+    resource FitTrackerz.Gym.Gym do
       define :list_gyms, action: :read
       define :get_gym, args: [:id], action: :get_by_id
       define :list_gyms_by_owner, args: [:owner_id], action: :list_by_owner
@@ -57,7 +57,7 @@ defmodule Fitconnex.Gym do
       define :destroy_gym, action: :destroy
     end
 
-    resource Fitconnex.Gym.GymMember do
+    resource FitTrackerz.Gym.GymMember do
       define :list_gym_members, action: :read
       define :list_members_by_gym, args: [:gym_id], action: :list_by_gym
       define :get_gym_member, args: [:id], action: :get_by_id
@@ -70,13 +70,13 @@ end
 
 ```elixir
 # CORRECT - Call domain function
-case Fitconnex.Gym.list_gyms_by_owner(user.id, actor: current_user) do
+case FitTrackerz.Gym.list_gyms_by_owner(user.id, actor: current_user) do
   {:ok, gyms} -> assign(socket, :gyms, gyms)
   {:error, _} -> assign(socket, :gyms, [])
 end
 
 # WRONG - Direct Ash call in LiveView
-gyms = Fitconnex.Gym.Gym
+gyms = FitTrackerz.Gym.Gym
        |> Ash.Query.filter(owner_id == ^user.id)
        |> Ash.read!()
 ```
@@ -147,8 +147,8 @@ end
 ### Module
 
 ```elixir
-# lib/fitconnex/accounts/system_actor.ex
-defmodule Fitconnex.Accounts.SystemActor do
+# lib/fit_trackerz/accounts/system_actor.ex
+defmodule FitTrackerz.Accounts.SystemActor do
   @moduledoc """
   System actor for internal operations that bypass user-level authorization.
   Used in change callbacks, background jobs, and system-level data access.
@@ -158,7 +158,7 @@ defmodule Fitconnex.Accounts.SystemActor do
     %{
       id: "00000000-0000-0000-0000-000000000000",
       role: :platform_admin,
-      email: "system@fitconnex.com",
+      email: "system@fit_trackerz.com",
       is_system_actor: true
     }
   end
@@ -172,14 +172,14 @@ end
 
 ```elixir
 # CORRECT - Use system actor
-alias Fitconnex.Accounts.SystemActor
+alias FitTrackerz.Accounts.SystemActor
 
-case Ash.get(Fitconnex.Accounts.User, email: email, actor: SystemActor.system_actor()) do
+case Ash.get(FitTrackerz.Accounts.User, email: email, actor: SystemActor.system_actor()) do
   {:ok, user} -> ...
 end
 
 # WRONG - authorize?: false
-case Ash.get(Fitconnex.Accounts.User, email: email, authorize?: false) do
+case Ash.get(FitTrackerz.Accounts.User, email: email, authorize?: false) do
   {:ok, user} -> ...
 end
 ```
@@ -234,7 +234,7 @@ end
 **Rule**: Every domain must have `authorize :by_default` and `require_actor? false`.
 
 ```elixir
-defmodule Fitconnex.Gym do
+defmodule FitTrackerz.Gym do
   use Ash.Domain
 
   authorization do
@@ -276,7 +276,7 @@ results = Ash.read!(query)
 
 ```elixir
 test "lists gym members" do
-  members = Fitconnex.Gym.GymMember |> Ash.read!(actor: admin)
+  members = FitTrackerz.Gym.GymMember |> Ash.read!(actor: admin)
   assert length(members) > 0
 end
 ```
@@ -293,7 +293,7 @@ end
 def mount(_params, _session, socket) do
   current_user = socket.assigns.current_user
 
-  case Fitconnex.Gym.list_gyms_by_owner(current_user.id, actor: current_user) do
+  case FitTrackerz.Gym.list_gyms_by_owner(current_user.id, actor: current_user) do
     {:ok, gyms} ->
       {:ok, assign(socket, :gyms, gyms)}
     {:error, _} ->
@@ -311,9 +311,9 @@ end
 def handle_event("delete", %{"id" => id}, socket) do
   actor = socket.assigns.current_user
 
-  case Fitconnex.Gym.get_gym(id, actor: actor) do
+  case FitTrackerz.Gym.get_gym(id, actor: actor) do
     {:ok, gym} ->
-      case Fitconnex.Gym.destroy_gym(gym, actor: actor) do
+      case FitTrackerz.Gym.destroy_gym(gym, actor: actor) do
         :ok -> {:noreply, put_flash(socket, :info, "Gym deleted")}
         {:error, _} -> {:noreply, put_flash(socket, :error, "Failed to delete")}
       end
@@ -330,8 +330,8 @@ end
 **Rule**: Never show raw Ash errors to users. Use a shared helper module to translate errors into user-friendly messages.
 
 ```elixir
-# lib/fitconnex_web/helpers/ash_error_helpers.ex
-defmodule FitconnexWeb.AshErrorHelpers do
+# lib/fit_trackerz_web/helpers/ash_error_helpers.ex
+defmodule FitTrackerzWeb.AshErrorHelpers do
   @moduledoc "Translates Ash errors into user-friendly flash messages."
 
   def user_friendly_message(%Ash.Error.Invalid{errors: errors}) do
@@ -377,8 +377,8 @@ end
 **Rule**: Standardize what gets preloaded for each resource using helper modules. Don't scatter `load:` lists across LiveViews.
 
 ```elixir
-# lib/fitconnex_web/helpers/load_options.ex
-defmodule FitconnexWeb.LoadOptions do
+# lib/fit_trackerz_web/helpers/load_options.ex
+defmodule FitTrackerzWeb.LoadOptions do
   def gym_basic, do: [:branches, :owner]
 
   def gym_detailed do
@@ -391,7 +391,7 @@ defmodule FitconnexWeb.LoadOptions do
 end
 
 # Usage:
-Fitconnex.Gym.list_gyms(actor: actor, load: LoadOptions.gym_basic())
+FitTrackerz.Gym.list_gyms(actor: actor, load: LoadOptions.gym_basic())
 ```
 
 ---
@@ -444,7 +444,7 @@ end
 
 ```elixir
 # Load aggregate like any other field:
-Fitconnex.Gym.get_gym(id, actor: actor, load: [:member_count, :trainer_count])
+FitTrackerz.Gym.get_gym(id, actor: actor, load: [:member_count, :trainer_count])
 ```
 
 ---
@@ -471,7 +471,7 @@ end
 
 ```elixir
 # Mount:
-form = AshPhoenix.Form.for_create(Fitconnex.Gym.Gym, :create, as: "gym")
+form = AshPhoenix.Form.for_create(FitTrackerz.Gym.Gym, :create, as: "gym")
 {:ok, assign(socket, form: form)}
 
 # Validate:
@@ -496,15 +496,15 @@ end
 **Rule**: For resources with 200+ lines, split into `Spark.Dsl.Fragment` modules. Not needed for small resources.
 
 ```
-lib/fitconnex/gym/gym.ex (main)
-  └── lib/fitconnex/gym/gym/fragments/
+lib/fit_trackerz/gym/gym.ex (main)
+  └── lib/fit_trackerz/gym/gym/fragments/
       ├── gym_policies.ex
       ├── gym_attributes.ex
       ├── gym_actions_read.ex
       └── gym_actions_write.ex
 ```
 
-**FitConnex status**: Resources are small enough — skip for now.
+**Fit Trackerz status**: Resources are small enough — skip for now.
 
 ---
 
@@ -524,7 +524,7 @@ state_machine do
 end
 ```
 
-**FitConnex status**: Good candidate for invitations, bookings, subscriptions — implement later.
+**Fit Trackerz status**: Good candidate for invitations, bookings, subscriptions — implement later.
 
 ---
 
@@ -538,11 +538,11 @@ use Ash.Resource, notifiers: [Ash.Notifier.PubSub]
 
 # LiveView:
 if connected?(socket) do
-  Phoenix.PubSub.subscribe(Fitconnex.PubSub, "gym:#{gym.id}")
+  Phoenix.PubSub.subscribe(FitTrackerz.PubSub, "gym:#{gym.id}")
 end
 ```
 
-**FitConnex status**: Implement later for booking updates, invitation responses.
+**Fit Trackerz status**: Implement later for booking updates, invitation responses.
 
 ---
 
@@ -565,7 +565,7 @@ Logger.error("Failed to load gym members",
 
 **Rule**: Cache full actor data in ETS to avoid repeated DB queries on every LiveView mount.
 
-**FitConnex status**: Not needed at current scale — implement when performance requires it.
+**Fit Trackerz status**: Not needed at current scale — implement when performance requires it.
 
 ---
 
