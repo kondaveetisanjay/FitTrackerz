@@ -131,7 +131,6 @@ defmodule FitTrackerz.Repo.Migrations.CreateFitTrackerzResourcesExtensions1 do
     VOLATILE;
     """)
 
-    execute("CREATE EXTENSION IF NOT EXISTS \"postgis\"")
   end
 
   def down do

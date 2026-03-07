@@ -15,7 +15,8 @@ config :fit_trackerz, FitTrackerzWeb.Endpoint,
     rewrite_on: [:x_forwarded_proto],
     exclude: [
       # paths: ["/health"],
-      ["localhost", "127.0.0.1"]
+      "localhost",
+      "127.0.0.1"
     ]
   ]
 
