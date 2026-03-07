@@ -161,14 +161,14 @@ defmodule FitTrackerzWeb.Explore.ContestListLive do
         <%!-- Page Header --%>
         <div>
           <div class="flex items-center gap-2 mb-1">
-            <a href="/explore" class="text-base-content/50 hover:text-primary text-sm">Explore</a>
+            <a href="/explore" class="text-base-content/50 hover:text-primary text-base">Explore</a>
             <span class="text-base-content/30">/</span>
-            <span class="text-sm font-medium">Contests</span>
+            <span class="text-base font-medium">Contests</span>
           </div>
           <div class="flex items-center justify-between">
             <div>
-              <h1 class="text-2xl sm:text-3xl font-brand">Fitness Contests</h1>
-              <p class="text-base-content/50 mt-1">
+              <h1 class="text-3xl sm:text-4xl font-brand">Fitness Contests</h1>
+              <p class="text-base text-base-content/50 mt-1">
                 Discover challenges, competitions & events at gyms near you.
               </p>
             </div>
@@ -187,7 +187,7 @@ defmodule FitTrackerzWeb.Explore.ContestListLive do
               <%!-- Search --%>
               <div class="flex-1">
                 <form phx-change="search" phx-submit="search">
-                  <label class="input input-bordered input-sm flex items-center gap-2 w-full">
+                  <label class="input input-bordered flex items-center gap-2 w-full">
                     <.icon name="hero-magnifying-glass-mini" class="size-4 opacity-50" />
                     <input
                       type="text"
@@ -204,7 +204,7 @@ defmodule FitTrackerzWeb.Explore.ContestListLive do
               <%!-- City Filter --%>
               <div class="w-full sm:w-40">
                 <form phx-change="filter_city">
-                  <select name="city" class="select select-bordered select-sm w-full">
+                  <select name="city" class="select select-bordered w-full">
                     <option value="">All Cities</option>
                     <%= for city <- @cities do %>
                       <option value={city} selected={@city_filter == city}>{city}</option>
@@ -216,7 +216,7 @@ defmodule FitTrackerzWeb.Explore.ContestListLive do
               <%!-- Type Filter --%>
               <div class="w-full sm:w-40">
                 <form phx-change="filter_type">
-                  <select name="type" class="select select-bordered select-sm w-full">
+                  <select name="type" class="select select-bordered w-full">
                     <option value="">All Types</option>
                     <%= for type <- @contest_types do %>
                       <option value={type} selected={@type_filter == to_string(type)}>
@@ -230,7 +230,7 @@ defmodule FitTrackerzWeb.Explore.ContestListLive do
               <%!-- Status Filter --%>
               <div class="w-full sm:w-40">
                 <form phx-change="filter_status">
-                  <select name="status" class="select select-bordered select-sm w-full">
+                  <select name="status" class="select select-bordered w-full">
                     <option value="">All Statuses</option>
                     <option value="upcoming" selected={@status_filter == "upcoming"}>Upcoming</option>
                     <option value="active" selected={@status_filter == "active"}>Active</option>
@@ -249,7 +249,7 @@ defmodule FitTrackerzWeb.Explore.ContestListLive do
         </div>
 
         <%!-- Results Count --%>
-        <p class="text-sm text-base-content/50">
+        <p class="text-base text-base-content/50">
           {length(@filtered_contests)} contest(s) found
         </p>
 
@@ -302,15 +302,15 @@ defmodule FitTrackerzWeb.Explore.ContestListLive do
                   </div>
 
                   <%!-- Title --%>
-                  <h2 class="card-title text-base leading-tight">{entry.contest.title}</h2>
+                  <h2 class="card-title text-lg leading-tight">{entry.contest.title}</h2>
 
                   <%!-- Description --%>
                   <%= if entry.contest.description do %>
-                    <p class="text-sm text-base-content/60 line-clamp-2">{entry.contest.description}</p>
+                    <p class="text-base text-base-content/60 line-clamp-2">{entry.contest.description}</p>
                   <% end %>
 
                   <%!-- Gym & Location --%>
-                  <div class="flex flex-col gap-1 text-sm text-base-content/60">
+                  <div class="flex flex-col gap-1 text-base text-base-content/60">
                     <div class="flex items-center gap-1.5">
                       <.icon name="hero-building-office-2-mini" class="size-3.5 shrink-0" />
                       <a href={"/explore/#{entry.gym_slug}"} class="hover:text-primary truncate">
@@ -326,14 +326,14 @@ defmodule FitTrackerzWeb.Explore.ContestListLive do
                   </div>
 
                   <%!-- Dates --%>
-                  <div class="flex items-center gap-1.5 text-sm text-base-content/60">
+                  <div class="flex items-center gap-1.5 text-base text-base-content/60">
                     <.icon name="hero-calendar-mini" class="size-3.5 shrink-0" />
                     <span>{format_date(entry.contest.starts_at)} — {format_date(entry.contest.ends_at)}</span>
                   </div>
 
                   <%!-- Participants --%>
                   <%= if entry.contest.max_participants do %>
-                    <div class="flex items-center gap-1.5 text-sm text-base-content/60">
+                    <div class="flex items-center gap-1.5 text-base text-base-content/60">
                       <.icon name="hero-users-mini" class="size-3.5 shrink-0" />
                       <span>{entry.contest.max_participants} max participants</span>
                     </div>
@@ -341,7 +341,7 @@ defmodule FitTrackerzWeb.Explore.ContestListLive do
 
                   <%!-- Prize --%>
                   <%= if entry.contest.prize_description do %>
-                    <div class="flex items-start gap-1.5 text-sm text-base-content/60">
+                    <div class="flex items-start gap-1.5 text-base text-base-content/60">
                       <.icon name="hero-gift-mini" class="size-3.5 shrink-0 mt-0.5" />
                       <span class="line-clamp-2">{entry.contest.prize_description}</span>
                     </div>
@@ -357,7 +357,7 @@ defmodule FitTrackerzWeb.Explore.ContestListLive do
           <div class="card bg-primary/5 border border-primary/20">
             <div class="card-body p-6 text-center">
               <h3 class="font-bold text-lg">Want to compete?</h3>
-              <p class="text-base-content/60 text-sm mt-1">
+              <p class="text-base-content/60 text-base mt-1">
                 Create an account to register for contests and track your fitness journey.
               </p>
               <div class="mt-3">
