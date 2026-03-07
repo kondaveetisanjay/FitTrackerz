@@ -238,8 +238,8 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
       <div class="space-y-6">
         <%!-- Page Header --%>
         <div class="bg-gradient-to-r from-primary/5 via-base-100 to-secondary/5 rounded-2xl p-6 mb-2">
-          <h1 class="text-2xl sm:text-3xl font-brand">Explore Gyms</h1>
-          <p class="text-base-content/50 mt-1">
+          <h1 class="text-3xl sm:text-4xl font-brand">Explore Gyms</h1>
+          <p class="text-base text-base-content/50 mt-1">
             Discover gyms near you, compare prices & services — all in one place.
           </p>
         </div>
@@ -248,7 +248,7 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
         <%= unless @user_lat do %>
           <div class="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-info/10 border border-info/20">
             <.icon name="hero-map-pin-mini" class="size-4 text-info shrink-0" />
-            <p class="text-sm text-base-content/70">
+            <p class="text-base text-base-content/70">
               Tap <span class="font-semibold text-info">"Detect my location"</span> to find the nearest and best gyms around you.
             </p>
           </div>
@@ -261,7 +261,7 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
               <%!-- Search --%>
               <div class="flex-1">
                 <form phx-change="search" phx-submit="search">
-                  <label class="input input-bordered input-sm flex items-center gap-2 w-full">
+                  <label class="input input-bordered flex items-center gap-2 w-full">
                     <.icon name="hero-magnifying-glass-mini" class="size-4 opacity-50" />
                     <input
                       type="text"
@@ -278,7 +278,7 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
               <%!-- City Filter --%>
               <div class="w-full sm:w-48">
                 <form phx-change="filter_city">
-                  <select name="city" class="select select-bordered select-sm w-full">
+                  <select name="city" class="select select-bordered w-full">
                     <option value="">All Locations</option>
                     <%= for city <- @cities do %>
                       <option value={city} selected={@city_filter == city}>{city}</option>
@@ -290,7 +290,7 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
               <%!-- Sort --%>
               <div class="w-full sm:w-48">
                 <form phx-change="sort">
-                  <select name="sort" class="select select-bordered select-sm w-full">
+                  <select name="sort" class="select select-bordered w-full">
                     <option value="distance" selected={@sort_by == "distance"}>Nearest</option>
                     <option value="price_low" selected={@sort_by == "price_low"}>Price: Low to High</option>
                     <option value="price_high" selected={@sort_by == "price_high"}>Price: High to Low</option>
@@ -309,7 +309,7 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
             <%!-- Location Search with Google Places Autocomplete --%>
             <div class="flex flex-col sm:flex-row gap-3 mt-3 pt-3 border-t border-base-300/30">
               <div class="flex-1" id="explore-place-wrapper" phx-update="ignore">
-                <label class="input input-bordered input-sm flex items-center gap-2 w-full">
+                <label class="input input-bordered flex items-center gap-2 w-full">
                   <.icon name="hero-map-pin-mini" class="size-4 text-primary opacity-70" />
                   <input
                     type="text"
@@ -354,7 +354,7 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
 
         <%!-- Results Count --%>
         <div class="flex items-center justify-between">
-          <p class="text-sm text-base-content/50">
+          <p class="text-base text-base-content/50">
             {length(@sorted_entries)} gym(s) found
             <%= if @user_lat do %>
               <span class="badge badge-sm badge-success gap-1 ml-2">
@@ -415,7 +415,7 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
                 <div class="card-body p-4 gap-2">
                   <%!-- Name + Badges --%>
                   <div class="flex items-start justify-between gap-2">
-                    <h3 class="card-title text-base truncate">{entry.gym.name}</h3>
+                    <h3 class="card-title text-lg truncate">{entry.gym.name}</h3>
                     <%= if entry.gym.is_promoted do %>
                       <span class="badge badge-xs badge-warning gap-1 shrink-0">
                         <.icon name="hero-star-mini" class="size-2.5" /> Featured
@@ -445,12 +445,12 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
                   <div class="flex items-center justify-between mt-1 pt-2 border-t border-base-300/30">
                     <div>
                       <%= if format_price(entry.cheapest_monthly) do %>
-                        <span class="text-lg font-black text-primary">
+                        <span class="text-xl font-black text-primary">
                           Rs {format_price(entry.cheapest_monthly)}
                         </span>
-                        <span class="text-xs text-base-content/40">/mo</span>
+                        <span class="text-sm text-base-content/40">/mo</span>
                       <% else %>
-                        <span class="text-sm text-base-content/40">Contact for pricing</span>
+                        <span class="text-base text-base-content/40">Contact for pricing</span>
                       <% end %>
                     </div>
                     <%= if distance do %>
