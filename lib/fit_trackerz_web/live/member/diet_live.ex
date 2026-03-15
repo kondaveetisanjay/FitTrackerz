@@ -299,13 +299,13 @@ defmodule FitTrackerzWeb.Member.DietLive do
             </div>
           </div>
           <%= if @plan_type == :general and not @no_gym do %>
-            <button
-              class="btn btn-primary btn-sm gap-2 font-semibold"
+            <.button
+              class="btn-primary btn-sm gap-2 font-semibold"
               phx-click="toggle_form"
               id="toggle-diet-form-btn"
             >
               <.icon name="hero-plus-mini" class="size-4" /> New Diet Plan
-            </button>
+            </.button>
           <% end %>
         </div>
 
@@ -374,9 +374,9 @@ defmodule FitTrackerzWeb.Member.DietLive do
                   <div class="space-y-3">
                     <div class="flex items-center justify-between">
                       <h3 class="font-semibold text-sm">Meals</h3>
-                      <button type="button" class="btn btn-ghost btn-xs gap-1" phx-click="add_meal" id="add-meal-btn">
+                      <.button type="button" class="btn-ghost btn-xs gap-1" phx-click="add_meal" id="add-meal-btn">
                         <.icon name="hero-plus-mini" class="size-3" /> Add Meal
-                      </button>
+                      </.button>
                     </div>
                     <div
                       :for={{meal, idx} <- Enum.with_index(@meals)}
@@ -388,15 +388,15 @@ defmodule FitTrackerzWeb.Member.DietLive do
                           Meal #{idx + 1}
                         </span>
                         <%= if length(@meals) > 1 do %>
-                          <button
+                          <.button
                             type="button"
-                            class="btn btn-ghost btn-xs text-error"
+                            class="btn-ghost btn-xs text-error"
                             phx-click="remove_meal"
                             phx-value-index={idx}
                             id={"remove-meal-#{idx}"}
                           >
                             <.icon name="hero-trash-mini" class="size-3" />
-                          </button>
+                          </.button>
                         <% end %>
                       </div>
                       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -501,12 +501,12 @@ defmodule FitTrackerzWeb.Member.DietLive do
                   </div>
 
                   <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" class="btn btn-ghost btn-sm" phx-click="toggle_form" id="cancel-diet-btn">
+                    <.button type="button" class="btn-ghost btn-sm" phx-click="toggle_form" id="cancel-diet-btn">
                       Cancel
-                    </button>
-                    <button type="submit" class="btn btn-primary btn-sm gap-2" id="submit-diet-btn">
+                    </.button>
+                    <.button type="submit" class="btn-primary btn-sm gap-2" id="submit-diet-btn">
                       <.icon name="hero-check-mini" class="size-4" /> Create Plan
-                    </button>
+                    </.button>
                   </div>
                 </.form>
               </div>
@@ -564,15 +564,15 @@ defmodule FitTrackerzWeb.Member.DietLive do
                         </span>
                       <% end %>
                       <%= if @plan_type == :general do %>
-                        <button
-                          class="btn btn-ghost btn-xs text-error"
+                        <.button
+                          class="btn-ghost btn-xs text-error"
                           phx-click="delete_diet"
                           phx-value-id={plan.id}
                           data-confirm="Are you sure you want to delete this diet plan?"
                           id={"delete-diet-#{plan.id}"}
                         >
                           <.icon name="hero-trash-mini" class="size-4" />
-                        </button>
+                        </.button>
                       <% end %>
                     </div>
                   </div>

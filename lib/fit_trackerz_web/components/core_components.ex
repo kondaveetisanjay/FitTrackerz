@@ -88,7 +88,7 @@ defmodule FitTrackerzWeb.CoreComponents do
       <.button phx-click="go" variant="primary">Send!</.button>
       <.button navigate={~p"/"}>Home</.button>
   """
-  attr :rest, :global, include: ~w(href navigate patch method download name value disabled)
+  attr :rest, :global, include: ~w(href navigate patch method download name value disabled type form)
   attr :class, :any
   attr :variant, :string, values: ~w(primary)
   slot :inner_block, required: true
@@ -472,6 +472,168 @@ defmodule FitTrackerzWeb.CoreComponents do
       </text>
       <rect x="0" y="46" width="95" height="3.5" rx="1.75" style="fill: var(--color-secondary)" />
     </svg>
+    """
+  end
+
+  @doc """
+  Renders a premium stat card with icon, label, value, and optional subtitle.
+
+  ## Examples
+
+      <.stat_card label="Members" value={42} icon="hero-user-group-solid" color="primary" />
+  """
+  attr :label, :string, required: true
+  attr :value, :any, required: true
+  attr :icon, :string, required: true
+  attr :color, :string, default: "primary"
+  attr :subtitle, :string, default: nil
+  attr :href, :string, default: nil
+  attr :id, :string, default: nil
+  attr :class, :string, default: nil
+
+  def stat_card(assigns) do
+    ~H"""
+    <%= if @href do %>
+      <.link navigate={@href} class={["premium-card group cursor-pointer", @class]} id={@id}>
+        <.stat_card_inner {assigns} />
+      </.link>
+    <% else %>
+      <div class={["premium-card group", @class]} id={@id}>
+        <.stat_card_inner {assigns} />
+      </div>
+    <% end %>
+    """
+  end
+
+  defp stat_card_inner(assigns) do
+    ~H"""
+    <div class="p-5">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-[11px] font-bold text-base-content/35 uppercase tracking-widest">
+            {@label}
+          </p>
+          <p class="text-3xl font-black mt-1.5 tracking-tight">{@value}</p>
+        </div>
+        <div class={[
+          "w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110",
+          @color == "primary" && "bg-gradient-to-br from-primary/15 to-primary/5",
+          @color == "secondary" && "bg-gradient-to-br from-secondary/15 to-secondary/5",
+          @color == "info" && "bg-gradient-to-br from-info/15 to-info/5",
+          @color == "success" && "bg-gradient-to-br from-success/15 to-success/5",
+          @color == "warning" && "bg-gradient-to-br from-warning/15 to-warning/5",
+          @color == "accent" && "bg-gradient-to-br from-accent/15 to-accent/5",
+          @color == "error" && "bg-gradient-to-br from-error/15 to-error/5"
+        ]}>
+          <.icon name={@icon} class={[
+            "size-6",
+            @color == "primary" && "text-primary",
+            @color == "secondary" && "text-secondary",
+            @color == "info" && "text-info",
+            @color == "success" && "text-success",
+            @color == "warning" && "text-warning",
+            @color == "accent" && "text-accent",
+            @color == "error" && "text-error"
+          ]} />
+        </div>
+      </div>
+      <p :if={@subtitle} class="text-xs text-base-content/35 mt-2 font-medium">{@subtitle}</p>
+    </div>
+    """
+  end
+
+  @doc """
+  Renders a consistent section header.
+
+  ## Examples
+
+      <.section_header icon="hero-fire-solid" icon_color="accent" title="My Workout" />
+  """
+  attr :title, :string, required: true
+  attr :icon, :string, default: nil
+  attr :icon_color, :string, default: "primary"
+  slot :actions
+
+  def section_header(assigns) do
+    ~H"""
+    <div class="flex items-center justify-between mb-1">
+      <h2 class="text-lg font-bold flex items-center gap-2.5">
+        <div
+          :if={@icon}
+          class={[
+            "w-8 h-8 rounded-lg flex items-center justify-center",
+            @icon_color == "primary" && "bg-primary/10",
+            @icon_color == "secondary" && "bg-secondary/10",
+            @icon_color == "info" && "bg-info/10",
+            @icon_color == "success" && "bg-success/10",
+            @icon_color == "warning" && "bg-warning/10",
+            @icon_color == "accent" && "bg-accent/10",
+            @icon_color == "error" && "bg-error/10"
+          ]}
+        >
+          <.icon name={@icon} class={[
+            "size-4",
+            @icon_color == "primary" && "text-primary",
+            @icon_color == "secondary" && "text-secondary",
+            @icon_color == "info" && "text-info",
+            @icon_color == "success" && "text-success",
+            @icon_color == "warning" && "text-warning",
+            @icon_color == "accent" && "text-accent",
+            @icon_color == "error" && "text-error"
+          ]} />
+        </div>
+        {@title}
+      </h2>
+      <div :if={@actions != []} class="flex items-center gap-2">
+        {render_slot(@actions)}
+      </div>
+    </div>
+    """
+  end
+
+  @doc """
+  Renders a consistent empty state card.
+
+  ## Examples
+
+      <.empty_state icon="hero-fire" color="accent" title="No Plans" message="Create your first workout plan." />
+  """
+  attr :icon, :string, required: true
+  attr :color, :string, default: "primary"
+  attr :title, :string, required: true
+  attr :message, :string, required: true
+  slot :actions
+
+  def empty_state(assigns) do
+    ~H"""
+    <div class="p-8 rounded-xl bg-base-300/20 text-center">
+      <div class={[
+        "w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4",
+        @color == "primary" && "bg-primary/10",
+        @color == "secondary" && "bg-secondary/10",
+        @color == "info" && "bg-info/10",
+        @color == "success" && "bg-success/10",
+        @color == "warning" && "bg-warning/10",
+        @color == "accent" && "bg-accent/10",
+        @color == "error" && "bg-error/10"
+      ]}>
+        <.icon name={@icon} class={[
+          "size-8",
+          @color == "primary" && "text-primary",
+          @color == "secondary" && "text-secondary",
+          @color == "info" && "text-info",
+          @color == "success" && "text-success",
+          @color == "warning" && "text-warning",
+          @color == "accent" && "text-accent",
+          @color == "error" && "text-error"
+        ]} />
+      </div>
+      <p class="text-sm font-bold">{@title}</p>
+      <p class="text-xs text-base-content/40 mt-1.5 max-w-xs mx-auto">{@message}</p>
+      <div :if={@actions != []} class="mt-4">
+        {render_slot(@actions)}
+      </div>
+    </div>
     """
   end
 

@@ -300,9 +300,9 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
 
               <%!-- Clear Filters --%>
               <%= if @search_query != "" or @city_filter != "" or @user_lat do %>
-                <button phx-click="clear_filters" class="btn btn-ghost btn-sm gap-1">
+                <.button phx-click="clear_filters" class="btn-ghost btn-sm gap-1">
                   <.icon name="hero-x-mark-mini" class="size-4" /> Clear
-                </button>
+                </.button>
               <% end %>
             </div>
 
@@ -323,10 +323,10 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
               </div>
               <span class="text-xs text-base-content/40 self-center hidden sm:block">or</span>
               <%!-- Location Button --%>
-              <button
+              <.button
                 id="detect-location-btn"
                 phx-hook="Geolocation"
-                class={"btn btn-sm gap-2 #{if @user_lat, do: "btn-success", else: "btn-outline"}"}
+                class={"btn-sm gap-2 #{if @user_lat, do: "btn-success", else: "btn-outline"}"}
               >
                 <.icon name="hero-map-pin-mini" class="size-4" />
                 <%= if @user_lat do %>
@@ -334,7 +334,7 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
                 <% else %>
                   Detect my location
                 <% end %>
-              </button>
+              </.button>
             </div>
 
             <%!-- Location Info --%>
@@ -385,8 +385,8 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
           <% page_entries = @sorted_entries |> Enum.drop((@page - 1) * @per_page) |> Enum.take(@per_page) %>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="gym-list">
             <%= for {entry, distance} <- page_entries do %>
-              <a
-                href={"/explore/#{entry.gym.slug}"}
+              <.link
+                navigate={"/explore/#{entry.gym.slug}"}
                 class="glass-card cursor-pointer overflow-hidden group"
                 id={"gym-card-#{entry.gym.id}"}
               >
@@ -470,7 +470,7 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
                     </div>
                   <% end %>
                 </div>
-              </a>
+              </.link>
             <% end %>
           </div>
         <% end %>
@@ -479,31 +479,31 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
         <% total_pages = max(ceil(length(@sorted_entries) / @per_page), 1) %>
         <%= if total_pages > 1 do %>
           <div class="flex justify-center gap-2 mt-8">
-            <button
+            <.button
               phx-click="change_page"
               phx-value-page={max(@page - 1, 1)}
-              class="btn btn-sm btn-ghost"
+              class="btn-sm btn-ghost"
               disabled={@page == 1}
             >
               <.icon name="hero-chevron-left-mini" class="size-4" /> Previous
-            </button>
+            </.button>
             <%= for p <- 1..total_pages do %>
-              <button
+              <.button
                 phx-click="change_page"
                 phx-value-page={p}
-                class={["btn btn-sm", if(p == @page, do: "btn-primary", else: "btn-ghost")]}
+                class={["btn-sm", if(p == @page, do: "btn-primary", else: "btn-ghost")]}
               >
                 {p}
-              </button>
+              </.button>
             <% end %>
-            <button
+            <.button
               phx-click="change_page"
               phx-value-page={min(@page + 1, total_pages)}
-              class="btn btn-sm btn-ghost"
+              class="btn-sm btn-ghost"
               disabled={@page == total_pages}
             >
               Next <.icon name="hero-chevron-right-mini" class="size-4" />
-            </button>
+            </.button>
           </div>
         <% end %>
 
@@ -528,9 +528,9 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
                 <span class="flex items-center gap-1"><.icon name="hero-check-circle-solid" class="size-3 text-success" /> Instant access</span>
               </div>
               <div class="mt-4">
-                <a href="/register" class="btn btn-primary btn-sm gap-2 animate-glow-pulse">
+                <.link navigate="/register" class="btn btn-primary btn-sm gap-2 animate-glow-pulse">
                   <.icon name="hero-user-plus-mini" class="size-4" /> Create Free Account
-                </a>
+                </.link>
               </div>
             </div>
           </div>

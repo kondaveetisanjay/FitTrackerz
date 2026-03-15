@@ -6,13 +6,18 @@
     <meta name="csrf-token" content={get_csrf_token()} />
     <meta
       name="description"
-      content="FitTrackerz - The all-in-one platform connecting gyms and members."
+      content="FitTrackerz — Discover gyms, book classes, track workouts, and manage your fitness business. The all-in-one fitness platform."
     />
+    <meta name="theme-color" content="#4338ca" />
     <.live_title default="FitTrackerz" suffix=" · FitTrackerz">
       {assigns[:page_title]}
     </.live_title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
     <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
     <script defer phx-track-static type="text/javascript" src={~p"/assets/js/app.js"}>
     </script>

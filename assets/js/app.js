@@ -271,11 +271,31 @@ const PasswordVisibilityToggle = {
   }
 }
 
+const ActiveNav = {
+  mounted() {
+    this._mark()
+    this._handler = () => this._mark()
+    window.addEventListener('phx:page-loading-stop', this._handler)
+  },
+  destroyed() {
+    window.removeEventListener('phx:page-loading-stop', this._handler)
+  },
+  _mark() {
+    const path = window.location.pathname
+    this.el.querySelectorAll('a[href]').forEach(a => {
+      const href = a.getAttribute('href')
+      if (!href || href === '#') return
+      const isActive = href === path || (href.length > 1 && path.startsWith(href))
+      a.setAttribute('data-active', isActive ? 'true' : 'false')
+    })
+  }
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {Geolocation, BranchGeolocation, PlacesAutocomplete, ExplorePlacesAutocomplete, PasswordVisibilityToggle},
+  hooks: {Geolocation, BranchGeolocation, PlacesAutocomplete, ExplorePlacesAutocomplete, PasswordVisibilityToggle, ActiveNav},
 })
 
 // Show progress bar on live navigation and form submits

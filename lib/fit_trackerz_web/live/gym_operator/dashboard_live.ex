@@ -167,16 +167,16 @@ defmodule FitTrackerzWeb.GymOperator.DashboardLive do
                 {"Equipment", "equipment", "hero-wrench-screwdriver"},
                 {"Branches", "branches", "hero-map-pin"}
               ] do %>
-                <button
+                <.button
                   phx-click="switch_tab"
                   phx-value-tab={tab_id}
                   class={[
-                    "btn btn-ghost btn-sm gap-2 rounded-none border-b-2 font-medium",
+                    "btn-ghost btn-sm gap-2 rounded-none border-b-2 font-medium",
                     if(@active_tab == tab_id, do: "border-primary text-primary", else: "border-transparent text-base-content/60")
                   ]}
                 >
                   <.icon name={icon} class="size-4" /> {label}
-                </button>
+                </.button>
               <% end %>
             </div>
           </div>

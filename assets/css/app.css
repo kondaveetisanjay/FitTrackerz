@@ -7,60 +7,56 @@
 @source "../../lib/fit_trackerz_web";
 @source "../../deps/ash_authentication_phoenix";
 
-/* Google Fonts – Oswald for brand headings */
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap');
+/* Google Fonts – Inter for body, Oswald fallback for brand */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Oswald:wght@400;500;600;700&display=swap');
 
-/* A Tailwind plugin that makes "hero-#{ICON}" classes available.
-   The heroicons installation itself is managed by your mix.exs */
+/* A Tailwind plugin that makes "hero-#{ICON}" classes available. */
 @plugin "../vendor/heroicons";
 
-/* daisyUI Tailwind Plugin. You can update this file by fetching the latest version with:
-   curl -sLO https://github.com/saadeghi/daisyui/releases/latest/download/daisyui.js
-   Make sure to look at the daisyUI changelog: https://daisyui.com/docs/changelog/ */
+/* daisyUI Tailwind Plugin */
 @plugin "../vendor/daisyui" {
   themes: false;
 }
 
 /* ============================================================
    FitTrackerz Brand Theme – Light (DEFAULT)
-   Indigo + Coral palette – Modern Fitness SaaS
-   Clean whites with cool undertones
+   Indigo + Coral palette — Premium Fitness SaaS
    ============================================================ */
 @plugin "../vendor/daisyui-theme" {
   name: "light";
   default: true;
   prefersdark: false;
   color-scheme: "light";
-  /* Base surfaces – clean white with cool undertones */
-  --color-base-100: oklch(100% 0 0);
-  --color-base-200: oklch(97% 0.003 280);
-  --color-base-300: oklch(92% 0.005 280);
-  --color-base-content: oklch(18% 0.005 280);
-  /* Indigo – rich purple-blue, trust & professionalism */
-  --color-primary: oklch(40% 0.22 280);
+  /* Base surfaces — warm whites */
+  --color-base-100: oklch(99.5% 0.002 280);
+  --color-base-200: oklch(96.5% 0.004 280);
+  --color-base-300: oklch(92% 0.006 280);
+  --color-base-content: oklch(16% 0.005 280);
+  /* Indigo — rich purple-blue, trust & professionalism */
+  --color-primary: oklch(45% 0.24 275);
   --color-primary-content: oklch(100% 0 0);
-  /* Coral – energy & motivation */
-  --color-secondary: oklch(68% 0.18 25);
+  /* Coral — energy & motivation */
+  --color-secondary: oklch(65% 0.20 25);
   --color-secondary-content: oklch(100% 0 0);
-  /* Amber – warm supporting accent */
-  --color-accent: oklch(72% 0.15 75);
-  --color-accent-content: oklch(18% 0.02 75);
-  /* Neutral – cool charcoal */
-  --color-neutral: oklch(28% 0.01 280);
+  /* Amber — warm supporting accent */
+  --color-accent: oklch(74% 0.16 75);
+  --color-accent-content: oklch(16% 0.02 75);
+  /* Neutral — cool charcoal */
+  --color-neutral: oklch(26% 0.01 280);
   --color-neutral-content: oklch(98% 0 0);
   /* Semantic colors */
-  --color-info: oklch(52% 0.15 250);
-  --color-info-content: oklch(98% 0.005 250);
-  --color-success: oklch(55% 0.16 155);
+  --color-info: oklch(55% 0.17 245);
+  --color-info-content: oklch(98% 0.005 245);
+  --color-success: oklch(55% 0.18 155);
   --color-success-content: oklch(98% 0.005 155);
-  --color-warning: oklch(72% 0.14 82);
-  --color-warning-content: oklch(18% 0.02 82);
-  --color-error: oklch(50% 0.20 25);
+  --color-warning: oklch(74% 0.16 82);
+  --color-warning-content: oklch(16% 0.02 82);
+  --color-error: oklch(52% 0.22 25);
   --color-error-content: oklch(98% 0.005 25);
   /* Shape */
   --radius-selector: 0.5rem;
-  --radius-field: 0.5rem;
-  --radius-box: 0.75rem;
+  --radius-field: 0.625rem;
+  --radius-box: 1rem;
   --size-selector: 0.25rem;
   --size-field: 0.25rem;
   --border: 1px;
@@ -70,43 +66,42 @@
 
 /* ============================================================
    FitTrackerz Brand Theme – Dark variant
-   Indigo + Coral on dark surfaces
    ============================================================ */
 @plugin "../vendor/daisyui-theme" {
   name: "dark";
   default: false;
   prefersdark: false;
   color-scheme: "dark";
-  /* Base surfaces – deep indigo-blacks */
-  --color-base-100: oklch(8% 0.005 280);
-  --color-base-200: oklch(15% 0.005 280);
-  --color-base-300: oklch(22% 0.005 280);
+  /* Base surfaces — deep navy-blacks */
+  --color-base-100: oklch(10% 0.008 275);
+  --color-base-200: oklch(15% 0.008 275);
+  --color-base-300: oklch(21% 0.008 275);
   --color-base-content: oklch(94% 0 0);
-  /* Indigo – brighter for dark bg readability */
-  --color-primary: oklch(55% 0.22 280);
+  /* Indigo — brighter for dark bg readability */
+  --color-primary: oklch(58% 0.24 275);
   --color-primary-content: oklch(100% 0 0);
-  /* Coral – brighter on dark */
-  --color-secondary: oklch(72% 0.18 25);
+  /* Coral — brighter on dark */
+  --color-secondary: oklch(70% 0.20 25);
   --color-secondary-content: oklch(100% 0 0);
-  /* Amber – brighter on dark */
-  --color-accent: oklch(78% 0.15 75);
+  /* Amber — brighter on dark */
+  --color-accent: oklch(80% 0.16 75);
   --color-accent-content: oklch(14% 0.02 75);
-  /* Neutral tones – cool */
-  --color-neutral: oklch(25% 0.005 280);
+  /* Neutral tones */
+  --color-neutral: oklch(22% 0.006 275);
   --color-neutral-content: oklch(90% 0 0);
-  /* Semantic colors */
-  --color-info: oklch(62% 0.16 250);
-  --color-info-content: oklch(95% 0.01 250);
-  --color-success: oklch(65% 0.14 155);
+  /* Semantic */
+  --color-info: oklch(64% 0.18 245);
+  --color-info-content: oklch(95% 0.01 245);
+  --color-success: oklch(65% 0.16 155);
   --color-success-content: oklch(15% 0.02 155);
   --color-warning: oklch(80% 0.16 82);
   --color-warning-content: oklch(14% 0.02 82);
-  --color-error: oklch(55% 0.20 25);
+  --color-error: oklch(58% 0.22 25);
   --color-error-content: oklch(95% 0.02 25);
   /* Shape */
   --radius-selector: 0.5rem;
-  --radius-field: 0.5rem;
-  --radius-box: 0.75rem;
+  --radius-field: 0.625rem;
+  --radius-box: 1rem;
   --size-selector: 0.25rem;
   --size-field: 0.25rem;
   --border: 1px;
@@ -124,6 +119,16 @@
 
 /* Make LiveView wrapper divs transparent for layout */
 [data-phx-session], [data-phx-teleported-src] { display: contents }
+
+/* ============================================================
+   Global Typography
+   ============================================================ */
+html {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
 
 /* ============================================================
    Brand Typography – Gilroy
@@ -173,7 +178,9 @@
   letter-spacing: 0.02em;
 }
 
-/* Smooth transitions on interactive elements only */
+/* ============================================================
+   Smooth Transitions
+   ============================================================ */
 a, button, .btn, .card, .badge, .collapse, input, select, textarea,
 [class*="hover:"] {
   transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform;
@@ -183,7 +190,8 @@ a, button, .btn, .card, .badge, .collapse, input, select, textarea,
 
 /* Brand button hover effects */
 .btn-primary:hover {
-  filter: brightness(0.85);
+  filter: brightness(1.12);
+  box-shadow: 0 4px 20px oklch(45% 0.24 275 / 0.3);
 }
 
 /* ============================================================
@@ -200,9 +208,14 @@ a, button, .btn, .card, .badge, .collapse, input, select, textarea,
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 @keyframes glowPulse {
-  0%, 100% { box-shadow: 0 0 8px 2px oklch(40% 0.22 280 / 0.3); }
-  50% { box-shadow: 0 0 20px 6px oklch(40% 0.22 280 / 0.5); }
+  0%, 100% { box-shadow: 0 0 8px 2px oklch(45% 0.24 275 / 0.25); }
+  50% { box-shadow: 0 0 24px 8px oklch(45% 0.24 275 / 0.4); }
 }
 
 @keyframes marqueeLeft {
@@ -216,8 +229,33 @@ a, button, .btn, .card, .badge, .collapse, input, select, textarea,
 }
 
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.9); }
+  from { opacity: 0; transform: scale(0.92); }
   to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes borderGlow {
+  0%, 100% { border-color: oklch(45% 0.24 275 / 0.2); }
+  50% { border-color: oklch(45% 0.24 275 / 0.5); }
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
 /* ============================================================
@@ -240,6 +278,10 @@ a, button, .btn, .card, .badge, .collapse, input, select, textarea,
   animation: fadeUp 0.6s ease-out both;
 }
 
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out both;
+}
+
 .animate-glow-pulse {
   animation: glowPulse 2.5s ease-in-out infinite;
 }
@@ -256,6 +298,31 @@ a, button, .btn, .card, .badge, .collapse, input, select, textarea,
   animation: scaleIn 0.4s ease-out both;
 }
 
+.animate-slide-in-left {
+  animation: slideInLeft 0.5s ease-out both;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.5s ease-out both;
+}
+
+.animate-gradient-shift {
+  background-size: 200% 200%;
+  animation: gradientShift 6s ease infinite;
+}
+
+.animate-border-glow {
+  animation: borderGlow 3s ease-in-out infinite;
+}
+
+/* Stagger delays for lists */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+.stagger-6 { animation-delay: 0.3s; }
+
 /* Pause marquee on mobile for accessibility */
 @media (max-width: 768px) {
   .animate-marquee-left,
@@ -265,44 +332,249 @@ a, button, .btn, .card, .badge, .collapse, input, select, textarea,
 }
 
 /* ============================================================
-   Glass Card Utility
+   Glass Card — Premium
    ============================================================ */
 
 .glass-card {
-  background: oklch(100% 0 0 / 0.60);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  background: oklch(100% 0 0 / 0.55);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
   border-radius: 1rem;
-  border: 1px solid oklch(92% 0.005 280 / 0.30);
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
-  transition: box-shadow 0.2s, transform 0.2s;
+  border: 1px solid oklch(92% 0.005 280 / 0.45);
+  box-shadow:
+    0 1px 3px rgb(0 0 0 / 0.04),
+    0 4px 8px -1px rgb(0 0 0 / 0.06);
+  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
 }
 
 .glass-card:hover {
-  box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  box-shadow:
+    0 8px 25px -5px rgb(0 0 0 / 0.08),
+    0 4px 10px -3px rgb(0 0 0 / 0.06);
   transform: translateY(-2px);
+  border-color: oklch(88% 0.01 275 / 0.5);
 }
 
 :where([data-theme=dark]) .glass-card {
-  background: oklch(15% 0 0 / 0.60);
-  border-color: oklch(22% 0 0 / 0.40);
+  background: oklch(15% 0.005 275 / 0.55);
+  border-color: oklch(25% 0.008 275 / 0.5);
+  box-shadow:
+    0 1px 3px rgb(0 0 0 / 0.2),
+    0 4px 8px -1px rgb(0 0 0 / 0.15);
 }
 
-/* Google Places autocomplete dropdown styling */
+:where([data-theme=dark]) .glass-card:hover {
+  border-color: oklch(35% 0.012 275 / 0.6);
+  box-shadow:
+    0 8px 25px -5px rgb(0 0 0 / 0.3),
+    0 4px 10px -3px rgb(0 0 0 / 0.2);
+}
+
+/* ============================================================
+   Premium Card — For stat cards and feature cards
+   ============================================================ */
+
+.premium-card {
+  background: oklch(100% 0 0 / 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 1rem;
+  border: 1px solid oklch(92% 0.005 280 / 0.4);
+  box-shadow: 0 2px 8px -2px rgb(0 0 0 / 0.06);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.premium-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, oklch(45% 0.24 275), oklch(65% 0.20 25));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.premium-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px -8px rgb(0 0 0 / 0.12);
+}
+
+.premium-card:hover::before {
+  opacity: 1;
+}
+
+:where([data-theme=dark]) .premium-card {
+  background: oklch(15% 0.006 275 / 0.7);
+  border-color: oklch(25% 0.008 275 / 0.5);
+}
+
+/* ============================================================
+   Gradient Utilities
+   ============================================================ */
+
+.gradient-primary {
+  background: linear-gradient(135deg, oklch(45% 0.24 275), oklch(55% 0.22 280));
+}
+
+.gradient-secondary {
+  background: linear-gradient(135deg, oklch(65% 0.20 25), oklch(72% 0.18 30));
+}
+
+.gradient-accent {
+  background: linear-gradient(135deg, oklch(74% 0.16 75), oklch(80% 0.14 80));
+}
+
+.gradient-mesh {
+  background:
+    radial-gradient(at 20% 80%, oklch(45% 0.24 275 / 0.08) 0%, transparent 50%),
+    radial-gradient(at 80% 20%, oklch(65% 0.20 25 / 0.06) 0%, transparent 50%),
+    radial-gradient(at 50% 50%, oklch(74% 0.16 75 / 0.04) 0%, transparent 50%);
+}
+
+:where([data-theme=dark]) .gradient-mesh {
+  background:
+    radial-gradient(at 20% 80%, oklch(45% 0.24 275 / 0.12) 0%, transparent 50%),
+    radial-gradient(at 80% 20%, oklch(65% 0.20 25 / 0.08) 0%, transparent 50%),
+    radial-gradient(at 50% 50%, oklch(74% 0.16 75 / 0.06) 0%, transparent 50%);
+}
+
+/* Gradient border effect */
+.gradient-border {
+  position: relative;
+  border: none;
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, oklch(45% 0.24 275 / 0.4), oklch(65% 0.20 25 / 0.4));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ============================================================
+   Icon Container Utility
+   ============================================================ */
+
+.icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  flex-shrink: 0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.icon-container:hover {
+  transform: scale(1.05);
+}
+
+/* ============================================================
+   Shimmer / Skeleton Loading
+   ============================================================ */
+
+.shimmer-bg {
+  background: linear-gradient(90deg, oklch(92% 0 0 / 0.5) 25%, oklch(96% 0 0 / 0.8) 50%, oklch(92% 0 0 / 0.5) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+:where([data-theme=dark]) .shimmer-bg {
+  background: linear-gradient(90deg, oklch(20% 0 0 / 0.5) 25%, oklch(25% 0 0 / 0.8) 50%, oklch(20% 0 0 / 0.5) 75%);
+  background-size: 200% 100%;
+}
+
+/* ============================================================
+   Scroll Animation Classes
+   ============================================================ */
+
+.scroll-fade-up {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.scroll-fade-up.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ============================================================
+   Selection Highlight
+   ============================================================ */
+
+::selection {
+  background: oklch(45% 0.24 275 / 0.2);
+  color: oklch(16% 0.005 280);
+}
+
+:where([data-theme=dark]) ::selection {
+  background: oklch(58% 0.24 275 / 0.3);
+  color: oklch(94% 0 0);
+}
+
+/* ============================================================
+   Scrollbar Styling
+   ============================================================ */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: oklch(80% 0 0 / 0.4);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(70% 0 0 / 0.5);
+}
+
+:where([data-theme=dark]) {
+  scrollbar-color: oklch(30% 0 0) transparent;
+}
+
+:where([data-theme=dark]) ::-webkit-scrollbar-thumb {
+  background: oklch(30% 0 0 / 0.6);
+}
+
+:where([data-theme=dark]) ::-webkit-scrollbar-thumb:hover {
+  background: oklch(35% 0 0 / 0.7);
+}
+
+/* ============================================================
+   Google Places autocomplete dropdown styling
+   ============================================================ */
 .pac-container {
   z-index: 10000 !important;
   background-color: oklch(100% 0 0);
   border: 1px solid oklch(90% 0.005 280);
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   margin-top: 4px;
 }
 
 .pac-item {
-  padding: 8px 12px;
+  padding: 10px 14px;
   color: oklch(25% 0.005 280);
   border-top: 1px solid oklch(94% 0.003 280);
   cursor: pointer;
+  transition: background-color 0.15s ease;
 }
 
 .pac-item:first-child {
@@ -310,11 +582,11 @@ a, button, .btn, .card, .badge, .collapse, input, select, textarea,
 }
 
 .pac-item:hover, .pac-item-selected {
-  background-color: oklch(97% 0.003 280);
+  background-color: oklch(96% 0.005 275);
 }
 
 .pac-item-query {
-  color: oklch(40% 0.22 280);
+  color: oklch(45% 0.24 275);
   font-weight: 600;
 }
 
@@ -323,13 +595,13 @@ a, button, .btn, .card, .badge, .collapse, input, select, textarea,
 }
 
 .pac-matched {
-  color: oklch(40% 0.22 280);
+  color: oklch(45% 0.24 275);
 }
 
 /* Dark theme overrides for PAC container */
 :where([data-theme=dark]) .pac-container {
   background-color: oklch(15% 0 0);
-  border-color: oklch(22% 0 0);
+  border-color: oklch(25% 0 0);
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
 }
 :where([data-theme=dark]) .pac-item {
@@ -342,10 +614,20 @@ a, button, .btn, .card, .badge, .collapse, input, select, textarea,
 }
 :where([data-theme=dark]) .pac-item-query,
 :where([data-theme=dark]) .pac-matched {
-  color: oklch(55% 0.22 280);
+  color: oklch(58% 0.24 275);
 }
 
-/* Scrollbar styling */
-:where([data-theme=dark]) {
-  scrollbar-color: oklch(25% 0 0) transparent;
+/* ============================================================
+   Focus Ring
+   ============================================================ */
+:focus-visible {
+  outline: 2px solid oklch(45% 0.24 275 / 0.5);
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   Topbar override
+   ============================================================ */
+#nprogress .bar {
+  background: linear-gradient(90deg, oklch(45% 0.24 275), oklch(65% 0.20 25)) !important;
 }

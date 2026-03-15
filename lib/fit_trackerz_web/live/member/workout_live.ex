@@ -245,13 +245,13 @@ defmodule FitTrackerzWeb.Member.WorkoutLive do
             </div>
           </div>
           <%= if @plan_type == :general and not @no_gym do %>
-            <button
-              class="btn btn-primary btn-sm gap-2 font-semibold"
+            <.button
+              class="btn-primary btn-sm gap-2 font-semibold"
               phx-click="toggle_form"
               id="toggle-workout-form-btn"
             >
               <.icon name="hero-plus-mini" class="size-4" /> New Workout Plan
-            </button>
+            </.button>
           <% end %>
         </div>
 
@@ -309,14 +309,14 @@ defmodule FitTrackerzWeb.Member.WorkoutLive do
                   <div class="space-y-3">
                     <div class="flex items-center justify-between">
                       <h3 class="font-semibold text-sm">Exercises</h3>
-                      <button
+                      <.button
                         type="button"
-                        class="btn btn-ghost btn-xs gap-1"
+                        class="btn-ghost btn-xs gap-1"
                         phx-click="add_exercise"
                         id="add-exercise-btn"
                       >
                         <.icon name="hero-plus-mini" class="size-3" /> Add Exercise
-                      </button>
+                      </.button>
                     </div>
                     <div
                       :for={{exercise, idx} <- Enum.with_index(@exercises)}
@@ -328,15 +328,15 @@ defmodule FitTrackerzWeb.Member.WorkoutLive do
                           Exercise #{idx + 1}
                         </span>
                         <%= if length(@exercises) > 1 do %>
-                          <button
+                          <.button
                             type="button"
-                            class="btn btn-ghost btn-xs text-error"
+                            class="btn-ghost btn-xs text-error"
                             phx-click="remove_exercise"
                             phx-value-index={idx}
                             id={"remove-exercise-#{idx}"}
                           >
                             <.icon name="hero-trash-mini" class="size-3" />
-                          </button>
+                          </.button>
                         <% end %>
                       </div>
                       <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
@@ -410,12 +410,12 @@ defmodule FitTrackerzWeb.Member.WorkoutLive do
                   </div>
 
                   <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" class="btn btn-ghost btn-sm" phx-click="toggle_form" id="cancel-workout-btn">
+                    <.button type="button" class="btn-ghost btn-sm" phx-click="toggle_form" id="cancel-workout-btn">
                       Cancel
-                    </button>
-                    <button type="submit" class="btn btn-primary btn-sm gap-2" id="submit-workout-btn">
+                    </.button>
+                    <.button type="submit" class="btn-primary btn-sm gap-2" id="submit-workout-btn">
                       <.icon name="hero-check-mini" class="size-4" /> Create Plan
-                    </button>
+                    </.button>
                   </div>
                 </.form>
               </div>
@@ -468,15 +468,15 @@ defmodule FitTrackerzWeb.Member.WorkoutLive do
                         {length(plan.exercises || [])} exercises
                       </div>
                       <%= if @plan_type == :general do %>
-                        <button
-                          class="btn btn-ghost btn-xs text-error"
+                        <.button
+                          class="btn-ghost btn-xs text-error"
                           phx-click="delete_workout"
                           phx-value-id={plan.id}
                           data-confirm="Are you sure you want to delete this workout plan?"
                           id={"delete-workout-#{plan.id}"}
                         >
                           <.icon name="hero-trash-mini" class="size-4" />
-                        </button>
+                        </.button>
                       <% end %>
                     </div>
                   </div>

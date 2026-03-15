@@ -45,44 +45,47 @@ defmodule FitTrackerzWeb.Layouts do
 
         <%!-- Main Content Area --%>
         <div class="drawer-content flex flex-col min-h-screen bg-base-100">
-          <%!-- Top Navbar (mobile + desktop) --%>
-          <header class="navbar bg-base-100 border-b border-base-300/50 px-4 lg:px-6 sticky top-0 z-30">
+          <%!-- Top Navbar --%>
+          <header class="navbar bg-base-100/80 backdrop-blur-xl border-b border-base-300/30 px-4 lg:px-8 sticky top-0 z-30">
             <div class="flex-none lg:hidden">
               <label
                 for="sidebar-toggle"
-                class="btn btn-ghost btn-sm btn-square"
+                class="btn btn-ghost btn-sm btn-square hover:bg-primary/10"
                 aria-label="Open menu"
               >
                 <.icon name="hero-bars-3" class="size-5" />
               </label>
             </div>
             <div class="flex-1 lg:flex-none lg:hidden">
-              <.brand_logo class="h-10 w-auto" />
+              <.brand_logo class="h-9 w-auto" />
             </div>
             <div class="flex-1 hidden lg:block"></div>
             <div class="flex-none flex items-center gap-3">
               <.theme_toggle />
               <div class="dropdown dropdown-end">
-                <div tabindex="0" role="button" class="btn btn-ghost btn-sm gap-2">
-                  <div class="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center">
+                <div tabindex="0" role="button" class="btn btn-ghost btn-sm gap-2 rounded-xl hover:bg-primary/8">
+                  <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center ring-2 ring-primary/10">
                     <span class="text-xs font-bold text-primary">
                       {String.first(@current_user.name || "U")}
                     </span>
                   </div>
-                  <span class="hidden sm:inline text-sm font-medium">{@current_user.name}</span>
-                  <.icon name="hero-chevron-down-mini" class="size-3 opacity-50" />
+                  <div class="hidden sm:block text-left">
+                    <span class="text-sm font-semibold block leading-tight">{@current_user.name}</span>
+                    <span class="text-[10px] text-base-content/40">{format_role(@user_role)}</span>
+                  </div>
+                  <.icon name="hero-chevron-down-mini" class="size-3 opacity-40" />
                 </div>
                 <ul
                   tabindex="0"
-                  class="dropdown-content menu bg-base-200 rounded-box z-50 w-52 p-2 shadow-lg border border-base-300"
+                  class="dropdown-content menu bg-base-100 rounded-xl z-50 w-56 p-2 shadow-xl border border-base-300/50 mt-2"
                 >
-                  <li class="menu-title text-xs">
-                    {format_role(@user_role)}
+                  <li class="menu-title text-xs px-3 py-1 text-base-content/40">
+                    {format_role(@user_role)} Portal
                   </li>
                   <li>
-                    <a href="/sign-out" class="text-error">
+                    <.link href="/sign-out" class="text-error hover:bg-error/10 rounded-lg gap-2">
                       <.icon name="hero-arrow-right-on-rectangle" class="size-4" /> Sign Out
-                    </a>
+                    </.link>
                   </li>
                 </ul>
               </div>
@@ -100,31 +103,39 @@ defmodule FitTrackerzWeb.Layouts do
         <%!-- Sidebar --%>
         <div class="drawer-side z-40">
           <label for="sidebar-toggle" aria-label="Close menu" class="drawer-overlay"></label>
-          <aside class="w-72 min-h-full bg-base-200 border-r border-base-300/50 flex flex-col">
+          <aside class="w-72 min-h-full bg-base-200/80 backdrop-blur-xl border-r border-base-300/30 flex flex-col relative">
+            <%!-- Sidebar gradient accent --%>
+            <div class="absolute left-0 top-0 bottom-0 w-[3px] bg-gradient-to-b from-primary via-secondary to-primary/30"></div>
+
             <%!-- Sidebar Header --%>
-            <div class="p-5 border-b border-base-300/50">
-              <a href="/dashboard">
+            <div class="p-5 pl-6 border-b border-base-300/30">
+              <.link navigate="/dashboard" class="flex items-center gap-2">
                 <.brand_logo class="h-10 w-auto" />
-              </a>
-              <p class="text-xs text-base-content/40 mt-1">{format_role(@user_role)} Portal</p>
+              </.link>
+              <div class="flex items-center gap-2 mt-2">
+                <div class="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></div>
+                <p class="text-[11px] text-base-content/40 font-medium tracking-wide uppercase">
+                  {format_role(@user_role)} Portal
+                </p>
+              </div>
             </div>
 
             <%!-- Navigation Links --%>
-            <nav class="flex-1 p-4 space-y-1">
+            <nav class="flex-1 p-4 pl-5 space-y-0.5 overflow-y-auto" id="sidebar-nav" phx-hook="ActiveNav">
               <.sidebar_nav role={@user_role} />
             </nav>
 
             <%!-- Sidebar Footer --%>
-            <div class="p-4 border-t border-base-300/50">
-              <div class="flex items-center gap-3 px-3 py-2">
-                <div class="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+            <div class="p-4 pl-5 border-t border-base-300/30">
+              <div class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-base-300/30">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0 ring-1 ring-primary/10">
                   <span class="text-sm font-bold text-primary">
                     {String.first(@current_user.name || "U")}
                   </span>
                 </div>
                 <div class="min-w-0">
                   <p class="text-sm font-semibold truncate">{@current_user.name}</p>
-                  <p class="text-xs text-base-content/50 truncate">{@current_user.email}</p>
+                  <p class="text-[11px] text-base-content/40 truncate">{@current_user.email}</p>
                 </div>
               </div>
             </div>
@@ -133,25 +144,31 @@ defmodule FitTrackerzWeb.Layouts do
       </div>
     <% else %>
       <%!-- Public layout (no sidebar) --%>
-      <header class="navbar px-4 sm:px-6 lg:px-8">
+      <header class="navbar px-4 sm:px-6 lg:px-8 bg-base-100/80 backdrop-blur-xl sticky top-0 z-50 border-b border-base-300/20">
         <div class="flex-1">
-          <a href="/" class="flex-1 flex w-fit items-center gap-2">
+          <.link navigate="/" class="flex-1 flex w-fit items-center gap-2">
             <.brand_logo class="h-10 w-auto" />
-          </a>
+          </.link>
         </div>
         <div class="flex-none">
-          <ul class="flex flex-column px-1 space-x-4 items-center">
+          <ul class="flex flex-column px-1 gap-1 items-center">
             <li>
-              <a href="/explore" class="btn btn-ghost btn-sm font-semibold">Explore Gyms</a>
+              <.link navigate="/explore" class="btn btn-ghost btn-sm font-semibold rounded-lg hover:bg-primary/8">
+                Explore Gyms
+              </.link>
             </li>
             <li>
-              <a href="/explore/contests" class="btn btn-ghost btn-sm font-semibold">Contests</a>
+              <.link navigate="/explore/contests" class="btn btn-ghost btn-sm font-semibold rounded-lg hover:bg-primary/8">
+                Contests
+              </.link>
             </li>
             <li>
               <.theme_toggle />
             </li>
             <li>
-              <a href="/sign-in" class="btn btn-primary btn-sm">Sign In</a>
+              <.link navigate="/sign-in" class="btn btn-primary btn-sm rounded-lg font-bold shadow-md shadow-primary/20">
+                Sign In
+              </.link>
             </li>
           </ul>
         </div>
@@ -175,15 +192,10 @@ defmodule FitTrackerzWeb.Layouts do
 
   def sidebar_nav(%{role: :platform_admin} = assigns) do
     ~H"""
-    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
-      Overview
-    </p>
+    <.nav_section label="Overview" />
     <.nav_link href="/admin/dashboard" icon="hero-squares-2x2-solid" label="Dashboard" />
 
-    <div class="divider my-3"></div>
-    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
-      Management
-    </p>
+    <.nav_section label="Management" />
     <.nav_link href="/admin/users" icon="hero-user-group-solid" label="Users" />
     <.nav_link href="/admin/gyms" icon="hero-building-office-2-solid" label="Gyms" />
     """
@@ -191,22 +203,14 @@ defmodule FitTrackerzWeb.Layouts do
 
   def sidebar_nav(%{role: :gym_operator} = assigns) do
     ~H"""
-    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
-      Overview
-    </p>
+    <.nav_section label="Overview" />
     <.nav_link href="/gym/dashboard" icon="hero-squares-2x2-solid" label="Dashboard" />
 
-    <div class="divider my-3"></div>
-    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
-      Gym Management
-    </p>
+    <.nav_section label="Gym Management" />
     <.nav_link href="/gym/setup" icon="hero-building-office-solid" label="My Gym" />
     <.nav_link href="/gym/members" icon="hero-user-group-solid" label="Members" />
 
-    <div class="divider my-3"></div>
-    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
-      Operations
-    </p>
+    <.nav_section label="Operations" />
     <.nav_link href="/gym/classes" icon="hero-calendar-days-solid" label="Classes" />
     <.nav_link href="/gym/plans" icon="hero-credit-card-solid" label="Plans & Billing" />
     <.nav_link href="/gym/invitations" icon="hero-envelope-solid" label="Invitations" />
@@ -217,16 +221,11 @@ defmodule FitTrackerzWeb.Layouts do
 
   def sidebar_nav(assigns) do
     ~H"""
-    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
-      Overview
-    </p>
+    <.nav_section label="Overview" />
     <.nav_link href="/member/dashboard" icon="hero-squares-2x2-solid" label="Dashboard" />
     <.nav_link href="/member/gym" icon="hero-building-office-2-solid" label="My Gyms" />
 
-    <div class="divider my-3"></div>
-    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
-      Fitness
-    </p>
+    <.nav_section label="Fitness" />
     <.nav_link href="/member/workout" icon="hero-fire-solid" label="My Workout" />
     <.nav_link href="/member/diet" icon="hero-heart-solid" label="My Diet Plan" />
     <.nav_link
@@ -235,18 +234,27 @@ defmodule FitTrackerzWeb.Layouts do
       label="Attendance"
     />
 
-    <div class="divider my-3"></div>
-    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
-      Classes
-    </p>
+    <.nav_section label="Classes" />
     <.nav_link href="/member/classes" icon="hero-calendar-days-solid" label="Browse Classes" />
     <.nav_link href="/member/bookings" icon="hero-ticket-solid" label="My Bookings" />
 
-    <div class="divider my-3"></div>
-    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
-      Account
-    </p>
+    <.nav_section label="Account" />
     <.nav_link href="/member/subscription" icon="hero-credit-card-solid" label="Subscription" />
+    """
+  end
+
+  attr :label, :string, required: true
+
+  defp nav_section(assigns) do
+    ~H"""
+    <div class="pt-5 pb-2 first:pt-0">
+      <div class="flex items-center gap-2 px-3">
+        <p class="text-[10px] font-bold text-base-content/30 uppercase tracking-widest">
+          {@label}
+        </p>
+        <div class="flex-1 h-px bg-base-300/30"></div>
+      </div>
+    </div>
     """
   end
 
@@ -256,13 +264,15 @@ defmodule FitTrackerzWeb.Layouts do
 
   defp nav_link(assigns) do
     ~H"""
-    <a
-      href={@href}
-      class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-base-content/70 hover:text-base-content hover:bg-base-300/50"
+    <.link
+      navigate={@href}
+      class="group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-base-content/60 hover:text-base-content hover:bg-base-300/40 transition-all duration-200 data-[active=true]:bg-primary/10 data-[active=true]:text-primary data-[active=true]:font-semibold"
     >
-      <.icon name={@icon} class="size-5 shrink-0" />
+      <div class="w-8 h-8 rounded-lg bg-base-300/30 flex items-center justify-center transition-colors group-hover:bg-primary/10 group-data-[active=true]:bg-primary/15">
+        <.icon name={@icon} class="size-4 transition-colors group-hover:text-primary group-data-[active=true]:text-primary" />
+      </div>
       <span>{@label}</span>
-    </a>
+    </.link>
     """
   end
 
@@ -351,7 +361,11 @@ defmodule FitTrackerzWeb.Layouts do
   """
   def back_button(assigns) do
     ~H"""
-    <button onclick="history.back()" class="btn btn-ghost btn-sm btn-circle" aria-label="Go back">
+    <button
+      onclick="history.back()"
+      class="btn btn-ghost btn-sm btn-circle hover:bg-primary/10"
+      aria-label="Go back"
+    >
       <.icon name="hero-arrow-left" class="size-5" />
     </button>
     """
