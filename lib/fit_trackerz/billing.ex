@@ -17,6 +17,7 @@ defmodule FitTrackerz.Billing do
     resource FitTrackerz.Billing.MemberSubscription do
       define :list_subscriptions, action: :read
       define :list_active_subscriptions_by_member, args: [:member_ids], action: :list_active_by_member
+      define :list_subscriptions_by_gym, args: [:gym_id], action: :list_by_gym
       define :create_subscription, action: :create
       define :update_subscription, action: :update
       define :cancel_subscription, action: :cancel
