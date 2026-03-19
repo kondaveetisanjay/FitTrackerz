@@ -15,7 +15,8 @@ config :fit_trackerz,
     FitTrackerz.Gym,
     FitTrackerz.Billing,
     FitTrackerz.Training,
-    FitTrackerz.Scheduling
+    FitTrackerz.Scheduling,
+    FitTrackerz.Health
   ]
 
 # Configure the endpoint

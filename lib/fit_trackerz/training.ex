@@ -43,5 +43,18 @@ defmodule FitTrackerz.Training do
       define :list_diets_by_trainer, args: [:trainer_ids], action: :list_by_trainer
       define :destroy_diet, action: :destroy
     end
+
+    resource FitTrackerz.Training.WorkoutLog do
+      define :list_workout_logs, args: [:member_ids], action: :list_by_member
+      define :list_workout_log_dates, args: [:member_ids], action: :list_dates_by_member
+      define :create_workout_log, action: :create
+      define :destroy_workout_log, action: :destroy
+    end
+
+    resource FitTrackerz.Training.WorkoutLogEntry do
+      define :list_workout_log_entries, args: [:workout_log_id], action: :list_by_workout_log
+      define :get_exercise_pr, args: [:member_id, :exercise_name], action: :list_by_member_exercise
+      define :create_workout_log_entry, action: :create
+    end
   end
 end

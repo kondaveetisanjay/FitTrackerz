@@ -32,7 +32,10 @@ defmodule FitTrackerzWeb.Member.DashboardLive do
         workout_plan: nil,
         diet_plan: nil,
         subscription: nil,
-        upcoming_bookings: []
+        upcoming_bookings: [],
+        streak_count: 0,
+        today_calories: 0,
+        calorie_target: nil
       )
     else
       member_ids = Enum.map(memberships, & &1.id)
@@ -74,6 +77,28 @@ defmodule FitTrackerzWeb.Member.DashboardLive do
         _ -> nil
       end
 
+      # Get workout streak
+      workout_log_dates = case FitTrackerz.Training.list_workout_log_dates(member_ids, actor: actor) do
+        {:ok, logs} -> logs
+        _ -> []
+      end
+
+      streak_count = calculate_streak(workout_log_dates)
+
+      # Get today's calories
+      today = Date.utc_today()
+      today_food = case FitTrackerz.Health.list_food_logs_by_date(member_ids, today, actor: actor) do
+        {:ok, entries} -> entries
+        _ -> []
+      end
+
+      today_calories = Enum.reduce(today_food, 0, &(&1.calories + &2))
+
+      calorie_target = case diet_plan do
+        nil -> nil
+        plan -> plan.calorie_target
+      end
+
       socket
       |> assign(
         page_title: "Member Dashboard",
@@ -84,7 +109,10 @@ defmodule FitTrackerzWeb.Member.DashboardLive do
         workout_plan: workout_plan,
         diet_plan: diet_plan,
         subscription: subscription,
-        upcoming_bookings: Enum.take(bookings, 5)
+        upcoming_bookings: Enum.take(bookings, 5),
+        streak_count: streak_count,
+        today_calories: today_calories,
+        calorie_target: calorie_target
       )
     end
   end
@@ -133,6 +161,26 @@ defmodule FitTrackerzWeb.Member.DashboardLive do
     end
   end
 
+  defp calculate_streak(logs) do
+    dates = logs
+      |> Enum.map(& &1.completed_on)
+      |> Enum.uniq()
+      |> Enum.sort(Date)
+      |> Enum.reverse()
+
+    count_streak(dates, Date.utc_today(), 0)
+  end
+
+  defp count_streak([], _expected, count), do: count
+  defp count_streak([date | rest], expected, count) do
+    diff = Date.diff(expected, date)
+    cond do
+      diff == 0 -> count_streak(rest, Date.add(expected, -1), count + 1)
+      diff == 1 -> count_streak([date | rest], Date.add(expected, -1), count)
+      true -> count
+    end
+  end
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -152,9 +200,15 @@ defmodule FitTrackerzWeb.Member.DashboardLive do
                 <p class="text-base-content/50 mt-1">Keep pushing towards your fitness goals!</p>
               </div>
 
-              <div class="flex gap-2">
+              <div class="flex gap-2 flex-wrap">
                 <.link navigate="/member/classes" class="btn btn-primary btn-sm gap-2 font-semibold">
                   <.icon name="hero-calendar-days-mini" class="size-4" /> Book a Class
+                </.link>
+                <.link navigate="/member/health" class="btn btn-ghost btn-sm gap-2">
+                  <.icon name="hero-chart-bar-mini" class="size-4" /> Health Log
+                </.link>
+                <.link navigate="/member/progress" class="btn btn-ghost btn-sm gap-2">
+                  <.icon name="hero-arrow-trending-up-mini" class="size-4" /> Progress
                 </.link>
               </div>
             </div>
@@ -290,17 +344,17 @@ defmodule FitTrackerzWeb.Member.DashboardLive do
             <.link
               navigate="/member/workout"
               class="card bg-base-200/50 border border-base-300/50 hover:shadow-md"
-              id="stat-workout"
+              id="stat-streak"
             >
               <div class="card-body p-4 sm:p-5">
                 <div class="flex items-center justify-between">
                   <div>
                     <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
-                      Workout
+                      Streak
                     </p>
 
                     <p class="text-2xl sm:text-3xl font-black mt-1">
-                      {if @workout_plan, do: length(@workout_plan.exercises || []), else: "--"}
+                      {@streak_count}
                     </p>
                   </div>
 
@@ -309,11 +363,11 @@ defmodule FitTrackerzWeb.Member.DashboardLive do
                   </div>
                 </div>
 
-                <p class="text-xs text-base-content/40 mt-2">Exercises</p>
+                <p class="text-xs text-base-content/40 mt-2">days</p>
               </div>
             </.link>
             <.link
-              navigate="/member/diet"
+              navigate="/member/food"
               class="card bg-base-200/50 border border-base-300/50 hover:shadow-md"
               id="stat-calories"
             >
@@ -321,13 +375,11 @@ defmodule FitTrackerzWeb.Member.DashboardLive do
                 <div class="flex items-center justify-between">
                   <div>
                     <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
-                      Calories
+                      Today's Calories
                     </p>
 
                     <p class="text-2xl sm:text-3xl font-black mt-1">
-                      {if @diet_plan && @diet_plan.calorie_target,
-                        do: @diet_plan.calorie_target,
-                        else: "--"}
+                      {@today_calories}
                     </p>
                   </div>
 
@@ -336,7 +388,9 @@ defmodule FitTrackerzWeb.Member.DashboardLive do
                   </div>
                 </div>
 
-                <p class="text-xs text-base-content/40 mt-2">Daily target</p>
+                <p class="text-xs text-base-content/40 mt-2">
+                  {if @calorie_target, do: "/ #{@calorie_target} target", else: "no target"}
+                </p>
               </div>
             </.link>
           </div>

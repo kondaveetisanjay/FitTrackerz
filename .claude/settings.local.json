@@ -34,7 +34,12 @@
       "Bash(mix ash.migrate:*)",
       "WebFetch(domain:daisyui.com)",
       "Bash(rm:*)",
-      "Bash(mix ecto.gen.migration restore_trainer_functionality)"
+      "Bash(mix ecto.gen.migration restore_trainer_functionality)",
+      "Bash(bash \"C:/Users/jkred/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.5/skills/brainstorming/scripts/start-server.sh\" --project-dir \"C:/Users/jkred/phoenix/FitTrackerz\")",
+      "Bash(\"C:/Users/jkred/phoenix/FitTrackerz/.gitignore\")",
+      "Bash(npm install:*)",
+      "Bash(mix ash.codegen add_health_and_workout_tracking)",
+      "Bash(mix ecto.migrations)"
     ]
   }
 }

@@ -159,6 +159,9 @@ defmodule FitTrackerzWeb.Router do
       live "/bookings", BookingsLive
       live "/subscription", SubscriptionLive
       live "/attendance", AttendanceLive
+      live "/health", HealthLive
+      live "/food", FoodLive
+      live "/progress", ProgressLive
     end
   end
 

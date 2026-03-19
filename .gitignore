@@ -42,3 +42,4 @@ npm-debug.log
 # Environment variables (API keys, secrets)
 .env
 
+.superpowers/
