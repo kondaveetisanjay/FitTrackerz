@@ -30,9 +30,19 @@ defmodule FitTrackerz.Gym do
       define :get_gym_member, args: [:id], action: :get_by_id
       define :list_active_memberships, args: [:user_id], action: :list_active_by_user
       define :list_members_by_gym, args: [:gym_id], action: :list_by_gym
+      define :list_members_by_trainer, args: [:trainer_ids], action: :list_by_assigned_trainer
       define :create_gym_member, action: :create
       define :update_gym_member, action: :update
       define :destroy_gym_member, action: :destroy
+    end
+
+    resource FitTrackerz.Gym.GymTrainer do
+      define :list_active_trainerships, args: [:user_id], action: :list_active_by_user
+      define :list_trainers_by_gym, args: [:gym_id], action: :list_by_gym
+      define :list_active_trainers_by_gym, args: [:gym_id], action: :list_active_by_gym
+      define :create_gym_trainer, action: :create
+      define :update_gym_trainer, action: :update
+      define :destroy_gym_trainer, action: :destroy
     end
 
     resource FitTrackerz.Gym.MemberInvitation do
@@ -43,6 +53,24 @@ defmodule FitTrackerz.Gym do
       define :accept_member_invitation, action: :accept
       define :reject_member_invitation, action: :reject
       define :expire_member_invitation, action: :expire
+    end
+
+    resource FitTrackerz.Gym.TrainerInvitation do
+      define :get_trainer_invitation, args: [:id], action: :get_by_id
+      define :list_pending_trainer_invitations, args: [:email], action: :list_pending_by_email
+      define :list_pending_trainer_invitations_by_gym, args: [:gym_id], action: :list_pending_by_gym
+      define :create_trainer_invitation, action: :create
+      define :accept_trainer_invitation, action: :accept
+      define :reject_trainer_invitation, action: :reject
+      define :expire_trainer_invitation, action: :expire
+    end
+
+    resource FitTrackerz.Gym.ClientAssignmentRequest do
+      define :get_assignment_request, args: [:id], action: :get_by_id
+      define :list_pending_assignments_by_trainer, args: [:trainer_ids], action: :list_pending_by_trainer
+      define :create_assignment_request, action: :create
+      define :accept_assignment_request, action: :accept
+      define :reject_assignment_request, action: :reject
     end
 
     resource FitTrackerz.Gym.Contest do

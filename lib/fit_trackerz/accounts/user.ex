@@ -100,7 +100,7 @@ defmodule FitTrackerz.Accounts.User do
     end
 
     attribute :role, :atom do
-      constraints(one_of: [:platform_admin, :gym_operator, :member])
+      constraints(one_of: [:platform_admin, :gym_operator, :trainer, :member])
       allow_nil?(false)
       default(:member)
       public?(true)

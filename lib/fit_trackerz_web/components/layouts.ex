@@ -202,6 +202,7 @@ defmodule FitTrackerzWeb.Layouts do
     </p>
     <.nav_link href="/gym/setup" icon="hero-building-office-solid" label="My Gym" />
     <.nav_link href="/gym/members" icon="hero-user-group-solid" label="Members" />
+    <.nav_link href="/gym/trainers" icon="hero-academic-cap-solid" label="Trainers" />
 
     <div class="divider my-3"></div>
     <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
@@ -215,6 +216,41 @@ defmodule FitTrackerzWeb.Layouts do
     """
   end
 
+  def sidebar_nav(%{role: :trainer} = assigns) do
+    ~H"""
+    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
+      Overview
+    </p>
+    <.nav_link href="/trainer/dashboard" icon="hero-squares-2x2-solid" label="Dashboard" />
+    <.nav_link href="/trainer/gyms" icon="hero-building-office-2-solid" label="My Gyms" />
+
+    <div class="divider my-3"></div>
+    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
+      Clients
+    </p>
+    <.nav_link href="/trainer/clients" icon="hero-user-group-solid" label="My Clients" />
+    <.nav_link
+      href="/trainer/attendance"
+      icon="hero-clipboard-document-check-solid"
+      label="Attendance"
+    />
+
+    <div class="divider my-3"></div>
+    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
+      Programs
+    </p>
+    <.nav_link href="/trainer/workouts" icon="hero-fire-solid" label="Workout Plans" />
+    <.nav_link href="/trainer/diets" icon="hero-heart-solid" label="Diet Plans" />
+    <.nav_link href="/trainer/templates" icon="hero-document-duplicate-solid" label="Templates" />
+
+    <div class="divider my-3"></div>
+    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
+      Schedule
+    </p>
+    <.nav_link href="/trainer/classes" icon="hero-calendar-days-solid" label="My Classes" />
+    """
+  end
+
   def sidebar_nav(assigns) do
     ~H"""
     <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
@@ -222,6 +258,7 @@ defmodule FitTrackerzWeb.Layouts do
     </p>
     <.nav_link href="/member/dashboard" icon="hero-squares-2x2-solid" label="Dashboard" />
     <.nav_link href="/member/gym" icon="hero-building-office-2-solid" label="My Gyms" />
+    <.nav_link href="/member/trainer" icon="hero-academic-cap-solid" label="My Trainer" />
 
     <div class="divider my-3"></div>
     <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
@@ -364,6 +401,7 @@ defmodule FitTrackerzWeb.Layouts do
 
   defp format_role(:platform_admin), do: "Platform Admin"
   defp format_role(:gym_operator), do: "Gym Operator"
+  defp format_role(:trainer), do: "Trainer"
   defp format_role(:member), do: "Member"
   defp format_role(_), do: "Member"
 end

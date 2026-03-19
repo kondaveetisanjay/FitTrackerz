@@ -24,6 +24,7 @@ defmodule FitTrackerzWeb.Router do
     get "/", PageController, :home
     get "/about", PageController, :about
     get "/solutions/members", PageController, :solutions_members
+    get "/solutions/trainers", PageController, :solutions_trainers
     get "/solutions/operators", PageController, :solutions_operators
   end
 
@@ -107,11 +108,34 @@ defmodule FitTrackerzWeb.Router do
       live "/dashboard", DashboardLive
       live "/setup", SetupLive
       live "/members", MembersLive
+      live "/trainers", TrainersLive
       live "/classes", ClassesLive
       live "/plans", PlansLive
       live "/invitations", InvitationsLive
       live "/attendance", AttendanceLive
       live "/contests", ContestsLive
+    end
+  end
+
+  # Trainer routes
+  ash_authentication_live_session :trainer,
+    otp_app: :fit_trackerz,
+    on_mount: [
+      {FitTrackerzWeb.LiveUserAuth, :live_user_required},
+      {FitTrackerzWeb.LiveUserAuth, :live_trainer_required}
+    ] do
+    scope "/trainer", FitTrackerzWeb.Trainer do
+      pipe_through :browser
+
+      live "/dashboard", DashboardLive
+      live "/gyms", GymsLive
+      live "/gyms/:id", GymDetailLive
+      live "/clients", ClientsLive
+      live "/workouts", WorkoutsLive
+      live "/diets", DietsLive
+      live "/templates", TemplatesLive
+      live "/classes", ClassesLive
+      live "/attendance", AttendanceLive
     end
   end
 
@@ -128,6 +152,7 @@ defmodule FitTrackerzWeb.Router do
       live "/dashboard", DashboardLive
       live "/gym", GymLive
       live "/gym/:id", GymDetailLive
+      live "/trainer", TrainerLive
       live "/workout", WorkoutLive
       live "/diet", DietLive
       live "/classes", ClassesLive

@@ -33,7 +33,8 @@
       "Bash(cmd.exe /C \"\"\"C:\\\\Program Files\\\\Microsoft Visual Studio\\\\2022\\\\Community\\\\VC\\\\Auxiliary\\\\Build\\\\vcvars64.bat\"\" && cd /d D:\\\\exp\\\\fit_trackerz && mix deps.compile bcrypt_elixir --force 2>&1\")",
       "Bash(mix ash.migrate:*)",
       "WebFetch(domain:daisyui.com)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(mix ecto.gen.migration restore_trainer_functionality)"
     ]
   }
 }

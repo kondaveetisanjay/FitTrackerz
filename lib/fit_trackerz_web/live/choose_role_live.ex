@@ -1,7 +1,7 @@
 defmodule FitTrackerzWeb.ChooseRoleLive do
   use FitTrackerzWeb, :live_view
 
-  @valid_roles ~w(member gym_operator)
+  @valid_roles ~w(member trainer gym_operator)
 
   @impl true
   def mount(_params, _session, socket) do
@@ -45,6 +45,7 @@ defmodule FitTrackerzWeb.ChooseRoleLive do
 
   defp dashboard_path_for_role(:platform_admin), do: "/admin/dashboard"
   defp dashboard_path_for_role(:gym_operator), do: "/gym/dashboard"
+  defp dashboard_path_for_role(:trainer), do: "/trainer/dashboard"
   defp dashboard_path_for_role(:member), do: "/member/dashboard"
   defp dashboard_path_for_role(_), do: "/member/dashboard"
 
@@ -69,7 +70,7 @@ defmodule FitTrackerzWeb.ChooseRoleLive do
           </div>
 
           <%!-- Role Cards --%>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto" id="role-cards">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto" id="role-cards">
             <%!-- Member Card --%>
             <button
               phx-click="select_role"
@@ -88,6 +89,29 @@ defmodule FitTrackerzWeb.ChooseRoleLive do
                 <div class="mt-6">
                   <span class="btn btn-primary btn-sm font-semibold gap-2 group-hover:shadow-lg group-hover:shadow-primary/25">
                     <.icon name="hero-arrow-right-mini" class="size-4" /> Join as Member
+                  </span>
+                </div>
+              </div>
+            </button>
+
+            <%!-- Trainer Card --%>
+            <button
+              phx-click="select_role"
+              phx-value-role="trainer"
+              class="card bg-base-200/50 border-2 border-base-300/50 hover:border-secondary/50 shadow-sm hover:shadow-xl hover:-translate-y-1 cursor-pointer text-left group"
+              id="role-trainer"
+            >
+              <div class="card-body items-center text-center p-8">
+                <div class="w-16 h-16 rounded-2xl bg-secondary/10 flex items-center justify-center mb-4 group-hover:bg-secondary/20 group-hover:scale-110">
+                  <.icon name="hero-academic-cap-solid" class="size-8 text-secondary" />
+                </div>
+                <h2 class="card-title text-xl">Trainer</h2>
+                <p class="text-base-content/50 text-sm mt-2 leading-relaxed">
+                  Manage clients, create workout & diet plans, track attendance, and conduct classes.
+                </p>
+                <div class="mt-6">
+                  <span class="btn btn-secondary btn-sm font-semibold gap-2 group-hover:shadow-lg group-hover:shadow-secondary/25">
+                    <.icon name="hero-arrow-right-mini" class="size-4" /> Join as Trainer
                   </span>
                 </div>
               </div>

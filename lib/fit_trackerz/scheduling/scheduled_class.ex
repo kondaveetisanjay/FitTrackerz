@@ -47,8 +47,14 @@ defmodule FitTrackerz.Scheduling.ScheduledClass do
       prepare build(load: [:class_definition, :branch, :bookings])
     end
 
+    read :list_by_trainer do
+      argument :trainer_ids, {:array, :uuid}, allow_nil?: false
+      filter expr(trainer_id in ^arg(:trainer_ids))
+      prepare build(load: [:class_definition, :branch])
+    end
+
     create :create do
-      accept([:scheduled_at, :duration_minutes, :class_definition_id, :branch_id])
+      accept([:scheduled_at, :duration_minutes, :class_definition_id, :branch_id, :trainer_id])
 
       validate numericality(:duration_minutes, greater_than: 0)
     end
@@ -98,5 +104,7 @@ defmodule FitTrackerz.Scheduling.ScheduledClass do
     end
 
     has_many :bookings, FitTrackerz.Scheduling.ClassBooking
+
+    belongs_to :trainer, FitTrackerz.Gym.GymTrainer
   end
 end

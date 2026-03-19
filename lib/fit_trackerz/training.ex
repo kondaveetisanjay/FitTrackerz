@@ -24,6 +24,7 @@ defmodule FitTrackerz.Training do
       define :create_workout, action: :create
       define :create_workout_from_template, action: :create_from_template
       define :update_workout, action: :update
+      define :list_workouts_by_trainer, args: [:trainer_ids], action: :list_by_trainer
       define :destroy_workout, action: :destroy
     end
 
@@ -39,6 +40,7 @@ defmodule FitTrackerz.Training do
       define :create_diet, action: :create
       define :create_diet_from_template, action: :create_from_template
       define :update_diet, action: :update
+      define :list_diets_by_trainer, args: [:trainer_ids], action: :list_by_trainer
       define :destroy_diet, action: :destroy
     end
   end

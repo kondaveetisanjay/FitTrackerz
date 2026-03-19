@@ -1,11 +1,11 @@
-defmodule FitTrackerz.Gym.GymMember do
+defmodule FitTrackerz.Gym.GymTrainer do
   use Ash.Resource,
     domain: FitTrackerz.Gym,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer]
 
   postgres do
-    table("gym_members")
+    table("gym_trainers")
     repo(FitTrackerz.Repo)
 
     references do
@@ -42,16 +42,10 @@ defmodule FitTrackerz.Gym.GymMember do
   actions do
     defaults([:read, :destroy])
 
-    read :get_by_id do
-      get? true
-      argument :id, :uuid, allow_nil?: false
-      filter expr(id == ^arg(:id))
-    end
-
     read :list_active_by_user do
       argument :user_id, :uuid, allow_nil?: false
       filter expr(user_id == ^arg(:user_id) and is_active == true)
-      prepare build(load: [:gym, :branch])
+      prepare build(load: [:gym])
     end
 
     read :list_by_gym do
@@ -60,23 +54,27 @@ defmodule FitTrackerz.Gym.GymMember do
       prepare build(load: [:user])
     end
 
-    read :list_by_assigned_trainer do
-      argument :trainer_ids, {:array, :uuid}, allow_nil?: false
-      filter expr(assigned_trainer_id in ^arg(:trainer_ids) and is_active == true)
-      prepare build(load: [:user, :gym])
+    read :list_active_by_gym do
+      argument :gym_id, :uuid, allow_nil?: false
+      filter expr(gym_id == ^arg(:gym_id) and is_active == true)
+      prepare build(load: [:user])
     end
 
     create :create do
-      accept([:user_id, :gym_id, :branch_id])
+      accept([:user_id, :gym_id, :specializations, :branch_id])
     end
 
     update :update do
-      accept([:is_active, :branch_id, :assigned_trainer_id])
+      accept([:specializations, :is_active, :branch_id])
     end
   end
 
   attributes do
     uuid_primary_key(:id)
+
+    attribute :specializations, {:array, :string} do
+      default([])
+    end
 
     attribute :is_active, :boolean do
       allow_nil?(false)
@@ -97,10 +95,24 @@ defmodule FitTrackerz.Gym.GymMember do
 
     belongs_to :branch, FitTrackerz.Gym.GymBranch
 
-    belongs_to :assigned_trainer, FitTrackerz.Gym.GymTrainer
+    has_many :scheduled_classes, FitTrackerz.Scheduling.ScheduledClass do
+      destination_attribute(:trainer_id)
+    end
+
+    has_many :workout_plans, FitTrackerz.Training.WorkoutPlan do
+      destination_attribute(:trainer_id)
+    end
+
+    has_many :diet_plans, FitTrackerz.Training.DietPlan do
+      destination_attribute(:trainer_id)
+    end
+
+    has_many :assigned_members, FitTrackerz.Gym.GymMember do
+      destination_attribute(:assigned_trainer_id)
+    end
   end
 
   identities do
-    identity(:unique_membership, [:user_id, :gym_id])
+    identity(:unique_trainer_gym, [:user_id, :gym_id])
   end
 end

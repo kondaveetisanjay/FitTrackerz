@@ -115,5 +115,8 @@ defmodule FitTrackerz.Gym.GymBranch do
       destination_attribute(:branch_id)
     end
 
+    has_many :gym_trainers, FitTrackerz.Gym.GymTrainer do
+      destination_attribute(:branch_id)
+    end
   end
 end

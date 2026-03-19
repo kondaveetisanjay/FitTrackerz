@@ -70,17 +70,17 @@ end
 # ============================
 IO.puts("--- Creating users ---")
 
-admin = SeedHelper.create_user("admin@fit_trackerz.com", "Password123!", "Admin User")
+admin = SeedHelper.create_user("admin@fittrackerz.com", "Password123!", "Admin User")
 admin = SeedHelper.set_role(admin, :platform_admin)
-IO.puts("  Created: admin@fit_trackerz.com (platform_admin)")
+IO.puts("  Created: admin@fittrackerz.com (platform_admin)")
 
-operator = SeedHelper.create_user("operator@fit_trackerz.com", "Password123!", "Gym Operator")
+operator = SeedHelper.create_user("operator@fittrackerz.com", "Password123!", "Gym Operator")
 operator = SeedHelper.set_role(operator, :gym_operator)
-IO.puts("  Created: operator@fit_trackerz.com (gym_operator)")
+IO.puts("  Created: operator@fittrackerz.com (gym_operator)")
 
-member = SeedHelper.create_user("member@fit_trackerz.com", "Password123!", "Jane Member")
+member = SeedHelper.create_user("member@fittrackerz.com", "Password123!", "Jane Member")
 member = SeedHelper.set_role(member, :member)
-IO.puts("  Created: member@fit_trackerz.com (member)")
+IO.puts("  Created: member@fittrackerz.com (member)")
 
 # ============================
 # 2. Create Gym (owned by operator)
@@ -244,9 +244,9 @@ IO.puts("""
 
 Login credentials (password for all: Password123!):
 
-  Admin:        admin@fit_trackerz.com
-  Gym Operator: operator@fit_trackerz.com
-  Member:       member@fit_trackerz.com
+  Admin:        admin@fittrackerz.com
+  Gym Operator: operator@fittrackerz.com
+  Member:       member@fittrackerz.com
 
 Connections:
   - FitZone Gym owned by Gym Operator (verified)
