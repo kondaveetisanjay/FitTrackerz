@@ -114,6 +114,7 @@ defmodule FitTrackerzWeb.Router do
       live "/invitations", InvitationsLive
       live "/attendance", AttendanceLive
       live "/contests", ContestsLive
+      live "/notifications", NotificationsLive
     end
   end
 
@@ -162,6 +163,7 @@ defmodule FitTrackerzWeb.Router do
       live "/health", HealthLive
       live "/food", FoodLive
       live "/progress", ProgressLive
+      live "/notifications", NotificationsLive
     end
   end
 

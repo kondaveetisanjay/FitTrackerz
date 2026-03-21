@@ -31,6 +31,9 @@ config :fit_trackerz,
        :token_signing_secret,
        "test-only-token-signing-secret-at-least-32-chars-long!!"
 
+# Disable Oban in test
+config :fit_trackerz, Oban, testing: :inline
+
 # Print only warnings and errors during test
 config :logger, level: :warning
 

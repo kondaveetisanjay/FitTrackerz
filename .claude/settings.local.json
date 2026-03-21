@@ -39,7 +39,10 @@
       "Bash(\"C:/Users/jkred/phoenix/FitTrackerz/.gitignore\")",
       "Bash(npm install:*)",
       "Bash(mix ash.codegen add_health_and_workout_tracking)",
-      "Bash(mix ecto.migrations)"
+      "Bash(mix ecto.migrations)",
+      "Bash(mix ecto.gen.migration add_oban_jobs_table)",
+      "Bash(mix ecto.gen.migration add_notifications_and_joined_at)",
+      "Bash(timeout 15 mix phx.server)"
     ]
   }
 }

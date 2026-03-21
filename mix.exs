@@ -71,7 +71,8 @@ defmodule FitTrackerz.MixProject do
       {:ash_authentication, "~> 4.0"},
       {:ash_authentication_phoenix, "~> 2.0"},
       {:bcrypt_elixir, "~> 3.0",optional: true},
-      {:simple_sat, "~> 0.1"}
+      {:simple_sat, "~> 0.1"},
+      {:oban, "~> 2.19"}
     ]
   end
 

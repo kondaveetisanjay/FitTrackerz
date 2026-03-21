@@ -67,11 +67,11 @@ defmodule FitTrackerz.Gym.GymMember do
     end
 
     create :create do
-      accept([:user_id, :gym_id, :branch_id])
+      accept([:user_id, :gym_id, :branch_id, :joined_at])
     end
 
     update :update do
-      accept([:is_active, :branch_id, :assigned_trainer_id])
+      accept([:is_active, :branch_id, :assigned_trainer_id, :joined_at])
     end
   end
 
@@ -81,6 +81,11 @@ defmodule FitTrackerz.Gym.GymMember do
     attribute :is_active, :boolean do
       allow_nil?(false)
       default(true)
+    end
+
+    attribute :joined_at, :date do
+      allow_nil?(true)
+      default(&Date.utc_today/0)
     end
 
     timestamps()

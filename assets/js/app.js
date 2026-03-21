@@ -213,6 +213,23 @@ const ExplorePlacesAutocomplete = {
   }
 }
 
+// Notification badge hook - updates unread count via PubSub
+const NotificationBadge = {
+  mounted() {
+    this.handleEvent("notification_count", ({count}) => {
+      this.updateBadge(count)
+    })
+  },
+  updateBadge(count) {
+    if (count > 0) {
+      this.el.textContent = count > 9 ? "9+" : count
+      this.el.classList.remove("hidden")
+    } else {
+      this.el.classList.add("hidden")
+    }
+  }
+}
+
 // Password visibility toggle hook
 const PasswordVisibilityToggle = {
   mounted() {
@@ -276,7 +293,7 @@ const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {Geolocation, BranchGeolocation, PlacesAutocomplete, ExplorePlacesAutocomplete, PasswordVisibilityToggle, ChartHook},
+  hooks: {Geolocation, BranchGeolocation, PlacesAutocomplete, ExplorePlacesAutocomplete, PasswordVisibilityToggle, ChartHook, NotificationBadge},
 })
 
 // Show progress bar on live navigation and form submits

@@ -61,6 +61,7 @@ defmodule FitTrackerzWeb.Layouts do
             </div>
             <div class="flex-1 hidden lg:block"></div>
             <div class="flex-none flex items-center gap-3">
+              <.notification_bell current_user={@current_user} />
               <.theme_toggle />
               <div class="dropdown dropdown-end">
                 <div tabindex="0" role="button" class="btn btn-ghost btn-sm gap-2">
@@ -213,6 +214,7 @@ defmodule FitTrackerzWeb.Layouts do
     <.nav_link href="/gym/invitations" icon="hero-envelope-solid" label="Invitations" />
     <.nav_link href="/gym/attendance" icon="hero-clipboard-document-check-solid" label="Attendance" />
     <.nav_link href="/gym/contests" icon="hero-trophy-solid" label="Contests" />
+    <.nav_link href="/gym/notifications" icon="hero-bell-solid" label="Notifications" />
     """
   end
 
@@ -284,6 +286,15 @@ defmodule FitTrackerzWeb.Layouts do
       Account
     </p>
     <.nav_link href="/member/subscription" icon="hero-credit-card-solid" label="Subscription" />
+    <.nav_link href="/member/notifications" icon="hero-bell-solid" label="Notifications" />
+
+    <div class="divider my-3"></div>
+    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
+      Health
+    </p>
+    <.nav_link href="/member/health" icon="hero-chart-bar-solid" label="Health Metrics" />
+    <.nav_link href="/member/food" icon="hero-cake-solid" label="Food Log" />
+    <.nav_link href="/member/progress" icon="hero-arrow-trending-up-solid" label="Progress" />
     """
   end
 
@@ -393,6 +404,33 @@ defmodule FitTrackerzWeb.Layouts do
     </button>
     """
   end
+
+  attr :current_user, :map, required: true
+
+  def notification_bell(assigns) do
+    ~H"""
+    <a
+      href={notification_path(@current_user)}
+      class="btn btn-ghost btn-sm btn-circle relative"
+      aria-label="Notifications"
+      id="notification-bell"
+    >
+      <.icon name="hero-bell" class="size-5" />
+      <span
+        id="notification-badge"
+        class="badge badge-xs badge-error absolute -top-0.5 -right-0.5 hidden"
+        phx-hook="NotificationBadge"
+        data-user-id={@current_user.id}
+      >
+      </span>
+    </a>
+    """
+  end
+
+  defp notification_path(%{role: :gym_operator}), do: "/gym/notifications"
+  defp notification_path(%{role: :trainer}), do: "/trainer/notifications"
+  defp notification_path(%{role: :platform_admin}), do: "/admin/notifications"
+  defp notification_path(_), do: "/member/notifications"
 
   defp get_user_role(nil), do: :member
   defp get_user_role(%{role: role}) when is_atom(role), do: role
