@@ -215,6 +215,7 @@ defmodule FitTrackerzWeb.Layouts do
     <.nav_link href="/gym/attendance" icon="hero-clipboard-document-check-solid" label="Attendance" />
     <.nav_link href="/gym/contests" icon="hero-trophy-solid" label="Contests" />
     <.nav_link href="/gym/notifications" icon="hero-bell-solid" label="Notifications" />
+    <.nav_link href="/gym/messages" icon="hero-chat-bubble-left-right-solid" label="Messages" />
     """
   end
 
@@ -244,6 +245,12 @@ defmodule FitTrackerzWeb.Layouts do
     <.nav_link href="/trainer/workouts" icon="hero-fire-solid" label="Workout Plans" />
     <.nav_link href="/trainer/diets" icon="hero-heart-solid" label="Diet Plans" />
     <.nav_link href="/trainer/templates" icon="hero-document-duplicate-solid" label="Templates" />
+
+    <div class="divider my-3"></div>
+    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
+      Communication
+    </p>
+    <.nav_link href="/trainer/messages" icon="hero-chat-bubble-left-right-solid" label="Messages" />
 
     <div class="divider my-3"></div>
     <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
@@ -287,6 +294,7 @@ defmodule FitTrackerzWeb.Layouts do
     </p>
     <.nav_link href="/member/subscription" icon="hero-credit-card-solid" label="Subscription" />
     <.nav_link href="/member/notifications" icon="hero-bell-solid" label="Notifications" />
+    <.nav_link href="/member/messages" icon="hero-chat-bubble-left-right-solid" label="Messages" />
 
     <div class="divider my-3"></div>
     <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">

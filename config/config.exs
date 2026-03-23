@@ -17,7 +17,8 @@ config :fit_trackerz,
     FitTrackerz.Training,
     FitTrackerz.Scheduling,
     FitTrackerz.Health,
-    FitTrackerz.Notifications
+    FitTrackerz.Notifications,
+    FitTrackerz.Messaging
   ]
 
 # Configure the endpoint

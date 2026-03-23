@@ -213,6 +213,30 @@ const ExplorePlacesAutocomplete = {
   }
 }
 
+const ScrollToBottom = {
+  mounted() {
+    this.scrollToBottom()
+    this.handleEvent("scroll_to_bottom", () => {
+      this.scrollToBottom()
+    })
+  },
+  updated() {
+    this.scrollToBottom()
+  },
+  scrollToBottom() {
+    this.el.scrollTop = this.el.scrollHeight
+  }
+}
+
+const AutoResize = {
+  mounted() {
+    this.el.addEventListener("input", () => {
+      this.el.style.height = "auto"
+      this.el.style.height = this.el.scrollHeight + "px"
+    })
+  }
+}
+
 // Notification badge hook - updates unread count via PubSub
 const NotificationBadge = {
   mounted() {
@@ -293,7 +317,7 @@ const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {Geolocation, BranchGeolocation, PlacesAutocomplete, ExplorePlacesAutocomplete, PasswordVisibilityToggle, ChartHook, NotificationBadge},
+  hooks: {Geolocation, BranchGeolocation, PlacesAutocomplete, ExplorePlacesAutocomplete, PasswordVisibilityToggle, ChartHook, NotificationBadge, ScrollToBottom, AutoResize},
 })
 
 // Show progress bar on live navigation and form submits
