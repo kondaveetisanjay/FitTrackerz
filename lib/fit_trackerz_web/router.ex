@@ -116,7 +116,9 @@ defmodule FitTrackerzWeb.Router do
       live "/contests", ContestsLive
       live "/notifications", NotificationsLive
       live "/messages", MessagesLive
-      live "/analytics", AnalyticsLive
+      live "/dashboards", DashboardsLive
+      live "/reports", ReportsLive
+      live "/reports/:report_type", ReportDetailLive
     end
   end
 
@@ -140,6 +142,8 @@ defmodule FitTrackerzWeb.Router do
       live "/classes", ClassesLive
       live "/attendance", AttendanceLive
       live "/messages", MessagesLive
+      live "/reports", ReportsLive
+      live "/reports/:report_type", ReportDetailLive
     end
   end
 

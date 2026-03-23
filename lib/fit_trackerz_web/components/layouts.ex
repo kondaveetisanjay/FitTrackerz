@@ -216,7 +216,8 @@ defmodule FitTrackerzWeb.Layouts do
     <.nav_link href="/gym/contests" icon="hero-trophy-solid" label="Contests" />
     <.nav_link href="/gym/notifications" icon="hero-bell-solid" label="Notifications" />
     <.nav_link href="/gym/messages" icon="hero-chat-bubble-left-right-solid" label="Messages" />
-    <.nav_link href="/gym/analytics" icon="hero-chart-bar-square-solid" label="Analytics" />
+    <.nav_link href="/gym/dashboards" icon="hero-chart-bar-square-solid" label="Dashboards" />
+    <.nav_link href="/gym/reports" icon="hero-document-chart-bar-solid" label="Reports" />
     """
   end
 
@@ -252,6 +253,7 @@ defmodule FitTrackerzWeb.Layouts do
       Communication
     </p>
     <.nav_link href="/trainer/messages" icon="hero-chat-bubble-left-right-solid" label="Messages" />
+    <.nav_link href="/trainer/reports" icon="hero-document-chart-bar-solid" label="Reports" />
 
     <div class="divider my-3"></div>
     <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">

@@ -1,4 +1,4 @@
-defmodule FitTrackerzWeb.GymOperator.AnalyticsLive do
+defmodule FitTrackerzWeb.GymOperator.DashboardsLive do
   use FitTrackerzWeb, :live_view
 
   alias FitTrackerz.Analytics
@@ -15,13 +15,22 @@ defmodule FitTrackerzWeb.GymOperator.AnalyticsLive do
         socket =
           socket
           |> assign(
-            page_title: "Analytics",
+            page_title: "Dashboards",
             gym: gym,
             preset: "30d",
             start_date: start_date,
             end_date: today,
             custom_start: "",
-            custom_end: ""
+            custom_end: "",
+            viz_types: %{
+              "new-members-chart" => "line",
+              "revenue-chart" => "bar",
+              "attendance-chart" => "line",
+              "retention-chart" => "line",
+              "subscription-chart" => "doughnut",
+              "payment-chart" => "doughnut",
+              "class-chart" => "bar"
+            }
           )
           |> load_all_metrics()
 
@@ -30,8 +39,17 @@ defmodule FitTrackerzWeb.GymOperator.AnalyticsLive do
       _ ->
         {:ok,
          assign(socket,
-           page_title: "Analytics",
-           gym: nil
+           page_title: "Dashboards",
+           gym: nil,
+           viz_types: %{
+             "new-members-chart" => "line",
+             "revenue-chart" => "bar",
+             "attendance-chart" => "line",
+             "retention-chart" => "line",
+             "subscription-chart" => "doughnut",
+             "payment-chart" => "doughnut",
+             "class-chart" => "bar"
+           }
          )}
     end
   end
@@ -83,6 +101,11 @@ defmodule FitTrackerzWeb.GymOperator.AnalyticsLive do
     end
   end
 
+  def handle_event("change_viz", %{"chart_id" => chart_id, "viz_type" => viz_type}, socket) do
+    viz_types = Map.put(socket.assigns.viz_types, chart_id, viz_type)
+    {:noreply, socket |> assign(viz_types: viz_types) |> load_all_metrics()}
+  end
+
   defp load_all_metrics(socket) do
     gym_id = socket.assigns.gym.id
     start_date = socket.assigns.start_date
@@ -112,13 +135,13 @@ defmodule FitTrackerzWeb.GymOperator.AnalyticsLive do
       new_members_total: new_members.total,
       revenue_total: revenue.total,
       avg_daily_attendance: Float.round(attendance.avg_daily, 1),
-      new_members_chart: build_new_members_chart(new_members.daily),
-      revenue_chart: build_revenue_chart(revenue.daily),
-      attendance_chart: build_attendance_chart(attendance.daily),
-      subscription_chart: build_subscription_chart(subscriptions),
-      payment_chart: build_payment_chart(payments),
-      class_chart: build_class_chart(classes),
-      retention_chart: build_retention_chart(retention)
+      new_members_chart: build_new_members_chart(new_members.daily, socket.assigns.viz_types["new-members-chart"]),
+      revenue_chart: build_revenue_chart(revenue.daily, socket.assigns.viz_types["revenue-chart"]),
+      attendance_chart: build_attendance_chart(attendance.daily, socket.assigns.viz_types["attendance-chart"]),
+      subscription_chart: build_subscription_chart(subscriptions, socket.assigns.viz_types["subscription-chart"]),
+      payment_chart: build_payment_chart(payments, socket.assigns.viz_types["payment-chart"]),
+      class_chart: build_class_chart(classes, socket.assigns.viz_types["class-chart"]),
+      retention_chart: build_retention_chart(retention, socket.assigns.viz_types["retention-chart"])
     )
   end
 
@@ -126,9 +149,16 @@ defmodule FitTrackerzWeb.GymOperator.AnalyticsLive do
   # Chart builders
   # ---------------------------------------------------------------------------
 
-  defp build_new_members_chart(daily) do
+  defp build_new_members_chart(daily, "table") do
+    %{type: "table", data: %{
+      headers: ["Date", "New Members"],
+      rows: Enum.map(daily, fn d -> [format_date(d.date), d.value] end)
+    }}
+  end
+
+  defp build_new_members_chart(daily, viz_type) do
     %{
-      type: "line",
+      type: viz_type,
       data: %{
         labels: Enum.map(daily, &format_date(&1.date)),
         datasets: [
@@ -146,9 +176,16 @@ defmodule FitTrackerzWeb.GymOperator.AnalyticsLive do
     }
   end
 
-  defp build_revenue_chart(daily) do
+  defp build_revenue_chart(daily, "table") do
+    %{type: "table", data: %{
+      headers: ["Date", "Revenue"],
+      rows: Enum.map(daily, fn d -> [format_date(d.date), d.value / 100] end)
+    }}
+  end
+
+  defp build_revenue_chart(daily, viz_type) do
     %{
-      type: "bar",
+      type: viz_type,
       data: %{
         labels: Enum.map(daily, &format_date(&1.date)),
         datasets: [
@@ -165,9 +202,16 @@ defmodule FitTrackerzWeb.GymOperator.AnalyticsLive do
     }
   end
 
-  defp build_attendance_chart(daily) do
+  defp build_attendance_chart(daily, "table") do
+    %{type: "table", data: %{
+      headers: ["Date", "Attendance"],
+      rows: Enum.map(daily, fn d -> [format_date(d.date), d.value] end)
+    }}
+  end
+
+  defp build_attendance_chart(daily, viz_type) do
     %{
-      type: "line",
+      type: viz_type,
       data: %{
         labels: Enum.map(daily, &format_date(&1.date)),
         datasets: [
@@ -185,7 +229,42 @@ defmodule FitTrackerzWeb.GymOperator.AnalyticsLive do
     }
   end
 
-  defp build_subscription_chart(subscriptions) do
+  defp build_subscription_chart(subscriptions, "table") do
+    labels = ["Active", "Cancelled", "Expired"]
+    keys = ["active", "cancelled", "expired"]
+    data = Enum.map(keys, fn k -> Map.get(subscriptions, k, 0) end)
+    %{type: "table", data: %{
+      headers: ["Status", "Count"],
+      rows: Enum.zip(labels, data) |> Enum.map(fn {l, d} -> [l, d] end)
+    }}
+  end
+
+  defp build_subscription_chart(subscriptions, "bar") do
+    labels = ["Active", "Cancelled", "Expired"]
+    keys = ["active", "cancelled", "expired"]
+    data = Enum.map(keys, fn k -> Map.get(subscriptions, k, 0) end)
+
+    %{
+      type: "bar",
+      data: %{
+        labels: labels,
+        datasets: [
+          %{
+            label: "Count",
+            data: data,
+            backgroundColor: [
+              "rgb(34, 197, 94)",
+              "rgb(245, 158, 11)",
+              "rgb(239, 68, 68)"
+            ]
+          }
+        ]
+      },
+      options: %{scales: %{x: %{}, y: %{}}}
+    }
+  end
+
+  defp build_subscription_chart(subscriptions, _viz_type) do
     labels = ["Active", "Cancelled", "Expired"]
     keys = ["active", "cancelled", "expired"]
     data = Enum.map(keys, fn k -> Map.get(subscriptions, k, 0) end)
@@ -211,7 +290,43 @@ defmodule FitTrackerzWeb.GymOperator.AnalyticsLive do
     }
   end
 
-  defp build_payment_chart(payments) do
+  defp build_payment_chart(payments, "table") do
+    labels = ["Paid", "Pending", "Failed", "Refunded"]
+    keys = ["paid", "pending", "failed", "refunded"]
+    data = Enum.map(keys, fn k -> Map.get(payments, k, 0) end)
+    %{type: "table", data: %{
+      headers: ["Status", "Count"],
+      rows: Enum.zip(labels, data) |> Enum.map(fn {l, d} -> [l, d] end)
+    }}
+  end
+
+  defp build_payment_chart(payments, "bar") do
+    labels = ["Paid", "Pending", "Failed", "Refunded"]
+    keys = ["paid", "pending", "failed", "refunded"]
+    data = Enum.map(keys, fn k -> Map.get(payments, k, 0) end)
+
+    %{
+      type: "bar",
+      data: %{
+        labels: labels,
+        datasets: [
+          %{
+            label: "Count",
+            data: data,
+            backgroundColor: [
+              "rgb(34, 197, 94)",
+              "rgb(245, 158, 11)",
+              "rgb(239, 68, 68)",
+              "rgb(156, 163, 175)"
+            ]
+          }
+        ]
+      },
+      options: %{scales: %{x: %{}, y: %{}}}
+    }
+  end
+
+  defp build_payment_chart(payments, _viz_type) do
     labels = ["Paid", "Pending", "Failed", "Refunded"]
     keys = ["paid", "pending", "failed", "refunded"]
     data = Enum.map(keys, fn k -> Map.get(payments, k, 0) end)
@@ -238,11 +353,18 @@ defmodule FitTrackerzWeb.GymOperator.AnalyticsLive do
     }
   end
 
-  defp build_class_chart(classes) do
+  defp build_class_chart(classes, "table") do
+    %{type: "table", data: %{
+      headers: ["Class", "Bookings", "Capacity"],
+      rows: Enum.map(classes, fn c -> [c.class_name, c.bookings, c.capacity] end)
+    }}
+  end
+
+  defp build_class_chart(classes, viz_type) do
     labels = Enum.map(classes, & &1.class_name)
 
     %{
-      type: "bar",
+      type: viz_type,
       data: %{
         labels: labels,
         datasets: [
@@ -269,9 +391,16 @@ defmodule FitTrackerzWeb.GymOperator.AnalyticsLive do
     }
   end
 
-  defp build_retention_chart(retention) do
+  defp build_retention_chart(retention, "table") do
+    %{type: "table", data: %{
+      headers: ["Date", "Active", "Inactive"],
+      rows: Enum.map(retention, fn r -> [format_date(r.date), r.active, r.inactive] end)
+    }}
+  end
+
+  defp build_retention_chart(retention, viz_type) do
     %{
-      type: "line",
+      type: viz_type,
       data: %{
         labels: Enum.map(retention, &format_date(&1.date)),
         datasets: [
@@ -343,6 +472,12 @@ defmodule FitTrackerzWeb.GymOperator.AnalyticsLive do
   defp preset_label("year"), do: "This Year"
   defp preset_label(_), do: "Custom"
 
+  defp viz_label("line"), do: "Line Chart"
+  defp viz_label("bar"), do: "Bar Chart"
+  defp viz_label("doughnut"), do: "Pie Chart"
+  defp viz_label("table"), do: "Table"
+  defp viz_label(other), do: other
+
   # ---------------------------------------------------------------------------
   # Render
   # ---------------------------------------------------------------------------
@@ -350,15 +485,36 @@ defmodule FitTrackerzWeb.GymOperator.AnalyticsLive do
   attr :id, :string, required: true
   attr :title, :string, required: true
   attr :chart_data, :map, required: true
+  attr :viz_options, :list, required: true
+  attr :current_viz, :string, required: true
 
   defp chart_card(assigns) do
     ~H"""
     <div class="card bg-base-200/50 border border-base-300/50">
       <div class="card-body p-4">
-        <h3 class="text-sm font-semibold text-base-content/60 mb-3">{@title}</h3>
-        <div id={@id} phx-hook="ChartHook" data-chart={Jason.encode!(@chart_data)}>
-          <canvas class="w-full" style="height: 250px;"></canvas>
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-semibold text-base-content/60">{@title}</h3>
+          <form phx-change="change_viz" class="inline">
+            <input type="hidden" name="chart_id" value={@id} />
+            <select name="viz_type" class="select select-xs select-bordered">
+              <option :for={opt <- @viz_options} value={opt} selected={opt == @current_viz}>
+                {viz_label(opt)}
+              </option>
+            </select>
+          </form>
         </div>
+        <%= if @chart_data[:type] == "table" do %>
+          <div class="overflow-x-auto" style="max-height: 250px;">
+            <table class="table table-sm table-zebra">
+              <thead><tr><th :for={h <- @chart_data.data.headers} class="text-xs">{h}</th></tr></thead>
+              <tbody><tr :for={row <- @chart_data.data.rows}><td :for={cell <- row} class="text-sm">{cell}</td></tr></tbody>
+            </table>
+          </div>
+        <% else %>
+          <div id={@id} phx-hook="ChartHook" data-chart={Jason.encode!(@chart_data)}>
+            <canvas class="w-full" style="height: 250px;"></canvas>
+          </div>
+        <% end %>
       </div>
     </div>
     """
@@ -376,7 +532,7 @@ defmodule FitTrackerzWeb.GymOperator.AnalyticsLive do
               <.link navigate="/gym" class="btn btn-ghost btn-sm btn-circle">
                 <.icon name="hero-arrow-left-mini" class="size-4" />
               </.link>
-              <h1 class="text-2xl sm:text-3xl font-brand">Analytics</h1>
+              <h1 class="text-2xl sm:text-3xl font-brand">Dashboards</h1>
             </div>
             <p class="text-base-content/50 ml-12">Performance metrics for {@gym.name}</p>
           </div>
@@ -470,24 +626,34 @@ defmodule FitTrackerzWeb.GymOperator.AnalyticsLive do
 
           <%!-- Charts Grid --%>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <.chart_card id="new-members-chart" title="New Members" chart_data={@new_members_chart} />
-            <.chart_card id="revenue-chart" title="Revenue" chart_data={@revenue_chart} />
-            <.chart_card id="attendance-chart" title="Attendance" chart_data={@attendance_chart} />
-            <.chart_card id="retention-chart" title="Member Retention" chart_data={@retention_chart} />
+            <.chart_card id="new-members-chart" title="New Members" chart_data={@new_members_chart}
+              viz_options={["line", "bar", "table"]} current_viz={@viz_types["new-members-chart"]} />
+            <.chart_card id="revenue-chart" title="Revenue" chart_data={@revenue_chart}
+              viz_options={["line", "bar", "table"]} current_viz={@viz_types["revenue-chart"]} />
+            <.chart_card id="attendance-chart" title="Attendance" chart_data={@attendance_chart}
+              viz_options={["line", "bar", "table"]} current_viz={@viz_types["attendance-chart"]} />
+            <.chart_card id="retention-chart" title="Member Retention" chart_data={@retention_chart}
+              viz_options={["line", "bar", "table"]} current_viz={@viz_types["retention-chart"]} />
             <.chart_card
               id="subscription-chart"
               title="Subscription Status"
               chart_data={@subscription_chart}
+              viz_options={["doughnut", "bar", "table"]}
+              current_viz={@viz_types["subscription-chart"]}
             />
             <.chart_card
               id="payment-chart"
               title="Payment Collection"
               chart_data={@payment_chart}
+              viz_options={["doughnut", "bar", "table"]}
+              current_viz={@viz_types["payment-chart"]}
             />
             <.chart_card
               id="class-chart"
               title="Class Utilization"
               chart_data={@class_chart}
+              viz_options={["bar", "table"]}
+              current_viz={@viz_types["class-chart"]}
             />
           </div>
         <% else %>
