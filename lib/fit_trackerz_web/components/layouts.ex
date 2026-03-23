@@ -216,6 +216,7 @@ defmodule FitTrackerzWeb.Layouts do
     <.nav_link href="/gym/contests" icon="hero-trophy-solid" label="Contests" />
     <.nav_link href="/gym/notifications" icon="hero-bell-solid" label="Notifications" />
     <.nav_link href="/gym/messages" icon="hero-chat-bubble-left-right-solid" label="Messages" />
+    <.nav_link href="/gym/analytics" icon="hero-chart-bar-square-solid" label="Analytics" />
     """
   end
 

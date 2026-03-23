@@ -116,6 +116,7 @@ defmodule FitTrackerzWeb.Router do
       live "/contests", ContestsLive
       live "/notifications", NotificationsLive
       live "/messages", MessagesLive
+      live "/analytics", AnalyticsLive
     end
   end
 
