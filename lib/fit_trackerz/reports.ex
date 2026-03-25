@@ -1892,6 +1892,665 @@ defmodule FitTrackerz.Reports do
   end
 
   # ===========================================================================
+  # ADMIN PLATFORM-WIDE REPORTS (19-24)
+  # ===========================================================================
+
+  # ---------------------------------------------------------------------------
+  # 19. admin_gyms_report
+  # ---------------------------------------------------------------------------
+
+  @doc "Platform-wide report of all gyms with owner info, member/trainer counts, and revenue."
+  def admin_gyms_report(_start_date, _end_date, opts \\ []) do
+    summary_data =
+      from(g in "gyms",
+        group_by: g.status,
+        select: {g.status, count(g.id)}
+      )
+      |> Repo.all()
+      |> Map.new()
+
+    verified = Map.get(summary_data, "verified", 0)
+    pending = Map.get(summary_data, "pending", 0)
+    suspended = Map.get(summary_data, "suspended", 0)
+    total = verified + pending + suspended
+
+    summary = [
+      %{label: "Verified", value: verified},
+      %{label: "Pending", value: pending},
+      %{label: "Suspended", value: suspended},
+      %{label: "Total", value: total}
+    ]
+
+    total_count =
+      from(g in "gyms", select: count(g.id))
+      |> Repo.one()
+
+    rows =
+      from(g in "gyms",
+        join: u in "users",
+        on: g.owner_id == u.id,
+        order_by: [asc: g.name],
+        select: %{
+          gym_name: g.name,
+          owner_name: u.name,
+          owner_email: u.email,
+          status: g.status,
+          members_count:
+            fragment(
+              "(SELECT count(*) FROM gym_members WHERE gym_id = ? AND is_active = true)",
+              g.id
+            ),
+          trainers_count:
+            fragment(
+              "(SELECT count(*) FROM gym_trainers WHERE gym_id = ? AND is_active = true)",
+              g.id
+            ),
+          revenue:
+            fragment(
+              "(SELECT coalesce(sum(sp.price_in_paise), 0) FROM member_subscriptions ms JOIN subscription_plans sp ON ms.subscription_plan_id = sp.id WHERE ms.gym_id = ? AND ms.payment_status = 'paid')",
+              g.id
+            ),
+          created_date: fragment("?::date", g.inserted_at)
+        }
+      )
+      |> paginate(opts)
+      |> Repo.all()
+      |> Enum.map(fn row ->
+        %{row | revenue: format_currency(decimal_to_int(row.revenue))}
+      end)
+
+    columns = [
+      %{key: :gym_name, label: "Gym Name"},
+      %{key: :owner_name, label: "Owner Name"},
+      %{key: :owner_email, label: "Owner Email"},
+      %{key: :status, label: "Status"},
+      %{key: :members_count, label: "Members"},
+      %{key: :trainers_count, label: "Trainers"},
+      %{key: :revenue, label: "Revenue"},
+      %{key: :created_date, label: "Created Date"}
+    ]
+
+    %{summary: summary, rows: rows, total_count: total_count, columns: columns}
+  end
+
+  def admin_gyms_report_csv(start_date, end_date, opts \\ []) do
+    %{summary: summary, columns: columns} =
+      admin_gyms_report(start_date, end_date, opts)
+
+    rows =
+      from(g in "gyms",
+        join: u in "users",
+        on: g.owner_id == u.id,
+        order_by: [asc: g.name],
+        select: %{
+          gym_name: g.name,
+          owner_name: u.name,
+          owner_email: u.email,
+          status: g.status,
+          members_count:
+            fragment(
+              "(SELECT count(*) FROM gym_members WHERE gym_id = ? AND is_active = true)",
+              g.id
+            ),
+          trainers_count:
+            fragment(
+              "(SELECT count(*) FROM gym_trainers WHERE gym_id = ? AND is_active = true)",
+              g.id
+            ),
+          revenue:
+            fragment(
+              "(SELECT coalesce(sum(sp.price_in_paise), 0) FROM member_subscriptions ms JOIN subscription_plans sp ON ms.subscription_plan_id = sp.id WHERE ms.gym_id = ? AND ms.payment_status = 'paid')",
+              g.id
+            ),
+          created_date: fragment("?::date", g.inserted_at)
+        }
+      )
+      |> Repo.all()
+      |> Enum.map(fn row ->
+        %{row | revenue: format_currency(decimal_to_int(row.revenue))}
+      end)
+
+    to_csv(summary, columns, rows)
+  end
+
+  # ---------------------------------------------------------------------------
+  # 20. admin_members_report
+  # ---------------------------------------------------------------------------
+
+  @doc "Platform-wide report of all gym members with status and subscription info."
+  def admin_members_report(_start_date, _end_date, opts \\ []) do
+    base_query =
+      from(gm in "gym_members",
+        join: u in "users",
+        on: gm.user_id == u.id,
+        join: g in "gyms",
+        on: gm.gym_id == g.id
+      )
+
+    summary_data =
+      from([gm, _u, _g] in base_query,
+        group_by: gm.is_active,
+        select: {gm.is_active, count(gm.id)}
+      )
+      |> Repo.all()
+      |> Map.new()
+
+    active = Map.get(summary_data, true, 0)
+    inactive = Map.get(summary_data, false, 0)
+
+    summary = [
+      %{label: "Total", value: active + inactive},
+      %{label: "Active", value: active},
+      %{label: "Inactive", value: inactive}
+    ]
+
+    total_count = active + inactive
+
+    rows =
+      from([gm, u, g] in base_query,
+        order_by: [asc: u.name],
+        select: %{
+          member_name: u.name,
+          email: u.email,
+          phone: u.phone,
+          gym_name: g.name,
+          status: gm.is_active,
+          subscription_status:
+            fragment(
+              "(SELECT status FROM member_subscriptions WHERE member_id = ? ORDER BY inserted_at DESC LIMIT 1)",
+              gm.id
+            ),
+          joined_at: gm.joined_at
+        }
+      )
+      |> paginate(opts)
+      |> Repo.all()
+      |> Enum.map(fn row ->
+        %{row | status: if(row.status, do: "Active", else: "Inactive")}
+      end)
+
+    columns = [
+      %{key: :member_name, label: "Member Name"},
+      %{key: :email, label: "Email"},
+      %{key: :phone, label: "Phone"},
+      %{key: :gym_name, label: "Gym"},
+      %{key: :status, label: "Status"},
+      %{key: :subscription_status, label: "Subscription Status"},
+      %{key: :joined_at, label: "Joined At"}
+    ]
+
+    %{summary: summary, rows: rows, total_count: total_count, columns: columns}
+  end
+
+  def admin_members_report_csv(start_date, end_date, opts \\ []) do
+    %{summary: summary, columns: columns} =
+      admin_members_report(start_date, end_date, opts)
+
+    base_query =
+      from(gm in "gym_members",
+        join: u in "users",
+        on: gm.user_id == u.id,
+        join: g in "gyms",
+        on: gm.gym_id == g.id
+      )
+
+    rows =
+      from([gm, u, g] in base_query,
+        order_by: [asc: u.name],
+        select: %{
+          member_name: u.name,
+          email: u.email,
+          phone: u.phone,
+          gym_name: g.name,
+          status: gm.is_active,
+          subscription_status:
+            fragment(
+              "(SELECT status FROM member_subscriptions WHERE member_id = ? ORDER BY inserted_at DESC LIMIT 1)",
+              gm.id
+            ),
+          joined_at: gm.joined_at
+        }
+      )
+      |> Repo.all()
+      |> Enum.map(fn row ->
+        %{row | status: if(row.status, do: "Active", else: "Inactive")}
+      end)
+
+    to_csv(summary, columns, rows)
+  end
+
+  # ---------------------------------------------------------------------------
+  # 21. admin_revenue_report
+  # ---------------------------------------------------------------------------
+
+  @doc "Platform-wide revenue report with gym-wise totals and transaction details."
+  def admin_revenue_report(start_date, end_date, opts \\ []) do
+    start_dt = to_start_datetime(start_date)
+    end_dt = to_end_datetime(end_date)
+
+    base_query =
+      from(ms in "member_subscriptions",
+        join: sp in "subscription_plans",
+        on: ms.subscription_plan_id == sp.id,
+        join: gm in "gym_members",
+        on: ms.member_id == gm.id,
+        join: u in "users",
+        on: gm.user_id == u.id,
+        join: g in "gyms",
+        on: ms.gym_id == g.id,
+        where:
+          ms.payment_status == ^"paid" and
+            ms.inserted_at >= ^start_dt and
+            ms.inserted_at <= ^end_dt
+      )
+
+    gym_totals =
+      from([ms, sp, _gm, _u, g] in base_query,
+        group_by: g.name,
+        select: {g.name, sum(sp.price_in_paise)}
+      )
+      |> Repo.all()
+
+    grand_total =
+      gym_totals
+      |> Enum.reduce(0, fn {_name, amount}, acc -> acc + decimal_to_int(amount) end)
+
+    summary =
+      Enum.map(gym_totals, fn {name, amount} ->
+        %{label: name, value: format_currency(decimal_to_int(amount))}
+      end) ++ [%{label: "Grand Total", value: format_currency(grand_total)}]
+
+    total_count =
+      from([ms, _sp, _gm, _u, _g] in base_query, select: count(ms.id))
+      |> Repo.one()
+
+    rows =
+      from([ms, sp, _gm, u, g] in base_query,
+        order_by: [desc: ms.inserted_at],
+        select: %{
+          gym_name: g.name,
+          member_name: u.name,
+          plan_name: sp.name,
+          amount: sp.price_in_paise,
+          payment_status: ms.payment_status,
+          date: fragment("?::date", ms.inserted_at)
+        }
+      )
+      |> paginate(opts)
+      |> Repo.all()
+      |> Enum.map(fn row ->
+        %{row | amount: format_currency(decimal_to_int(row.amount))}
+      end)
+
+    columns = [
+      %{key: :gym_name, label: "Gym"},
+      %{key: :member_name, label: "Member"},
+      %{key: :plan_name, label: "Plan"},
+      %{key: :amount, label: "Amount"},
+      %{key: :payment_status, label: "Payment Status"},
+      %{key: :date, label: "Date"}
+    ]
+
+    %{summary: summary, rows: rows, total_count: total_count, columns: columns}
+  end
+
+  def admin_revenue_report_csv(start_date, end_date, opts \\ []) do
+    start_dt = to_start_datetime(start_date)
+    end_dt = to_end_datetime(end_date)
+
+    %{summary: summary, columns: columns} =
+      admin_revenue_report(start_date, end_date, opts)
+
+    base_query =
+      from(ms in "member_subscriptions",
+        join: sp in "subscription_plans",
+        on: ms.subscription_plan_id == sp.id,
+        join: gm in "gym_members",
+        on: ms.member_id == gm.id,
+        join: u in "users",
+        on: gm.user_id == u.id,
+        join: g in "gyms",
+        on: ms.gym_id == g.id,
+        where:
+          ms.payment_status == ^"paid" and
+            ms.inserted_at >= ^start_dt and
+            ms.inserted_at <= ^end_dt
+      )
+
+    rows =
+      from([ms, sp, _gm, u, g] in base_query,
+        order_by: [desc: ms.inserted_at],
+        select: %{
+          gym_name: g.name,
+          member_name: u.name,
+          plan_name: sp.name,
+          amount: sp.price_in_paise,
+          payment_status: ms.payment_status,
+          date: fragment("?::date", ms.inserted_at)
+        }
+      )
+      |> Repo.all()
+      |> Enum.map(fn row ->
+        %{row | amount: format_currency(decimal_to_int(row.amount))}
+      end)
+
+    to_csv(summary, columns, rows)
+  end
+
+  # ---------------------------------------------------------------------------
+  # 22. admin_subscriptions_report
+  # ---------------------------------------------------------------------------
+
+  @doc "Platform-wide subscriptions report with status breakdown."
+  def admin_subscriptions_report(_start_date, _end_date, opts \\ []) do
+    base_query =
+      from(ms in "member_subscriptions",
+        join: gm in "gym_members",
+        on: ms.member_id == gm.id,
+        join: u in "users",
+        on: gm.user_id == u.id,
+        join: g in "gyms",
+        on: ms.gym_id == g.id,
+        join: sp in "subscription_plans",
+        on: ms.subscription_plan_id == sp.id
+      )
+
+    summary_data =
+      from([ms, _gm, _u, _g, _sp] in base_query,
+        group_by: ms.status,
+        select: {ms.status, count(ms.id)}
+      )
+      |> Repo.all()
+      |> Map.new()
+
+    active = Map.get(summary_data, "active", 0)
+    expired = Map.get(summary_data, "expired", 0)
+    cancelled = Map.get(summary_data, "cancelled", 0)
+    total = Enum.reduce(summary_data, 0, fn {_k, v}, acc -> acc + v end)
+
+    summary = [
+      %{label: "Active", value: active},
+      %{label: "Expired", value: expired},
+      %{label: "Cancelled", value: cancelled},
+      %{label: "Total", value: total}
+    ]
+
+    total_count = total
+
+    rows =
+      from([ms, gm, u, g, sp] in base_query,
+        order_by: [desc: ms.inserted_at],
+        select: %{
+          member_name: u.name,
+          gym_name: g.name,
+          plan_name: sp.name,
+          status: ms.status,
+          payment_status: ms.payment_status,
+          starts_at: fragment("?::date", ms.starts_at),
+          ends_at: fragment("?::date", ms.ends_at)
+        }
+      )
+      |> paginate(opts)
+      |> Repo.all()
+
+    columns = [
+      %{key: :member_name, label: "Member"},
+      %{key: :gym_name, label: "Gym"},
+      %{key: :plan_name, label: "Plan"},
+      %{key: :status, label: "Status"},
+      %{key: :payment_status, label: "Payment Status"},
+      %{key: :starts_at, label: "Starts At"},
+      %{key: :ends_at, label: "Ends At"}
+    ]
+
+    %{summary: summary, rows: rows, total_count: total_count, columns: columns}
+  end
+
+  def admin_subscriptions_report_csv(start_date, end_date, opts \\ []) do
+    %{summary: summary, columns: columns} =
+      admin_subscriptions_report(start_date, end_date, opts)
+
+    base_query =
+      from(ms in "member_subscriptions",
+        join: gm in "gym_members",
+        on: ms.member_id == gm.id,
+        join: u in "users",
+        on: gm.user_id == u.id,
+        join: g in "gyms",
+        on: ms.gym_id == g.id,
+        join: sp in "subscription_plans",
+        on: ms.subscription_plan_id == sp.id
+      )
+
+    rows =
+      from([ms, _gm, u, g, sp] in base_query,
+        order_by: [desc: ms.inserted_at],
+        select: %{
+          member_name: u.name,
+          gym_name: g.name,
+          plan_name: sp.name,
+          status: ms.status,
+          payment_status: ms.payment_status,
+          starts_at: fragment("?::date", ms.starts_at),
+          ends_at: fragment("?::date", ms.ends_at)
+        }
+      )
+      |> Repo.all()
+
+    to_csv(summary, columns, rows)
+  end
+
+  # ---------------------------------------------------------------------------
+  # 23. admin_trainers_report
+  # ---------------------------------------------------------------------------
+
+  @doc "Platform-wide trainers report with client counts and classes taught."
+  def admin_trainers_report(start_date, end_date, opts \\ []) do
+    start_dt = to_start_datetime(start_date)
+    end_dt = to_end_datetime(end_date)
+
+    base_query =
+      from(gt in "gym_trainers",
+        join: u in "users",
+        on: gt.user_id == u.id,
+        join: g in "gyms",
+        on: gt.gym_id == g.id
+      )
+
+    total =
+      from([gt, _u, _g] in base_query, select: count(gt.id))
+      |> Repo.one()
+
+    active =
+      from([gt, _u, _g] in base_query, where: gt.is_active == true, select: count(gt.id))
+      |> Repo.one()
+
+    summary = [
+      %{label: "Total", value: total},
+      %{label: "Active", value: active}
+    ]
+
+    total_count = total
+
+    rows =
+      from([gt, u, g] in base_query,
+        order_by: [asc: u.name],
+        select: %{
+          trainer_name: u.name,
+          email: u.email,
+          gym_name: g.name,
+          specializations:
+            fragment("array_to_string(coalesce(?, '{}'), ', ')", gt.specializations),
+          active_clients:
+            fragment(
+              "(SELECT count(*) FROM gym_members WHERE assigned_trainer_id = ? AND is_active = true)",
+              gt.id
+            ),
+          classes_taught:
+            fragment(
+              "(SELECT count(*) FROM scheduled_classes WHERE trainer_id = ? AND scheduled_at >= ? AND scheduled_at <= ?)",
+              gt.id,
+              ^start_dt,
+              ^end_dt
+            )
+        }
+      )
+      |> paginate(opts)
+      |> Repo.all()
+
+    columns = [
+      %{key: :trainer_name, label: "Trainer"},
+      %{key: :email, label: "Email"},
+      %{key: :gym_name, label: "Gym"},
+      %{key: :specializations, label: "Specializations"},
+      %{key: :active_clients, label: "Active Clients"},
+      %{key: :classes_taught, label: "Classes Taught"}
+    ]
+
+    %{summary: summary, rows: rows, total_count: total_count, columns: columns}
+  end
+
+  def admin_trainers_report_csv(start_date, end_date, opts \\ []) do
+    start_dt = to_start_datetime(start_date)
+    end_dt = to_end_datetime(end_date)
+
+    %{summary: summary, columns: columns} =
+      admin_trainers_report(start_date, end_date, opts)
+
+    base_query =
+      from(gt in "gym_trainers",
+        join: u in "users",
+        on: gt.user_id == u.id,
+        join: g in "gyms",
+        on: gt.gym_id == g.id
+      )
+
+    rows =
+      from([gt, u, g] in base_query,
+        order_by: [asc: u.name],
+        select: %{
+          trainer_name: u.name,
+          email: u.email,
+          gym_name: g.name,
+          specializations:
+            fragment("array_to_string(coalesce(?, '{}'), ', ')", gt.specializations),
+          active_clients:
+            fragment(
+              "(SELECT count(*) FROM gym_members WHERE assigned_trainer_id = ? AND is_active = true)",
+              gt.id
+            ),
+          classes_taught:
+            fragment(
+              "(SELECT count(*) FROM scheduled_classes WHERE trainer_id = ? AND scheduled_at >= ? AND scheduled_at <= ?)",
+              gt.id,
+              ^start_dt,
+              ^end_dt
+            )
+        }
+      )
+      |> Repo.all()
+
+    to_csv(summary, columns, rows)
+  end
+
+  # ---------------------------------------------------------------------------
+  # 24. admin_attendance_report
+  # ---------------------------------------------------------------------------
+
+  @doc "Platform-wide attendance report with check-in details and top gyms."
+  def admin_attendance_report(start_date, end_date, opts \\ []) do
+    start_dt = to_start_datetime(start_date)
+    end_dt = to_end_datetime(end_date)
+
+    base_query =
+      from(ar in "attendance_records",
+        join: gm in "gym_members",
+        on: ar.gym_member_id == gm.id,
+        join: u in "users",
+        on: gm.user_id == u.id,
+        join: g in "gyms",
+        on: gm.gym_id == g.id,
+        where: ar.attended_at >= ^start_dt and ar.attended_at <= ^end_dt
+      )
+
+    total_checkins =
+      from([ar, _gm, _u, _g] in base_query, select: count(ar.id))
+      |> Repo.one()
+
+    top_gyms =
+      from([ar, _gm, _u, g] in base_query,
+        group_by: g.name,
+        order_by: [desc: count(ar.id)],
+        limit: 5,
+        select: {g.name, count(ar.id)}
+      )
+      |> Repo.all()
+
+    summary =
+      [%{label: "Total Check-ins", value: total_checkins}] ++
+        Enum.map(top_gyms, fn {name, count} ->
+          %{label: name, value: count}
+        end)
+
+    total_count = total_checkins
+
+    rows =
+      from([ar, gm, u, g] in base_query,
+        order_by: [desc: ar.attended_at],
+        select: %{
+          gym_name: g.name,
+          member_name: u.name,
+          attended_date: fragment("?::date", ar.attended_at),
+          attended_time: fragment("to_char(?, 'HH24:MI')", ar.attended_at)
+        }
+      )
+      |> paginate(opts)
+      |> Repo.all()
+
+    columns = [
+      %{key: :gym_name, label: "Gym"},
+      %{key: :member_name, label: "Member"},
+      %{key: :attended_date, label: "Date"},
+      %{key: :attended_time, label: "Time"}
+    ]
+
+    %{summary: summary, rows: rows, total_count: total_count, columns: columns}
+  end
+
+  def admin_attendance_report_csv(start_date, end_date, opts \\ []) do
+    start_dt = to_start_datetime(start_date)
+    end_dt = to_end_datetime(end_date)
+
+    %{summary: summary, columns: columns} =
+      admin_attendance_report(start_date, end_date, opts)
+
+    base_query =
+      from(ar in "attendance_records",
+        join: gm in "gym_members",
+        on: ar.gym_member_id == gm.id,
+        join: u in "users",
+        on: gm.user_id == u.id,
+        join: g in "gyms",
+        on: gm.gym_id == g.id,
+        where: ar.attended_at >= ^start_dt and ar.attended_at <= ^end_dt
+      )
+
+    rows =
+      from([ar, _gm, u, g] in base_query,
+        order_by: [desc: ar.attended_at],
+        select: %{
+          gym_name: g.name,
+          member_name: u.name,
+          attended_date: fragment("?::date", ar.attended_at),
+          attended_time: fragment("to_char(?, 'HH24:MI')", ar.attended_at)
+        }
+      )
+      |> Repo.all()
+
+    to_csv(summary, columns, rows)
+  end
+
+  # ===========================================================================
   # PRIVATE HELPERS
   # ===========================================================================
 

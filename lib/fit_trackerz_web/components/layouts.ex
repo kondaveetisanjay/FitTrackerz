@@ -187,6 +187,13 @@ defmodule FitTrackerzWeb.Layouts do
     </p>
     <.nav_link href="/admin/users" icon="hero-user-group-solid" label="Users" />
     <.nav_link href="/admin/gyms" icon="hero-building-office-2-solid" label="Gyms" />
+
+    <div class="divider my-3"></div>
+    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
+      Analytics
+    </p>
+    <.nav_link href="/admin/dashboards" icon="hero-chart-bar-square-solid" label="Dashboards" />
+    <.nav_link href="/admin/reports" icon="hero-document-chart-bar-solid" label="Reports" />
     """
   end
 

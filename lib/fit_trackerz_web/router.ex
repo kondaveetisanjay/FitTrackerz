@@ -92,6 +92,9 @@ defmodule FitTrackerzWeb.Router do
       live "/dashboard", DashboardLive
       live "/users", UsersLive
       live "/gyms", GymsLive
+      live "/dashboards", DashboardsLive
+      live "/reports", ReportsLive
+      live "/reports/:report_type", ReportDetailLive
     end
   end
 
