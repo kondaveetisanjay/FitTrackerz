@@ -246,6 +246,95 @@ defmodule FitTrackerz.Analytics do
     )
   end
 
+  # ===========================================================================
+  # Admin / Platform-wide analytics
+  # ===========================================================================
+
+  def total_gyms_count do
+    from(g in "gyms", select: count(g.id)) |> Repo.one()
+  end
+
+  def gyms_by_status do
+    from(g in "gyms", group_by: g.status, select: {g.status, count(g.id)})
+    |> Repo.all()
+    |> Map.new()
+  end
+
+  def total_members_count do
+    from(m in "gym_members", where: m.is_active == true, select: count(m.id)) |> Repo.one()
+  end
+
+  def total_trainers_count do
+    from(t in "gym_trainers", where: t.is_active == true, select: count(t.id)) |> Repo.one()
+  end
+
+  def platform_revenue(start_date, end_date) do
+    start_dt = to_start_datetime(start_date)
+    end_dt = to_end_datetime(end_date)
+
+    daily_data =
+      from(ms in "member_subscriptions",
+        join: sp in "subscription_plans", on: ms.subscription_plan_id == sp.id,
+        where: ms.payment_status == ^"paid" and ms.inserted_at >= ^start_dt and ms.inserted_at <= ^end_dt,
+        group_by: fragment("?::date", ms.inserted_at),
+        select: {fragment("?::date", ms.inserted_at), coalesce(sum(sp.price_in_paise), 0)}
+      )
+      |> Repo.all()
+      |> Map.new()
+
+    daily = fill_missing_dates(daily_data, start_date, end_date)
+    total = Enum.reduce(daily, 0, fn %{value: v}, acc -> acc + v end)
+    %{total: total, daily: daily}
+  end
+
+  def platform_new_gyms(start_date, end_date) do
+    daily_data =
+      from(g in "gyms",
+        where: fragment("?::date", g.inserted_at) >= ^start_date and fragment("?::date", g.inserted_at) <= ^end_date,
+        group_by: fragment("?::date", g.inserted_at),
+        select: {fragment("?::date", g.inserted_at), count(g.id)}
+      )
+      |> Repo.all()
+      |> Map.new()
+
+    daily = fill_missing_dates(daily_data, start_date, end_date)
+    total = Enum.reduce(daily, 0, fn %{value: v}, acc -> acc + v end)
+    %{total: total, daily: daily}
+  end
+
+  def platform_member_growth(start_date, end_date) do
+    daily_data =
+      from(m in "gym_members",
+        where: m.joined_at >= ^start_date and m.joined_at <= ^end_date,
+        group_by: m.joined_at,
+        select: {m.joined_at, count(m.id)}
+      )
+      |> Repo.all()
+      |> Map.new()
+
+    daily = fill_missing_dates(daily_data, start_date, end_date)
+    total = Enum.reduce(daily, 0, fn %{value: v}, acc -> acc + v end)
+    %{total: total, daily: daily}
+  end
+
+  def platform_subscription_breakdown do
+    from(ms in "member_subscriptions", group_by: ms.status, select: {ms.status, count(ms.id)})
+    |> Repo.all()
+    |> Map.new()
+  end
+
+  def top_gyms_by_members(limit \\ 10) do
+    from(gm in "gym_members",
+      join: g in "gyms", on: gm.gym_id == g.id,
+      where: gm.is_active == true,
+      group_by: [g.id, g.name],
+      select: %{gym_name: g.name, member_count: count(gm.id)},
+      order_by: [desc: count(gm.id)],
+      limit: ^limit
+    )
+    |> Repo.all()
+  end
+
   # ---------------------------------------------------------------------------
   # Helpers
   # ---------------------------------------------------------------------------
