@@ -48,7 +48,7 @@ defmodule FitTrackerz.Gym.Gym do
     read :list_by_owner do
       argument :owner_id, :uuid, allow_nil?: false
       filter expr(owner_id == ^arg(:owner_id))
-      prepare build(load: [:branches, :gym_members, :member_invitations])
+      prepare build(load: [:branches, :gym_members, :gym_trainers, :member_invitations, :trainer_invitations])
     end
 
     read :list_pending_verification do
@@ -130,6 +130,8 @@ defmodule FitTrackerz.Gym.Gym do
     has_many :branches, FitTrackerz.Gym.GymBranch
     has_many :gym_members, FitTrackerz.Gym.GymMember
     has_many :member_invitations, FitTrackerz.Gym.MemberInvitation
+    has_many :gym_trainers, FitTrackerz.Gym.GymTrainer
+    has_many :trainer_invitations, FitTrackerz.Gym.TrainerInvitation
   end
 
   identities do

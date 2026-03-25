@@ -9,6 +9,7 @@ defmodule FitTrackerzWeb.DashboardLive.Index do
       case user.role do
         :platform_admin -> "/admin/dashboard"
         :gym_operator -> "/gym/dashboard"
+        :trainer -> "/trainer/dashboard"
         :member -> "/member/dashboard"
         _ -> "/member/dashboard"
       end

@@ -35,6 +35,8 @@ defmodule FitTrackerz.Training.DietPlan do
 
     policy action_type([:create, :update, :destroy]) do
       authorize_if actor_attribute_equals(:role, :gym_operator)
+      authorize_if actor_attribute_equals(:role, :trainer)
+      authorize_if actor_attribute_equals(:role, :member)
     end
   end
 
@@ -47,6 +49,12 @@ defmodule FitTrackerz.Training.DietPlan do
       prepare build(load: [:gym])
     end
 
+    read :list_by_trainer do
+      argument :trainer_ids, {:array, :uuid}, allow_nil?: false
+      filter expr(trainer_id in ^arg(:trainer_ids))
+      prepare build(load: [:gym, :member])
+    end
+
     create :create do
       accept([
         :name,
@@ -55,7 +63,8 @@ defmodule FitTrackerz.Training.DietPlan do
         :dietary_type,
         :member_id,
         :gym_id,
-        :template_id
+        :template_id,
+        :trainer_id
       ])
 
       validate string_length(:name, min: 1, max: 255)
@@ -107,5 +116,7 @@ defmodule FitTrackerz.Training.DietPlan do
     end
 
     belongs_to :template, FitTrackerz.Training.DietPlanTemplate
+
+    belongs_to :trainer, FitTrackerz.Gym.GymTrainer
   end
 end

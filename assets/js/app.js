@@ -23,6 +23,7 @@ import "phoenix_html"
 import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import topbar from "../vendor/topbar"
+import ChartHook from "./chart_hook"
 
 const Geolocation = {
   mounted() {
@@ -212,6 +213,63 @@ const ExplorePlacesAutocomplete = {
   }
 }
 
+const ScrollToBottom = {
+  mounted() {
+    this.scrollToBottom()
+    this.handleEvent("scroll_to_bottom", () => {
+      this.scrollToBottom()
+    })
+  },
+  updated() {
+    this.scrollToBottom()
+  },
+  scrollToBottom() {
+    this.el.scrollTop = this.el.scrollHeight
+  }
+}
+
+const AutoResize = {
+  mounted() {
+    this.el.addEventListener("input", () => {
+      this.el.style.height = "auto"
+      this.el.style.height = this.el.scrollHeight + "px"
+    })
+  }
+}
+
+const CsvDownload = {
+  mounted() {
+    this.handleEvent("download_csv", ({filename, content}) => {
+      const blob = new Blob([content], { type: "text/csv;charset=utf-8;" })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+    })
+  }
+}
+
+// Notification badge hook - updates unread count via PubSub
+const NotificationBadge = {
+  mounted() {
+    this.handleEvent("notification_count", ({count}) => {
+      this.updateBadge(count)
+    })
+  },
+  updateBadge(count) {
+    if (count > 0) {
+      this.el.textContent = count > 9 ? "9+" : count
+      this.el.classList.remove("hidden")
+    } else {
+      this.el.classList.add("hidden")
+    }
+  }
+}
+
 // Password visibility toggle hook
 const PasswordVisibilityToggle = {
   mounted() {
@@ -275,7 +333,7 @@ const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {Geolocation, BranchGeolocation, PlacesAutocomplete, ExplorePlacesAutocomplete, PasswordVisibilityToggle},
+  hooks: {Geolocation, BranchGeolocation, PlacesAutocomplete, ExplorePlacesAutocomplete, PasswordVisibilityToggle, ChartHook, NotificationBadge, ScrollToBottom, AutoResize, CsvDownload},
 })
 
 // Show progress bar on live navigation and form submits

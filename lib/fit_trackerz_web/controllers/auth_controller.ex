@@ -106,6 +106,7 @@ defmodule FitTrackerzWeb.AuthController do
 
   defp dashboard_path_for_role(:platform_admin), do: "/admin/dashboard"
   defp dashboard_path_for_role(:gym_operator), do: "/gym/dashboard"
+  defp dashboard_path_for_role(:trainer), do: "/trainer/dashboard"
   defp dashboard_path_for_role(:member), do: "/member/dashboard"
   defp dashboard_path_for_role(_), do: "/member/dashboard"
 end

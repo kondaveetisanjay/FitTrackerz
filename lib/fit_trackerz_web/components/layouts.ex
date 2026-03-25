@@ -61,6 +61,7 @@ defmodule FitTrackerzWeb.Layouts do
             </div>
             <div class="flex-1 hidden lg:block"></div>
             <div class="flex-none flex items-center gap-3">
+              <.notification_bell current_user={@current_user} />
               <.theme_toggle />
               <div class="dropdown dropdown-end">
                 <div tabindex="0" role="button" class="btn btn-ghost btn-sm gap-2">
@@ -202,6 +203,7 @@ defmodule FitTrackerzWeb.Layouts do
     </p>
     <.nav_link href="/gym/setup" icon="hero-building-office-solid" label="My Gym" />
     <.nav_link href="/gym/members" icon="hero-user-group-solid" label="Members" />
+    <.nav_link href="/gym/trainers" icon="hero-academic-cap-solid" label="Trainers" />
 
     <div class="divider my-3"></div>
     <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
@@ -212,6 +214,52 @@ defmodule FitTrackerzWeb.Layouts do
     <.nav_link href="/gym/invitations" icon="hero-envelope-solid" label="Invitations" />
     <.nav_link href="/gym/attendance" icon="hero-clipboard-document-check-solid" label="Attendance" />
     <.nav_link href="/gym/contests" icon="hero-trophy-solid" label="Contests" />
+    <.nav_link href="/gym/notifications" icon="hero-bell-solid" label="Notifications" />
+    <.nav_link href="/gym/messages" icon="hero-chat-bubble-left-right-solid" label="Messages" />
+    <.nav_link href="/gym/dashboards" icon="hero-chart-bar-square-solid" label="Dashboards" />
+    <.nav_link href="/gym/reports" icon="hero-document-chart-bar-solid" label="Reports" />
+    """
+  end
+
+  def sidebar_nav(%{role: :trainer} = assigns) do
+    ~H"""
+    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
+      Overview
+    </p>
+    <.nav_link href="/trainer/dashboard" icon="hero-squares-2x2-solid" label="Dashboard" />
+    <.nav_link href="/trainer/gyms" icon="hero-building-office-2-solid" label="My Gyms" />
+
+    <div class="divider my-3"></div>
+    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
+      Clients
+    </p>
+    <.nav_link href="/trainer/clients" icon="hero-user-group-solid" label="My Clients" />
+    <.nav_link
+      href="/trainer/attendance"
+      icon="hero-clipboard-document-check-solid"
+      label="Attendance"
+    />
+
+    <div class="divider my-3"></div>
+    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
+      Programs
+    </p>
+    <.nav_link href="/trainer/workouts" icon="hero-fire-solid" label="Workout Plans" />
+    <.nav_link href="/trainer/diets" icon="hero-heart-solid" label="Diet Plans" />
+    <.nav_link href="/trainer/templates" icon="hero-document-duplicate-solid" label="Templates" />
+
+    <div class="divider my-3"></div>
+    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
+      Communication
+    </p>
+    <.nav_link href="/trainer/messages" icon="hero-chat-bubble-left-right-solid" label="Messages" />
+    <.nav_link href="/trainer/reports" icon="hero-document-chart-bar-solid" label="Reports" />
+
+    <div class="divider my-3"></div>
+    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
+      Schedule
+    </p>
+    <.nav_link href="/trainer/classes" icon="hero-calendar-days-solid" label="My Classes" />
     """
   end
 
@@ -222,6 +270,7 @@ defmodule FitTrackerzWeb.Layouts do
     </p>
     <.nav_link href="/member/dashboard" icon="hero-squares-2x2-solid" label="Dashboard" />
     <.nav_link href="/member/gym" icon="hero-building-office-2-solid" label="My Gyms" />
+    <.nav_link href="/member/trainer" icon="hero-academic-cap-solid" label="My Trainer" />
 
     <div class="divider my-3"></div>
     <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
@@ -247,6 +296,16 @@ defmodule FitTrackerzWeb.Layouts do
       Account
     </p>
     <.nav_link href="/member/subscription" icon="hero-credit-card-solid" label="Subscription" />
+    <.nav_link href="/member/notifications" icon="hero-bell-solid" label="Notifications" />
+    <.nav_link href="/member/messages" icon="hero-chat-bubble-left-right-solid" label="Messages" />
+
+    <div class="divider my-3"></div>
+    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
+      Health
+    </p>
+    <.nav_link href="/member/health" icon="hero-chart-bar-solid" label="Health Metrics" />
+    <.nav_link href="/member/food" icon="hero-cake-solid" label="Food Log" />
+    <.nav_link href="/member/progress" icon="hero-arrow-trending-up-solid" label="Progress" />
     """
   end
 
@@ -357,6 +416,33 @@ defmodule FitTrackerzWeb.Layouts do
     """
   end
 
+  attr :current_user, :map, required: true
+
+  def notification_bell(assigns) do
+    ~H"""
+    <a
+      href={notification_path(@current_user)}
+      class="btn btn-ghost btn-sm btn-circle relative"
+      aria-label="Notifications"
+      id="notification-bell"
+    >
+      <.icon name="hero-bell" class="size-5" />
+      <span
+        id="notification-badge"
+        class="badge badge-xs badge-error absolute -top-0.5 -right-0.5 hidden"
+        phx-hook="NotificationBadge"
+        data-user-id={@current_user.id}
+      >
+      </span>
+    </a>
+    """
+  end
+
+  defp notification_path(%{role: :gym_operator}), do: "/gym/notifications"
+  defp notification_path(%{role: :trainer}), do: "/trainer/notifications"
+  defp notification_path(%{role: :platform_admin}), do: "/admin/notifications"
+  defp notification_path(_), do: "/member/notifications"
+
   defp get_user_role(nil), do: :member
   defp get_user_role(%{role: role}) when is_atom(role), do: role
   defp get_user_role(%{role: role}) when is_binary(role), do: String.to_existing_atom(role)
@@ -364,6 +450,7 @@ defmodule FitTrackerzWeb.Layouts do
 
   defp format_role(:platform_admin), do: "Platform Admin"
   defp format_role(:gym_operator), do: "Gym Operator"
+  defp format_role(:trainer), do: "Trainer"
   defp format_role(:member), do: "Member"
   defp format_role(_), do: "Member"
 end

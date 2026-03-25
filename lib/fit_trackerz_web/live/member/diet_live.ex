@@ -349,25 +349,26 @@ defmodule FitTrackerzWeb.Member.DietLive do
                       type="number"
                       placeholder="2000"
                     />
-                    <div>
-                      <label class="label"><span class="label-text font-medium">Dietary Type</span></label>
-                      <select name="diet[dietary_type]" class="select select-bordered w-full" id="diet-type-select">
-                        <option value="">Select type...</option>
-                        <option value="vegetarian">Vegetarian</option>
-                        <option value="non_vegetarian">Non-Vegetarian</option>
-                        <option value="vegan">Vegan</option>
-                        <option value="eggetarian">Eggetarian</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label class="label"><span class="label-text font-medium">Gym</span></label>
-                      <select name="diet[gym_id]" class="select select-bordered w-full" id="diet-gym-select" required>
-                        <option value="">Select a gym...</option>
-                        <option :for={m <- @memberships} value={m.gym_id}>
-                          {m.gym.name}
-                        </option>
-                      </select>
-                    </div>
+                    <.input
+                      field={@form[:dietary_type]}
+                      type="select"
+                      label="Dietary Type"
+                      prompt="Select type..."
+                      options={[
+                        {"Vegetarian", "vegetarian"},
+                        {"Non-Vegetarian", "non_vegetarian"},
+                        {"Vegan", "vegan"},
+                        {"Eggetarian", "eggetarian"}
+                      ]}
+                    />
+                    <.input
+                      field={@form[:gym_id]}
+                      type="select"
+                      label="Gym"
+                      prompt="Select a gym..."
+                      options={Enum.map(@memberships, fn m -> {m.gym.name, m.gym_id} end)}
+                      required
+                    />
                   </div>
 
                   <%!-- Meals --%>

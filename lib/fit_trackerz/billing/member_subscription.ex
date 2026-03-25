@@ -48,6 +48,12 @@ defmodule FitTrackerz.Billing.MemberSubscription do
       prepare build(load: [:subscription_plan, :gym])
     end
 
+    read :list_by_gym do
+      argument :gym_id, :uuid, allow_nil?: false
+      filter expr(gym_id == ^arg(:gym_id))
+      prepare build(load: [:subscription_plan, :member])
+    end
+
     create :create do
       accept([:member_id, :subscription_plan_id, :gym_id, :starts_at, :ends_at, :payment_status])
     end

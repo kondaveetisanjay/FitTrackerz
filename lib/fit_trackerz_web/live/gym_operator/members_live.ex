@@ -9,10 +9,11 @@ defmodule FitTrackerzWeb.GymOperator.MembersLive do
 
     case FitTrackerz.Gym.list_gyms_by_owner(actor.id, actor: actor) do
       {:ok, [gym | _]} ->
-        members = case FitTrackerz.Gym.list_members_by_gym(gym.id, actor: actor, load: [:user]) do
-          {:ok, members} -> members
-          _ -> []
-        end
+        members = load_members(gym.id, actor)
+        plans = load_plans(gym.id, actor)
+        subscriptions = load_subscriptions(gym.id, actor)
+        sub_map = build_sub_map(subscriptions)
+        trainers = load_trainers(gym.id, actor)
 
         invite_form = to_form(%{"email" => ""}, as: "invite")
 
@@ -21,8 +22,18 @@ defmodule FitTrackerzWeb.GymOperator.MembersLive do
            page_title: "Members",
            gym: gym,
            members: members,
+           all_members: members,
+           plans: plans,
+           subscriptions: subscriptions,
+           sub_map: sub_map,
+           trainers: trainers,
            invite_form: invite_form,
-           show_invite: false
+           show_invite: false,
+           assigning_member_id: nil,
+           assigning_trainer_member_id: nil,
+           search: "",
+           filter_status: "all",
+           filter_trainer: "all"
          )}
 
       _ ->
@@ -31,13 +42,46 @@ defmodule FitTrackerzWeb.GymOperator.MembersLive do
            page_title: "Members",
            gym: nil,
            members: [],
+           plans: [],
+           subscriptions: [],
+           sub_map: %{},
+           trainers: [],
            invite_form: nil,
-           show_invite: false
+           show_invite: false,
+           assigning_member_id: nil,
+           assigning_trainer_member_id: nil,
+           search: "",
+           filter_status: "all",
+           filter_trainer: "all",
+           all_members: []
          )}
     end
   end
 
+  # ── Event Handlers ──
+
   @impl true
+  def handle_event("search", %{"search" => search}, socket) do
+    {:noreply,
+     socket
+     |> assign(search: search)
+     |> apply_member_filters()}
+  end
+
+  def handle_event("filter_status", %{"status" => status}, socket) do
+    {:noreply,
+     socket
+     |> assign(filter_status: status)
+     |> apply_member_filters()}
+  end
+
+  def handle_event("filter_trainer", %{"trainer" => trainer_id}, socket) do
+    {:noreply,
+     socket
+     |> assign(filter_trainer: trainer_id)
+     |> apply_member_filters()}
+  end
+
   def handle_event("toggle_invite", _params, socket) do
     {:noreply, assign(socket, show_invite: !socket.assigns.show_invite)}
   end
@@ -77,15 +121,13 @@ defmodule FitTrackerzWeb.GymOperator.MembersLive do
       {:ok, member} ->
         case FitTrackerz.Gym.update_gym_member(member, %{is_active: !member.is_active}, actor: actor) do
           {:ok, _updated} ->
-            members = case FitTrackerz.Gym.list_members_by_gym(gym.id, actor: actor, load: [:user]) do
-              {:ok, members} -> members
-              _ -> []
-            end
+            members = load_members(gym.id, actor)
 
             {:noreply,
              socket
              |> put_flash(:info, "Member status updated.")
-             |> assign(members: members)}
+             |> assign(all_members: members)
+             |> apply_member_filters()}
 
           {:error, _} ->
             {:noreply, put_flash(socket, :error, "Failed to update member status.")}
@@ -95,6 +137,335 @@ defmodule FitTrackerzWeb.GymOperator.MembersLive do
         {:noreply, put_flash(socket, :error, "Member not found.")}
     end
   end
+
+  def handle_event("show_assign_plan", %{"member-id" => member_id}, socket) do
+    {:noreply, assign(socket, assigning_member_id: member_id)}
+  end
+
+  def handle_event("cancel_assign_plan", _params, socket) do
+    {:noreply, assign(socket, assigning_member_id: nil)}
+  end
+
+  def handle_event("show_assign_trainer", %{"member-id" => member_id}, socket) do
+    {:noreply, assign(socket, assigning_trainer_member_id: member_id)}
+  end
+
+  def handle_event("cancel_assign_trainer", _params, socket) do
+    {:noreply, assign(socket, assigning_trainer_member_id: nil)}
+  end
+
+  def handle_event("assign_trainer", %{"trainer_id" => trainer_id, "member_id" => member_id}, socket) do
+    actor = socket.assigns.current_user
+    gym = socket.assigns.gym
+
+    if trainer_id == "" do
+      {:noreply, socket}
+    else
+      case FitTrackerz.Gym.create_assignment_request(%{
+        gym_id: gym.id,
+        member_id: member_id,
+        trainer_id: trainer_id,
+        requested_by_id: actor.id
+      }, actor: actor) do
+        {:ok, _request} ->
+          members = load_members(gym.id, actor)
+
+          {:noreply,
+           socket
+           |> put_flash(:info, "Trainer assignment request sent! The trainer needs to accept.")
+           |> assign(all_members: members, assigning_trainer_member_id: nil)
+           |> apply_member_filters()}
+
+        {:error, error} ->
+          {:noreply, put_flash(socket, :error, AshErrorHelpers.user_friendly_message(error))}
+      end
+    end
+  end
+
+  def handle_event("assign_plan", %{"plan_id" => plan_id, "member_id" => member_id} = params, socket) do
+    actor = socket.assigns.current_user
+    gym = socket.assigns.gym
+
+    plan = Enum.find(socket.assigns.plans, &(&1.id == plan_id))
+
+    if plan do
+      # Use custom start date if provided, otherwise use now
+      starts_at = case params["starts_at"] do
+        date when is_binary(date) and date != "" ->
+          case Date.from_iso8601(date) do
+            {:ok, d} -> DateTime.new!(d, ~T[00:00:00], "Etc/UTC")
+            _ -> DateTime.utc_now()
+          end
+        _ -> DateTime.utc_now()
+      end
+
+      ends_at = calculate_end_date(starts_at, plan.duration)
+
+      case FitTrackerz.Billing.create_subscription(%{
+        member_id: member_id,
+        subscription_plan_id: plan_id,
+        gym_id: gym.id,
+        starts_at: starts_at,
+        ends_at: ends_at,
+        payment_status: :pending
+      }, actor: actor) do
+        {:ok, _sub} ->
+          # Also update member's joined_at if not set
+          update_joined_at(member_id, starts_at, actor)
+
+          subscriptions = load_subscriptions(gym.id, actor)
+          sub_map = build_sub_map(subscriptions)
+          members = load_members(gym.id, actor)
+
+          # Send notification to the member
+          notify_plan_assigned(member_id, plan, gym, actor)
+
+          {:noreply,
+           socket
+           |> put_flash(:info, "Plan assigned successfully!")
+           |> assign(subscriptions: subscriptions, sub_map: sub_map, all_members: members, assigning_member_id: nil)
+           |> apply_member_filters()}
+
+        {:error, error} ->
+          {:noreply, put_flash(socket, :error, AshErrorHelpers.user_friendly_message(error))}
+      end
+    else
+      {:noreply, put_flash(socket, :error, "Plan not found.")}
+    end
+  end
+
+  def handle_event("renew_subscription", %{"id" => sub_id}, socket) do
+    actor = socket.assigns.current_user
+    gym = socket.assigns.gym
+
+    sub = Enum.find(socket.assigns.subscriptions, &(&1.id == sub_id))
+
+    if sub do
+      now = DateTime.utc_now()
+      # Start from now (or from ends_at if subscription hasn't expired yet)
+      starts_at = if DateTime.compare(sub.ends_at, now) == :gt, do: sub.ends_at, else: now
+      ends_at = calculate_end_date(starts_at, sub.subscription_plan.duration)
+
+      case FitTrackerz.Billing.create_subscription(%{
+        member_id: sub.member_id,
+        subscription_plan_id: sub.subscription_plan_id,
+        gym_id: gym.id,
+        starts_at: starts_at,
+        ends_at: ends_at,
+        payment_status: :pending
+      }, actor: actor) do
+        {:ok, _new_sub} ->
+          # Cancel the old subscription if it's expired
+          if sub.status == :expired or DateTime.compare(sub.ends_at, now) != :gt do
+            FitTrackerz.Billing.cancel_subscription(sub, actor: actor)
+          end
+
+          subscriptions = load_subscriptions(gym.id, actor)
+          sub_map = build_sub_map(subscriptions)
+
+          {:noreply,
+           socket
+           |> put_flash(:info, "Subscription renewed successfully!")
+           |> assign(subscriptions: subscriptions, sub_map: sub_map)}
+
+        {:error, error} ->
+          {:noreply, put_flash(socket, :error, AshErrorHelpers.user_friendly_message(error))}
+      end
+    else
+      {:noreply, put_flash(socket, :error, "Subscription not found.")}
+    end
+  end
+
+  def handle_event("toggle_payment", %{"id" => sub_id}, socket) do
+    actor = socket.assigns.current_user
+    gym = socket.assigns.gym
+
+    sub = Enum.find(socket.assigns.subscriptions, &(&1.id == sub_id))
+
+    if sub do
+      new_status = if sub.payment_status == :paid, do: :pending, else: :paid
+
+      case FitTrackerz.Billing.update_subscription(sub, %{payment_status: new_status}, actor: actor) do
+        {:ok, _updated} ->
+          subscriptions = load_subscriptions(gym.id, actor)
+          sub_map = build_sub_map(subscriptions)
+
+          {:noreply,
+           socket
+           |> put_flash(:info, "Payment marked as #{new_status}.")
+           |> assign(subscriptions: subscriptions, sub_map: sub_map)}
+
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Failed to update payment status.")}
+      end
+    else
+      {:noreply, put_flash(socket, :error, "Subscription not found.")}
+    end
+  end
+
+  # ── Helpers ──
+
+  defp apply_member_filters(socket) do
+    members =
+      socket.assigns.all_members
+      |> filter_members_by_search(socket.assigns.search)
+      |> filter_members_by_status(socket.assigns.filter_status)
+      |> filter_members_by_trainer(socket.assigns.filter_trainer)
+
+    assign(socket, members: members)
+  end
+
+  defp filter_members_by_search(members, ""), do: members
+  defp filter_members_by_search(members, search) do
+    q = String.downcase(search)
+    Enum.filter(members, fn m ->
+      String.contains?(String.downcase(m.user.name || ""), q) or
+        String.contains?(String.downcase(to_string(m.user.email)), q)
+    end)
+  end
+
+  defp filter_members_by_status(members, "all"), do: members
+  defp filter_members_by_status(members, "active"), do: Enum.filter(members, & &1.is_active)
+  defp filter_members_by_status(members, "inactive"), do: Enum.reject(members, & &1.is_active)
+  defp filter_members_by_status(members, _), do: members
+
+  defp filter_members_by_trainer(members, "all"), do: members
+  defp filter_members_by_trainer(members, "unassigned") do
+    Enum.filter(members, &is_nil(&1.assigned_trainer_id))
+  end
+  defp filter_members_by_trainer(members, trainer_id) do
+    Enum.filter(members, &(&1.assigned_trainer_id == trainer_id))
+  end
+
+  defp load_members(gym_id, actor) do
+    case FitTrackerz.Gym.list_members_by_gym(gym_id, actor: actor, load: [:user, assigned_trainer: [:user]]) do
+      {:ok, members} -> members
+      _ -> []
+    end
+  end
+
+  defp load_plans(gym_id, actor) do
+    case FitTrackerz.Billing.list_plans_by_gym(gym_id, actor: actor) do
+      {:ok, plans} -> plans
+      _ -> []
+    end
+  end
+
+  defp load_trainers(gym_id, actor) do
+    case FitTrackerz.Gym.list_active_trainers_by_gym(gym_id, actor: actor, load: [:user]) do
+      {:ok, trainers} -> trainers
+      _ -> []
+    end
+  end
+
+  defp load_subscriptions(gym_id, actor) do
+    case FitTrackerz.Billing.list_subscriptions_by_gym(gym_id, actor: actor) do
+      {:ok, subs} -> subs
+      _ -> []
+    end
+  end
+
+  defp update_joined_at(member_id, starts_at, actor) do
+    case FitTrackerz.Gym.get_gym_member(member_id, actor: actor) do
+      {:ok, member} ->
+        if is_nil(member.joined_at) do
+          FitTrackerz.Gym.update_gym_member(member, %{joined_at: DateTime.to_date(starts_at)}, actor: actor)
+        end
+
+      _ ->
+        :ok
+    end
+  end
+
+  defp notify_plan_assigned(member_id, plan, gym, actor) do
+    case FitTrackerz.Gym.get_gym_member(member_id, actor: actor, load: [:user]) do
+      {:ok, member} ->
+        Ash.create(FitTrackerz.Notifications.Notification,
+          %{
+            type: :plan_assigned,
+            title: "Plan Assigned",
+            message: "You have been assigned the #{plan.name} plan at #{gym.name}.",
+            user_id: member.user.id,
+            gym_id: gym.id,
+            metadata: %{"plan_id" => plan.id, "member_id" => member_id}
+          },
+          authorize?: false
+        )
+
+        Phoenix.PubSub.broadcast(
+          FitTrackerz.PubSub,
+          "notifications:#{member.user.id}",
+          {:new_notification, %{type: :plan_assigned, title: "Plan Assigned"}}
+        )
+
+      _ ->
+        :ok
+    end
+  end
+
+  defp subscription_expiring?(sub) do
+    if sub && sub.status == :active do
+      days_left = DateTime.diff(sub.ends_at, DateTime.utc_now(), :day)
+      days_left <= 3
+    else
+      false
+    end
+  end
+
+  defp subscription_expired?(sub) do
+    if sub do
+      sub.status == :expired or DateTime.compare(sub.ends_at, DateTime.utc_now()) != :gt
+    else
+      false
+    end
+  end
+
+  defp days_remaining(sub) do
+    if sub do
+      days = DateTime.diff(sub.ends_at, DateTime.utc_now(), :day)
+      if days < 0, do: 0, else: days
+    else
+      0
+    end
+  end
+
+  defp build_sub_map(subscriptions) do
+    subscriptions
+    |> Enum.filter(&(&1.status in [:active, :expired]))
+    |> Enum.group_by(& &1.member_id)
+    |> Enum.map(fn {member_id, subs} ->
+      # Prefer active subscriptions, then most recent
+      best = Enum.find(subs, &(&1.status == :active)) ||
+             Enum.max_by(subs, & &1.inserted_at, DateTime)
+      {member_id, best}
+    end)
+    |> Map.new()
+  end
+
+  defp calculate_end_date(start, :day_pass), do: DateTime.add(start, 1, :day)
+  defp calculate_end_date(start, :monthly), do: DateTime.add(start, 30, :day)
+  defp calculate_end_date(start, :quarterly), do: DateTime.add(start, 90, :day)
+  defp calculate_end_date(start, :half_yearly), do: DateTime.add(start, 180, :day)
+  defp calculate_end_date(start, :annual), do: DateTime.add(start, 365, :day)
+  defp calculate_end_date(start, :two_year), do: DateTime.add(start, 730, :day)
+  defp calculate_end_date(start, _), do: DateTime.add(start, 30, :day)
+
+  defp format_price(paise) when is_integer(paise) do
+    rupees = div(paise, 100)
+    "Rs. #{rupees}"
+  end
+
+  defp format_price(_), do: "--"
+
+  defp format_duration(:day_pass), do: "1 Day"
+  defp format_duration(:monthly), do: "1 Month"
+  defp format_duration(:quarterly), do: "3 Months"
+  defp format_duration(:half_yearly), do: "6 Months"
+  defp format_duration(:annual), do: "12 Months"
+  defp format_duration(:two_year), do: "24 Months"
+  defp format_duration(other), do: other |> to_string() |> String.replace("_", " ") |> String.capitalize()
+
+  # ── Render ──
 
   @impl true
   def render(assigns) do
@@ -106,7 +477,7 @@ defmodule FitTrackerzWeb.GymOperator.MembersLive do
             <Layouts.back_button />
             <div>
               <h1 class="text-2xl sm:text-3xl font-brand">Members</h1>
-              <p class="text-base-content/50 mt-1">Manage gym memberships and invite new members.</p>
+              <p class="text-base-content/50 mt-1">Manage gym memberships, plans, and payments.</p>
             </div>
           </div>
           <%= if @gym do %>
@@ -169,6 +540,64 @@ defmodule FitTrackerzWeb.GymOperator.MembersLive do
             </div>
           <% end %>
 
+          <%!-- Search & Filter --%>
+          <div class="flex flex-col sm:flex-row gap-3" id="members-search-filter">
+            <div class="flex-1">
+              <div class="relative">
+                <.icon name="hero-magnifying-glass-mini" class="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40" />
+                <input
+                  type="text"
+                  placeholder="Search by name or email..."
+                  value={@search}
+                  phx-keyup="search"
+                  phx-key="Enter"
+                  phx-debounce="300"
+                  name="search"
+                  class="input input-bordered input-sm w-full pl-9"
+                  id="member-search-input"
+                />
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-2 items-center">
+              <button
+                phx-click="filter_status"
+                phx-value-status="all"
+                class={"btn btn-sm #{if @filter_status == "all", do: "btn-primary", else: "btn-ghost"}"}
+              >
+                All <span class="badge badge-sm ml-1">{length(@all_members)}</span>
+              </button>
+              <button
+                phx-click="filter_status"
+                phx-value-status="active"
+                class={"btn btn-sm #{if @filter_status == "active", do: "btn-success", else: "btn-ghost"}"}
+              >
+                Active
+              </button>
+              <button
+                phx-click="filter_status"
+                phx-value-status="inactive"
+                class={"btn btn-sm #{if @filter_status == "inactive", do: "btn-error", else: "btn-ghost"}"}
+              >
+                Inactive
+              </button>
+              <div class="divider divider-horizontal mx-0"></div>
+              <select
+                phx-change="filter_trainer"
+                name="trainer"
+                class="select select-bordered select-sm w-44"
+                id="filter-trainer-select"
+              >
+                <option value="all" selected={@filter_trainer == "all"}>All Trainers</option>
+                <option value="unassigned" selected={@filter_trainer == "unassigned"}>Unassigned</option>
+                <%= for trainer <- @trainers do %>
+                  <option value={trainer.id} selected={@filter_trainer == trainer.id}>
+                    {trainer.user.name}
+                  </option>
+                <% end %>
+              </select>
+            </div>
+          </div>
+
           <%!-- Members Table --%>
           <div class="card bg-base-200/50 border border-base-300/50" id="members-table-card">
             <div class="card-body p-6">
@@ -180,7 +609,11 @@ defmodule FitTrackerzWeb.GymOperator.MembersLive do
                 <div class="flex items-center gap-3 p-4 rounded-lg bg-base-300/20">
                   <div class="w-2 h-2 rounded-full bg-base-content/20 shrink-0"></div>
                   <p class="text-sm text-base-content/50">
-                    No members yet. Send invitations to grow your gym!
+                    <%= if @search != "" or @filter_status != "all" do %>
+                      No members match your filters.
+                    <% else %>
+                      No members yet. Send invitations to grow your gym!
+                    <% end %>
                   </p>
                 </div>
               <% else %>
@@ -190,20 +623,194 @@ defmodule FitTrackerzWeb.GymOperator.MembersLive do
                       <tr class="text-base-content/40">
                         <th>Name</th>
                         <th>Email</th>
+                        <th>Joined</th>
                         <th>Status</th>
+                        <th>Trainer</th>
+                        <th>Plan</th>
+                        <th>Payment</th>
                         <th>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       <%= for member <- @members do %>
+                        <% sub = Map.get(@sub_map, member.id) %>
                         <tr id={"member-#{member.id}"}>
                           <td class="font-medium">{member.user.name}</td>
                           <td class="text-base-content/60">{member.user.email}</td>
+                          <td class="text-sm text-base-content/60">
+                            <%= if member.joined_at do %>
+                              {Calendar.strftime(member.joined_at, "%b %d, %Y")}
+                            <% else %>
+                              <span class="text-base-content/30">--</span>
+                            <% end %>
+                          </td>
                           <td>
                             <%= if member.is_active do %>
                               <span class="badge badge-success badge-sm">Active</span>
                             <% else %>
                               <span class="badge badge-error badge-sm">Inactive</span>
+                            <% end %>
+                          </td>
+                          <td>
+                            <%= if member.assigned_trainer && member.assigned_trainer.user do %>
+                              <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-full bg-info/15 flex items-center justify-center">
+                                  <span class="text-xs font-bold text-info">
+                                    {String.first(member.assigned_trainer.user.name || "T")}
+                                  </span>
+                                </div>
+                                <span class="text-sm">{member.assigned_trainer.user.name}</span>
+                              </div>
+                            <% else %>
+                              <%= if @assigning_trainer_member_id == member.id do %>
+                                <form phx-submit="assign_trainer" class="flex items-center gap-1" id={"trainer-form-#{member.id}"}>
+                                  <input type="hidden" name="member_id" value={member.id} />
+                                  <select
+                                    class="select select-bordered select-xs w-32"
+                                    name="trainer_id"
+                                    id={"trainer-select-#{member.id}"}
+                                    required
+                                  >
+                                    <option value="">Pick trainer</option>
+                                    <%= for trainer <- @trainers do %>
+                                      <option value={trainer.id}>{trainer.user.name}</option>
+                                    <% end %>
+                                  </select>
+                                  <button type="submit" class="btn btn-info btn-xs" id={"submit-trainer-#{member.id}"}>
+                                    <.icon name="hero-check-mini" class="size-3" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    phx-click="cancel_assign_trainer"
+                                    class="btn btn-ghost btn-xs"
+                                    id={"cancel-trainer-#{member.id}"}
+                                  >
+                                    <.icon name="hero-x-mark-mini" class="size-3" />
+                                  </button>
+                                </form>
+                              <% else %>
+                                <button
+                                  phx-click="show_assign_trainer"
+                                  phx-value-member-id={member.id}
+                                  class="btn btn-ghost btn-xs gap-1 text-info"
+                                  id={"assign-trainer-#{member.id}"}
+                                >
+                                  <.icon name="hero-plus-mini" class="size-3.5" /> Assign
+                                </button>
+                              <% end %>
+                            <% end %>
+                          </td>
+                          <td>
+                            <%= if sub do %>
+                              <div class="flex flex-col">
+                                <span class="text-sm font-medium">{sub.subscription_plan.name}</span>
+                                <span class="text-xs text-base-content/40">
+                                  {format_duration(sub.subscription_plan.duration)} &middot; {format_price(sub.subscription_plan.price_in_paise)}
+                                </span>
+                                <%= if subscription_expired?(sub) do %>
+                                  <span class="badge badge-error badge-xs mt-1 gap-1">
+                                    <.icon name="hero-exclamation-triangle-mini" class="size-3" /> Expired
+                                  </span>
+                                <% else %>
+                                  <%= if subscription_expiring?(sub) do %>
+                                    <span class="badge badge-warning badge-xs mt-1 gap-1">
+                                      <.icon name="hero-clock-mini" class="size-3" /> {days_remaining(sub)} days left
+                                    </span>
+                                  <% else %>
+                                    <span class="text-xs text-base-content/40">
+                                      Ends: {Calendar.strftime(sub.ends_at, "%b %d, %Y")}
+                                    </span>
+                                  <% end %>
+                                <% end %>
+                                <%= if subscription_expiring?(sub) or subscription_expired?(sub) do %>
+                                  <button
+                                    phx-click="renew_subscription"
+                                    phx-value-id={sub.id}
+                                    class="btn btn-success btn-xs mt-1 gap-1"
+                                    id={"renew-#{sub.id}"}
+                                  >
+                                    <.icon name="hero-arrow-path-mini" class="size-3" /> Renew
+                                  </button>
+                                <% end %>
+                              </div>
+                            <% else %>
+                              <%= if @assigning_member_id == member.id do %>
+                                <form phx-submit="assign_plan" class="flex flex-col gap-2" id={"assign-form-#{member.id}"}>
+                                  <input type="hidden" name="member_id" value={member.id} />
+                                  <%= if @plans == [] do %>
+                                    <span class="text-xs text-base-content/40">No plans created yet</span>
+                                  <% else %>
+                                    <div class="flex items-center gap-2">
+                                      <select
+                                        class="select select-bordered select-xs w-40"
+                                        id={"plan-select-#{member.id}"}
+                                        name="plan_id"
+                                        required
+                                      >
+                                        <option value="">Pick a plan</option>
+                                        <%= for plan <- @plans do %>
+                                          <option value={plan.id}>
+                                            {plan.name}
+                                          </option>
+                                        <% end %>
+                                      </select>
+                                      <button
+                                        type="button"
+                                        phx-click="cancel_assign_plan"
+                                        class="btn btn-ghost btn-xs"
+                                        id={"cancel-assign-#{member.id}"}
+                                      >
+                                        <.icon name="hero-x-mark-mini" class="size-3.5" />
+                                      </button>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                      <input
+                                        type="date"
+                                        name="starts_at"
+                                        class="input input-bordered input-xs w-36"
+                                        id={"start-date-#{member.id}"}
+                                        value={Date.to_iso8601(Date.utc_today())}
+                                        title="Joining / Start date"
+                                      />
+                                      <button
+                                        type="submit"
+                                        class="btn btn-primary btn-xs gap-1"
+                                        id={"submit-plan-#{member.id}"}
+                                      >
+                                        <.icon name="hero-check-mini" class="size-3" /> Assign
+                                      </button>
+                                    </div>
+                                  <% end %>
+                                </form>
+                              <% else %>
+                                <button
+                                  phx-click="show_assign_plan"
+                                  phx-value-member-id={member.id}
+                                  class="btn btn-ghost btn-xs gap-1 text-primary"
+                                  id={"assign-plan-#{member.id}"}
+                                >
+                                  <.icon name="hero-plus-mini" class="size-3.5" /> Assign Plan
+                                </button>
+                              <% end %>
+                            <% end %>
+                          </td>
+                          <td>
+                            <%= if sub do %>
+                              <label class="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  class="checkbox checkbox-sm checkbox-success"
+                                  checked={sub.payment_status == :paid}
+                                  phx-click="toggle_payment"
+                                  phx-value-id={sub.id}
+                                  id={"payment-toggle-#{sub.id}"}
+                                />
+                                <span class={"text-xs font-medium #{if sub.payment_status == :paid, do: "text-success", else: "text-warning"}"}>
+                                  {sub.payment_status |> to_string() |> String.capitalize()}
+                                </span>
+                              </label>
+                            <% else %>
+                              <span class="text-xs text-base-content/30">--</span>
                             <% end %>
                           </td>
                           <td>

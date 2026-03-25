@@ -20,6 +20,7 @@ defmodule FitTrackerz.Scheduling do
       define :create_scheduled_class, action: :create
       define :update_scheduled_class, action: :update
       define :complete_scheduled_class, action: :complete
+      define :list_classes_by_trainer, args: [:trainer_ids], action: :list_by_trainer
       define :cancel_scheduled_class, action: :cancel
     end
 

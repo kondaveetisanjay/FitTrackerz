@@ -13,6 +13,7 @@ defmodule FitTrackerz.Application do
       {DNSCluster, query: Application.get_env(:fit_trackerz, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: FitTrackerz.PubSub},
       {AshAuthentication.Supervisor, otp_app: :fit_trackerz},
+      {Oban, Application.fetch_env!(:fit_trackerz, Oban)},
       # Start to serve requests, typically the last entry
       FitTrackerzWeb.Endpoint
     ]

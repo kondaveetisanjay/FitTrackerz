@@ -15,7 +15,10 @@ config :fit_trackerz,
     FitTrackerz.Gym,
     FitTrackerz.Billing,
     FitTrackerz.Training,
-    FitTrackerz.Scheduling
+    FitTrackerz.Scheduling,
+    FitTrackerz.Health,
+    FitTrackerz.Notifications,
+    FitTrackerz.Messaging
   ]
 
 # Configure the endpoint
@@ -63,6 +66,18 @@ config :tailwind,
 config :logger, :default_formatter,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
+
+# Configure Oban job processing
+config :fit_trackerz, Oban,
+  repo: FitTrackerz.Repo,
+  queues: [default: 10, notifications: 5],
+  plugins: [
+    {Oban.Plugins.Pruner, max_age: 60 * 60 * 24 * 7},
+    {Oban.Plugins.Cron,
+     crontab: [
+       {"0 8 * * *", FitTrackerz.Workers.SubscriptionExpiryWorker}
+     ]}
+  ]
 
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason

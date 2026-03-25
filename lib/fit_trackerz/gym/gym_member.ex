@@ -60,12 +60,18 @@ defmodule FitTrackerz.Gym.GymMember do
       prepare build(load: [:user])
     end
 
+    read :list_by_assigned_trainer do
+      argument :trainer_ids, {:array, :uuid}, allow_nil?: false
+      filter expr(assigned_trainer_id in ^arg(:trainer_ids) and is_active == true)
+      prepare build(load: [:user, :gym])
+    end
+
     create :create do
-      accept([:user_id, :gym_id, :branch_id])
+      accept([:user_id, :gym_id, :branch_id, :joined_at])
     end
 
     update :update do
-      accept([:is_active, :branch_id])
+      accept([:is_active, :branch_id, :assigned_trainer_id, :joined_at])
     end
   end
 
@@ -75,6 +81,11 @@ defmodule FitTrackerz.Gym.GymMember do
     attribute :is_active, :boolean do
       allow_nil?(false)
       default(true)
+    end
+
+    attribute :joined_at, :date do
+      allow_nil?(true)
+      default(&Date.utc_today/0)
     end
 
     timestamps()
@@ -90,6 +101,8 @@ defmodule FitTrackerz.Gym.GymMember do
     end
 
     belongs_to :branch, FitTrackerz.Gym.GymBranch
+
+    belongs_to :assigned_trainer, FitTrackerz.Gym.GymTrainer
   end
 
   identities do
