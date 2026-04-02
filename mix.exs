@@ -62,6 +62,7 @@ defmodule FitTrackerz.MixProject do
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 1.0"},
       {:jason, "~> 1.2"},
+      {:req, "~> 0.5"},
       {:dns_cluster, "~> 0.2.0"},
       {:bandit, "~> 1.5"},
       {:ash, "~> 3.0"},
@@ -69,7 +70,7 @@ defmodule FitTrackerz.MixProject do
       {:ash_phoenix, "~> 2.0"},
       {:ash_authentication, "~> 4.0"},
       {:ash_authentication_phoenix, "~> 2.0"},
-      {:bcrypt_elixir, "~> 3.0",optional: true},
+      {:bcrypt_elixir, "~> 3.0"},
       {:simple_sat, "~> 0.1"}
     ]
   end

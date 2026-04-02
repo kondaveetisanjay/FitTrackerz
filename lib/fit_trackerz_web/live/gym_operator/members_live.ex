@@ -112,7 +112,7 @@ defmodule FitTrackerzWeb.GymOperator.MembersLive do
           <%= if @gym do %>
             <button
               phx-click="toggle_invite"
-              class="btn btn-primary btn-sm gap-2 font-semibold"
+              class="btn btn-primary btn-sm gap-2 font-semibold press-scale"
               id="toggle-invite-btn"
             >
               <.icon name="hero-user-plus-mini" class="size-4" /> Invite Member
@@ -121,8 +121,8 @@ defmodule FitTrackerzWeb.GymOperator.MembersLive do
         </div>
 
         <%= if @gym == nil do %>
-          <div class="card bg-base-200/50 border border-base-300/50" id="no-gym-card">
-            <div class="card-body p-6 text-center">
+          <div class="ft-card p-6" id="no-gym-card">
+            <div class="text-center">
               <.icon name="hero-building-office-solid" class="size-12 text-base-content/20 mx-auto" />
               <h2 class="text-lg font-bold mt-4">No Gym Found</h2>
               <p class="text-base-content/50 mt-1">
@@ -136,99 +136,95 @@ defmodule FitTrackerzWeb.GymOperator.MembersLive do
         <% else %>
           <%!-- Invite Form --%>
           <%= if @show_invite do %>
-            <div class="card bg-base-200/50 border border-base-300/50" id="invite-member-card">
-              <div class="card-body p-6">
-                <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                  <.icon name="hero-envelope-solid" class="size-5 text-primary" /> Invite New Member
-                </h2>
-                <.form
-                  for={@invite_form}
-                  id="invite-member-form"
-                  phx-change="validate_invite"
-                  phx-submit="invite"
-                >
-                  <div class="flex flex-col sm:flex-row gap-4 items-end">
-                    <div class="flex-1">
-                      <.input
-                        field={@invite_form[:email]}
-                        type="email"
-                        label="Email Address"
-                        placeholder="member@example.com"
-                        required
-                      />
-                    </div>
-
-                    <div class="mb-2">
-                      <button type="submit" class="btn btn-primary btn-sm gap-2" id="send-invite-btn">
-                        <.icon name="hero-paper-airplane" class="size-4" /> Send Invite
-                      </button>
-                    </div>
+            <div class="ft-card p-6" id="invite-member-card">
+              <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
+                <.icon name="hero-envelope-solid" class="size-5 text-primary" /> Invite New Member
+              </h2>
+              <.form
+                for={@invite_form}
+                id="invite-member-form"
+                phx-change="validate_invite"
+                phx-submit="invite"
+              >
+                <div class="flex flex-col sm:flex-row gap-4 items-end">
+                  <div class="flex-1">
+                    <.input
+                      field={@invite_form[:email]}
+                      type="email"
+                      label="Email Address"
+                      placeholder="member@example.com"
+                      required
+                    />
                   </div>
-                </.form>
-              </div>
+
+                  <div class="mb-2">
+                    <button type="submit" class="btn btn-primary btn-sm gap-2" id="send-invite-btn">
+                      <.icon name="hero-paper-airplane" class="size-4" /> Send Invite
+                    </button>
+                  </div>
+                </div>
+              </.form>
             </div>
           <% end %>
 
           <%!-- Members Table --%>
-          <div class="card bg-base-200/50 border border-base-300/50" id="members-table-card">
-            <div class="card-body p-6">
-              <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                <.icon name="hero-user-group-solid" class="size-5 text-primary" /> All Members
-                <span class="badge badge-neutral badge-sm">{length(@members)}</span>
-              </h2>
-              <%= if @members == [] do %>
-                <div class="flex items-center gap-3 p-4 rounded-lg bg-base-300/20">
-                  <div class="w-2 h-2 rounded-full bg-base-content/20 shrink-0"></div>
-                  <p class="text-sm text-base-content/50">
-                    No members yet. Send invitations to grow your gym!
-                  </p>
-                </div>
-              <% else %>
-                <div class="overflow-x-auto">
-                  <table class="table table-sm" id="members-table">
-                    <thead>
-                      <tr class="text-base-content/40">
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+          <div class="ft-card p-6" id="members-table-card">
+            <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
+              <.icon name="hero-user-group-solid" class="size-5 text-primary" /> All Members
+              <span class="badge badge-neutral badge-sm">{length(@members)}</span>
+            </h2>
+            <%= if @members == [] do %>
+              <div class="flex items-center gap-3 p-4 bg-base-200/30 rounded-xl">
+                <div class="w-2 h-2 rounded-full bg-base-content/20 shrink-0"></div>
+                <p class="text-sm text-base-content/50">
+                  No members yet. Send invitations to grow your gym!
+                </p>
+              </div>
+            <% else %>
+              <div class="ft-table overflow-x-auto">
+                <table class="table table-sm" id="members-table">
+                  <thead>
+                    <tr class="text-base-content/40">
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <%= for member <- @members do %>
+                      <tr id={"member-#{member.id}"}>
+                        <td class="font-medium">{member.user.name}</td>
+                        <td class="text-base-content/60">{member.user.email}</td>
+                        <td>
+                          <%= if member.is_active do %>
+                            <span class="badge badge-success badge-sm">Active</span>
+                          <% else %>
+                            <span class="badge badge-error badge-sm">Inactive</span>
+                          <% end %>
+                        </td>
+                        <td>
+                          <div class="flex items-center gap-1">
+                            <button
+                              phx-click="toggle_active"
+                              phx-value-id={member.id}
+                              class="btn btn-ghost btn-xs press-scale"
+                              id={"toggle-member-#{member.id}"}
+                            >
+                              <%= if member.is_active do %>
+                                <.icon name="hero-pause" class="size-4 text-warning" />
+                              <% else %>
+                                <.icon name="hero-play" class="size-4 text-success" />
+                              <% end %>
+                            </button>
+                          </div>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      <%= for member <- @members do %>
-                        <tr id={"member-#{member.id}"}>
-                          <td class="font-medium">{member.user.name}</td>
-                          <td class="text-base-content/60">{member.user.email}</td>
-                          <td>
-                            <%= if member.is_active do %>
-                              <span class="badge badge-success badge-sm">Active</span>
-                            <% else %>
-                              <span class="badge badge-error badge-sm">Inactive</span>
-                            <% end %>
-                          </td>
-                          <td>
-                            <div class="flex items-center gap-1">
-                              <button
-                                phx-click="toggle_active"
-                                phx-value-id={member.id}
-                                class="btn btn-ghost btn-xs"
-                                id={"toggle-member-#{member.id}"}
-                              >
-                                <%= if member.is_active do %>
-                                  <.icon name="hero-pause" class="size-4 text-warning" />
-                                <% else %>
-                                  <.icon name="hero-play" class="size-4 text-success" />
-                                <% end %>
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      <% end %>
-                    </tbody>
-                  </table>
-                </div>
-              <% end %>
-            </div>
+                    <% end %>
+                  </tbody>
+                </table>
+              </div>
+            <% end %>
           </div>
         <% end %>
       </div>

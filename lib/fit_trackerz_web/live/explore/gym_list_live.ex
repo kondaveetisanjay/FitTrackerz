@@ -255,101 +255,99 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
         <% end %>
 
         <%!-- Search & Filters Bar --%>
-        <div class="glass-card">
-          <div class="card-body p-4">
-            <div class="flex flex-col sm:flex-row gap-3">
-              <%!-- Search --%>
-              <div class="flex-1">
-                <form phx-change="search" phx-submit="search">
-                  <label class="input input-bordered flex items-center gap-2 w-full">
-                    <.icon name="hero-magnifying-glass-mini" class="size-4 opacity-50" />
-                    <input
-                      type="text"
-                      name="query"
-                      value={@search_query}
-                      placeholder="Search gyms by name..."
-                      class="grow"
-                      phx-debounce="300"
-                    />
-                  </label>
-                </form>
-              </div>
-
-              <%!-- City Filter --%>
-              <div class="w-full sm:w-48">
-                <form phx-change="filter_city">
-                  <select name="city" class="select select-bordered w-full">
-                    <option value="">All Locations</option>
-                    <%= for city <- @cities do %>
-                      <option value={city} selected={@city_filter == city}>{city}</option>
-                    <% end %>
-                  </select>
-                </form>
-              </div>
-
-              <%!-- Sort --%>
-              <div class="w-full sm:w-48">
-                <form phx-change="sort">
-                  <select name="sort" class="select select-bordered w-full">
-                    <option value="distance" selected={@sort_by == "distance"}>Nearest</option>
-                    <option value="price_low" selected={@sort_by == "price_low"}>Price: Low to High</option>
-                    <option value="price_high" selected={@sort_by == "price_high"}>Price: High to Low</option>
-                  </select>
-                </form>
-              </div>
-
-              <%!-- Clear Filters --%>
-              <%= if @search_query != "" or @city_filter != "" or @user_lat do %>
-                <.button phx-click="clear_filters" class="btn-ghost btn-sm gap-1">
-                  <.icon name="hero-x-mark-mini" class="size-4" /> Clear
-                </.button>
-              <% end %>
-            </div>
-
-            <%!-- Location Search with Google Places Autocomplete --%>
-            <div class="flex flex-col sm:flex-row gap-3 mt-3 pt-3 border-t border-base-300/30">
-              <div class="flex-1" id="explore-place-wrapper" phx-update="ignore">
+        <div class="ft-card p-4 mb-6">
+          <div class="flex flex-col sm:flex-row gap-3">
+            <%!-- Search --%>
+            <div class="flex-1">
+              <form phx-change="search" phx-submit="search">
                 <label class="input input-bordered flex items-center gap-2 w-full">
-                  <.icon name="hero-map-pin-mini" class="size-4 text-primary opacity-70" />
+                  <.icon name="hero-magnifying-glass-mini" class="size-4 opacity-50" />
                   <input
                     type="text"
-                    id="explore-place-search"
-                    phx-hook="ExplorePlacesAutocomplete"
-                    placeholder="Type a location to find nearby gyms..."
+                    name="query"
+                    value={@search_query}
+                    placeholder="Search gyms by name..."
                     class="grow"
-                    autocomplete="off"
+                    phx-debounce="300"
                   />
                 </label>
-              </div>
-              <span class="text-xs text-base-content/40 self-center hidden sm:block">or</span>
-              <%!-- Location Button --%>
-              <.button
-                id="detect-location-btn"
-                phx-hook="Geolocation"
-                class={"btn-sm gap-2 #{if @user_lat, do: "btn-success", else: "btn-outline"}"}
-              >
-                <.icon name="hero-map-pin-mini" class="size-4" />
-                <%= if @user_lat do %>
-                  Location detected
-                <% else %>
-                  Detect my location
-                <% end %>
-              </.button>
+              </form>
             </div>
 
-            <%!-- Location Info --%>
-            <%= if @user_lat do %>
-              <div class="flex items-center gap-2 mt-2 pt-2 border-t border-base-300/30">
-                <.icon name="hero-map-pin-solid" class="size-4 text-success shrink-0" />
-                <span class="text-sm text-base-content/60">
-                  Your location:
-                  <span class="font-semibold text-base-content/80">
-                    {@place_name}
-                  </span>
-                </span>
-              </div>
+            <%!-- City Filter --%>
+            <div class="w-full sm:w-48">
+              <form phx-change="filter_city">
+                <select name="city" class="select select-bordered w-full">
+                  <option value="">All Locations</option>
+                  <%= for city <- @cities do %>
+                    <option value={city} selected={@city_filter == city}>{city}</option>
+                  <% end %>
+                </select>
+              </form>
+            </div>
+
+            <%!-- Sort --%>
+            <div class="w-full sm:w-48">
+              <form phx-change="sort">
+                <select name="sort" class="select select-bordered w-full">
+                  <option value="distance" selected={@sort_by == "distance"}>Nearest</option>
+                  <option value="price_low" selected={@sort_by == "price_low"}>Price: Low to High</option>
+                  <option value="price_high" selected={@sort_by == "price_high"}>Price: High to Low</option>
+                </select>
+              </form>
+            </div>
+
+            <%!-- Clear Filters --%>
+            <%= if @search_query != "" or @city_filter != "" or @user_lat do %>
+              <.button phx-click="clear_filters" class="btn-ghost btn-sm gap-1 press-scale">
+                <.icon name="hero-x-mark-mini" class="size-4" /> Clear
+              </.button>
             <% end %>
           </div>
+
+          <%!-- Location Search with Google Places Autocomplete --%>
+          <div class="flex flex-col sm:flex-row gap-3 mt-3 pt-3 border-t border-base-200/20">
+            <div class="flex-1" id="explore-place-wrapper" phx-update="ignore">
+              <label class="input input-bordered flex items-center gap-2 w-full">
+                <.icon name="hero-map-pin-mini" class="size-4 text-primary opacity-70" />
+                <input
+                  type="text"
+                  id="explore-place-search"
+                  phx-hook="ExplorePlacesAutocomplete"
+                  placeholder="Type a location to find nearby gyms..."
+                  class="grow"
+                  autocomplete="off"
+                />
+              </label>
+            </div>
+            <span class="text-xs text-base-content/40 self-center hidden sm:block">or</span>
+            <%!-- Location Button --%>
+            <.button
+              id="detect-location-btn"
+              phx-hook="Geolocation"
+              class={"btn-sm gap-2 #{if @user_lat, do: "btn-success", else: "btn-outline"}"}
+            >
+              <.icon name="hero-map-pin-mini" class="size-4" />
+              <%= if @user_lat do %>
+                Location detected
+              <% else %>
+                Detect my location
+              <% end %>
+            </.button>
+          </div>
+
+          <%!-- Location Info --%>
+          <%= if @user_lat do %>
+            <div class="flex items-center gap-2 mt-2 pt-2 border-t border-base-200/20">
+              <.icon name="hero-map-pin-solid" class="size-4 text-success shrink-0" />
+              <span class="text-sm text-base-content/60">
+                Your location:
+                <span class="font-semibold text-base-content/80">
+                  {@place_name}
+                </span>
+              </span>
+            </div>
+          <% end %>
         </div>
 
         <%!-- Results Count --%>
@@ -366,8 +364,8 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
 
         <%!-- Gym Cards Grid --%>
         <%= if @sorted_entries == [] do %>
-          <div class="glass-card relative">
-            <div class="card-body p-8 text-center">
+          <div class="ft-card relative p-6">
+            <div class="p-8 text-center">
               <.icon name="hero-building-office-2-solid" class="size-16 text-base-content/20 mx-auto" />
               <div class="absolute top-6 right-6 w-16 h-16 border-2 border-primary/10 rounded-full"></div>
               <div class="absolute bottom-6 left-6 w-12 h-12 border-2 border-secondary/10 rounded-lg rotate-45"></div>
@@ -387,11 +385,11 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
             <%= for {entry, distance} <- page_entries do %>
               <.link
                 navigate={"/explore/#{entry.gym.slug}"}
-                class="glass-card cursor-pointer overflow-hidden group"
+                class="ft-card ft-card-hover cursor-pointer overflow-hidden group"
                 id={"gym-card-#{entry.gym.id}"}
               >
                 <%!-- Image --%>
-                <figure class="h-40 bg-base-300/30 overflow-hidden">
+                <figure class="h-40 bg-base-200/30 rounded-xl overflow-hidden">
                   <%= if branch_logo(entry) do %>
                     <img
                       src={branch_logo(entry)}
@@ -442,7 +440,7 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
                   </div>
 
                   <%!-- Price + Distance --%>
-                  <div class="flex items-center justify-between mt-1 pt-2 border-t border-base-300/30">
+                  <div class="flex items-center justify-between mt-1 pt-2 border-t border-base-200/20">
                     <div>
                       <%= if format_price(entry.cheapest_monthly) do %>
                         <span class="text-xl font-black text-primary">
@@ -482,7 +480,7 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
             <.button
               phx-click="change_page"
               phx-value-page={max(@page - 1, 1)}
-              class="btn-sm btn-ghost"
+              class="btn-sm btn-ghost press-scale"
               disabled={@page == 1}
             >
               <.icon name="hero-chevron-left-mini" class="size-4" /> Previous
@@ -491,7 +489,7 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
               <.button
                 phx-click="change_page"
                 phx-value-page={p}
-                class={["btn-sm", if(p == @page, do: "btn-primary", else: "btn-ghost")]}
+                class={["btn-sm press-scale", if(p == @page, do: "btn-primary", else: "btn-ghost")]}
               >
                 {p}
               </.button>
@@ -499,7 +497,7 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
             <.button
               phx-click="change_page"
               phx-value-page={min(@page + 1, total_pages)}
-              class="btn-sm btn-ghost"
+              class="btn-sm btn-ghost press-scale"
               disabled={@page == total_pages}
             >
               Next <.icon name="hero-chevron-right-mini" class="size-4" />
@@ -509,10 +507,10 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
 
         <%!-- Sign Up CTA --%>
         <%= if @current_user == nil do %>
-          <div class="glass-card mt-4 relative overflow-hidden">
+          <div class="ft-card mt-4 relative overflow-hidden">
             <div class="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
             <div class="absolute bottom-0 left-0 w-20 h-20 bg-secondary/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
-            <div class="card-body p-6 text-center relative z-10">
+            <div class="p-6 text-center relative z-10">
               <div class="flex justify-center mb-2">
                 <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
                   <.icon name="hero-rocket-launch-solid" class="size-5 text-primary" />
@@ -528,7 +526,7 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
                 <span class="flex items-center gap-1"><.icon name="hero-check-circle-solid" class="size-3 text-success" /> Instant access</span>
               </div>
               <div class="mt-4">
-                <.link navigate="/register" class="btn btn-primary btn-sm gap-2 animate-glow-pulse">
+                <.link navigate="/register" class="btn btn-primary btn-sm gap-2 animate-glow-pulse press-scale">
                   <.icon name="hero-user-plus-mini" class="size-4" /> Create Free Account
                 </.link>
               </div>

@@ -141,7 +141,7 @@ defmodule FitTrackerzWeb.Member.ClassesLive do
 
         <%= if @no_gym do %>
           <%!-- No Gym Membership --%>
-          <div class="card bg-base-200/50 border border-base-300/50" id="no-gym-card">
+          <div class="ft-card p-6" id="no-gym-card">
             <div class="card-body items-center text-center p-8">
               <div class="w-16 h-16 rounded-2xl bg-warning/10 flex items-center justify-center mb-4">
                 <.icon name="hero-building-office-2" class="size-8 text-warning" />
@@ -155,7 +155,7 @@ defmodule FitTrackerzWeb.Member.ClassesLive do
         <% else %>
           <%= if @scheduled_classes == [] do %>
             <%!-- Empty State --%>
-            <div class="card bg-base-200/50 border border-base-300/50" id="no-classes">
+            <div class="ft-card p-6" id="no-classes">
               <div class="card-body items-center text-center p-8">
                 <div class="w-16 h-16 rounded-2xl bg-info/10 flex items-center justify-center mb-4">
                   <.icon name="hero-calendar-days" class="size-8 text-info" />
@@ -171,67 +171,65 @@ defmodule FitTrackerzWeb.Member.ClassesLive do
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               <div
                 :for={sc <- @scheduled_classes}
-                class="card bg-base-200/50 border border-base-300/50"
+                class="ft-card ft-card-hover p-6"
                 id={"class-#{sc.id}"}
               >
-                <div class="card-body p-5">
-                  <%!-- Class Name & Type --%>
-                  <div class="flex items-start justify-between gap-2">
-                    <div>
-                      <h3 class="text-base font-bold">{sc.class_definition.name}</h3>
-                      <span class="badge badge-ghost badge-xs mt-1">
-                        {sc.class_definition.class_type}
-                      </span>
-                    </div>
-                    <div class="w-10 h-10 rounded-xl bg-info/10 flex items-center justify-center shrink-0">
-                      <.icon name="hero-calendar-days-solid" class="size-5 text-info" />
-                    </div>
+                <%!-- Class Name & Type --%>
+                <div class="flex items-start justify-between gap-2">
+                  <div>
+                    <h3 class="text-base font-bold">{sc.class_definition.name}</h3>
+                    <span class="badge badge-ghost badge-xs mt-1">
+                      {sc.class_definition.class_type}
+                    </span>
                   </div>
-
-                  <%!-- Details --%>
-                  <div class="mt-4 space-y-2 text-sm">
-                    <%!-- Date & Time --%>
-                    <div class="flex items-center gap-2 text-base-content/70">
-                      <.icon name="hero-clock-mini" class="size-4 text-base-content/40" />
-                      <span>{format_datetime(sc.scheduled_at)}</span>
-                    </div>
-                    <%!-- Duration --%>
-                    <div class="flex items-center gap-2 text-base-content/70">
-                      <.icon name="hero-arrow-path-mini" class="size-4 text-base-content/40" />
-                      <span>{sc.duration_minutes} minutes</span>
-                    </div>
-                    <%!-- Location --%>
-                    <%= if sc.branch do %>
-                      <div class="flex items-center gap-2 text-base-content/70">
-                        <.icon name="hero-map-pin-mini" class="size-4 text-base-content/40" />
-                        <span>{sc.branch.city}, {sc.branch.address}</span>
-                      </div>
-                    <% end %>
+                  <div class="w-10 h-10 rounded-xl bg-info/10 flex items-center justify-center shrink-0">
+                    <.icon name="hero-calendar-days-solid" class="size-5 text-info" />
                   </div>
+                </div>
 
-                  <%!-- Spots & Book Button --%>
-                  <div class="mt-4 flex items-center justify-between">
-                    <div class="text-xs text-base-content/50">
-                      <span class="font-medium">Spots:</span> {spots_available(sc)}
+                <%!-- Details --%>
+                <div class="mt-4 space-y-2 text-sm">
+                  <%!-- Date & Time --%>
+                  <div class="flex items-center gap-2 text-base-content/70">
+                    <.icon name="hero-clock-mini" class="size-4 text-base-content/40" />
+                    <span>{format_datetime(sc.scheduled_at)}</span>
+                  </div>
+                  <%!-- Duration --%>
+                  <div class="flex items-center gap-2 text-base-content/70">
+                    <.icon name="hero-arrow-path-mini" class="size-4 text-base-content/40" />
+                    <span>{sc.duration_minutes} minutes</span>
+                  </div>
+                  <%!-- Location --%>
+                  <%= if sc.branch do %>
+                    <div class="flex items-center gap-2 text-base-content/70">
+                      <.icon name="hero-map-pin-mini" class="size-4 text-base-content/40" />
+                      <span>{sc.branch.city}, {sc.branch.address}</span>
                     </div>
-                    <%= if class_full?(sc) do %>
-                      <button class="btn btn-sm btn-disabled" disabled>
-                        Full
+                  <% end %>
+                </div>
+
+                <%!-- Spots & Book Button --%>
+                <div class="mt-4 flex items-center justify-between">
+                  <div class="text-xs text-base-content/50">
+                    <span class="font-medium">Spots:</span> {spots_available(sc)}
+                  </div>
+                  <%= if class_full?(sc) do %>
+                    <button class="btn btn-sm btn-disabled" disabled>
+                      Full
+                    </button>
+                  <% else %>
+                    <% membership = membership_for_class(@memberships, sc) %>
+                    <%= if membership do %>
+                      <button
+                        class="btn btn-primary btn-sm gap-1 press-scale"
+                        phx-click="book_class"
+                        phx-value-class-id={sc.id}
+                        phx-value-member-id={membership.id}
+                      >
+                        <.icon name="hero-ticket-mini" class="size-4" /> Book
                       </button>
-                    <% else %>
-                      <% membership = membership_for_class(@memberships, sc) %>
-                      <%= if membership do %>
-                        <button
-                          class="btn btn-primary btn-sm gap-1"
-                          phx-click="book_class"
-                          phx-value-class-id={sc.id}
-                          phx-value-member-id={membership.id}
-                        >
-                          <.icon name="hero-ticket-mini" class="size-4" /> Book
-                        </button>
-                      <% end %>
                     <% end %>
-                  </div>
+                  <% end %>
                 </div>
               </div>
             </div>

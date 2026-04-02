@@ -246,7 +246,7 @@ defmodule FitTrackerzWeb.Member.WorkoutLive do
           </div>
           <%= if @plan_type == :general and not @no_gym do %>
             <.button
-              class="btn-primary btn-sm gap-2 font-semibold"
+              class="btn-primary btn-sm gap-2 font-semibold press-scale"
               phx-click="toggle_form"
               id="toggle-workout-form-btn"
             >
@@ -256,7 +256,7 @@ defmodule FitTrackerzWeb.Member.WorkoutLive do
         </div>
 
         <%= if @no_gym do %>
-          <div class="card bg-base-200/50 border border-base-300/50" id="no-gym-card">
+          <div class="ft-card p-6" id="no-gym-card">
             <div class="card-body items-center text-center p-8">
               <div class="w-16 h-16 rounded-2xl bg-warning/10 flex items-center justify-center mb-4">
                 <.icon name="hero-building-office-2" class="size-8 text-warning" />
@@ -270,160 +270,158 @@ defmodule FitTrackerzWeb.Member.WorkoutLive do
         <% else %>
           <%!-- Create Form (General only) --%>
           <%= if @plan_type == :general and @show_form do %>
-            <div class="card bg-base-200/50 border border-base-300/50" id="workout-form-card">
-              <div class="card-body p-5">
-                <h2 class="text-lg font-bold flex items-center gap-2">
-                  <.icon name="hero-fire-solid" class="size-5 text-accent" /> New Workout Plan
-                </h2>
-                <.form
-                  for={@form}
-                  id="workout-form"
-                  phx-change="validate"
-                  phx-submit="save_workout"
-                  class="mt-4 space-y-4"
-                >
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <.input
-                      field={@form[:name]}
-                      label="Plan Name"
-                      placeholder="e.g., Full Body Strength"
+            <div class="ft-card p-6" id="workout-form-card">
+              <h2 class="text-lg font-bold flex items-center gap-2">
+                <.icon name="hero-fire-solid" class="size-5 text-accent" /> New Workout Plan
+              </h2>
+              <.form
+                for={@form}
+                id="workout-form"
+                phx-change="validate"
+                phx-submit="save_workout"
+                class="mt-4 space-y-4"
+              >
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <.input
+                    field={@form[:name]}
+                    label="Plan Name"
+                    placeholder="e.g., Full Body Strength"
+                    required
+                  />
+                  <div>
+                    <label class="label"><span class="label-text font-medium">Gym</span></label>
+                    <select
+                      name="workout[gym_id]"
+                      class="select select-bordered w-full"
+                      id="workout-gym-select"
                       required
-                    />
-                    <div>
-                      <label class="label"><span class="label-text font-medium">Gym</span></label>
-                      <select
-                        name="workout[gym_id]"
-                        class="select select-bordered w-full"
-                        id="workout-gym-select"
-                        required
-                      >
-                        <option value="">Select a gym...</option>
-                        <option :for={m <- @memberships} value={m.gym_id}>
-                          {m.gym.name}
-                        </option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <%!-- Exercises --%>
-                  <div class="space-y-3">
-                    <div class="flex items-center justify-between">
-                      <h3 class="font-semibold text-sm">Exercises</h3>
-                      <.button
-                        type="button"
-                        class="btn-ghost btn-xs gap-1"
-                        phx-click="add_exercise"
-                        id="add-exercise-btn"
-                      >
-                        <.icon name="hero-plus-mini" class="size-3" /> Add Exercise
-                      </.button>
-                    </div>
-                    <div
-                      :for={{exercise, idx} <- Enum.with_index(@exercises)}
-                      class="p-4 rounded-lg bg-base-300/20 space-y-3"
-                      id={"exercise-row-#{idx}"}
                     >
-                      <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold text-base-content/40 uppercase">
-                          Exercise #{idx + 1}
-                        </span>
-                        <%= if length(@exercises) > 1 do %>
-                          <.button
-                            type="button"
-                            class="btn-ghost btn-xs text-error"
-                            phx-click="remove_exercise"
-                            phx-value-index={idx}
-                            id={"remove-exercise-#{idx}"}
-                          >
-                            <.icon name="hero-trash-mini" class="size-3" />
-                          </.button>
-                        <% end %>
+                      <option value="">Select a gym...</option>
+                      <option :for={m <- @memberships} value={m.gym_id}>
+                        {m.gym.name}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+                <%!-- Exercises --%>
+                <div class="space-y-3">
+                  <div class="flex items-center justify-between">
+                    <h3 class="font-semibold text-sm">Exercises</h3>
+                    <.button
+                      type="button"
+                      class="btn-ghost btn-xs gap-1 press-scale"
+                      phx-click="add_exercise"
+                      id="add-exercise-btn"
+                    >
+                      <.icon name="hero-plus-mini" class="size-3" /> Add Exercise
+                    </.button>
+                  </div>
+                  <div
+                    :for={{exercise, idx} <- Enum.with_index(@exercises)}
+                    class="p-4 rounded-xl bg-base-200/30 space-y-3"
+                    id={"exercise-row-#{idx}"}
+                  >
+                    <div class="flex items-center justify-between">
+                      <span class="text-xs font-semibold text-base-content/40 uppercase">
+                        Exercise #{idx + 1}
+                      </span>
+                      <%= if length(@exercises) > 1 do %>
+                        <.button
+                          type="button"
+                          class="btn-ghost btn-xs text-error press-scale"
+                          phx-click="remove_exercise"
+                          phx-value-index={idx}
+                          id={"remove-exercise-#{idx}"}
+                        >
+                          <.icon name="hero-trash-mini" class="size-3" />
+                        </.button>
+                      <% end %>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                      <div class="col-span-2 sm:col-span-1">
+                        <label class="label"><span class="label-text text-xs">Name</span></label>
+                        <input
+                          type="text"
+                          value={exercise["name"]}
+                          placeholder="e.g., Squats"
+                          class="input input-bordered input-sm w-full"
+                          phx-blur="update_exercise"
+                          phx-value-index={idx}
+                          phx-value-field="name"
+                          id={"exercise-name-#{idx}"}
+                        />
                       </div>
-                      <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                        <div class="col-span-2 sm:col-span-1">
-                          <label class="label"><span class="label-text text-xs">Name</span></label>
-                          <input
-                            type="text"
-                            value={exercise["name"]}
-                            placeholder="e.g., Squats"
-                            class="input input-bordered input-sm w-full"
-                            phx-blur="update_exercise"
-                            phx-value-index={idx}
-                            phx-value-field="name"
-                            id={"exercise-name-#{idx}"}
-                          />
-                        </div>
-                        <div>
-                          <label class="label"><span class="label-text text-xs">Sets</span></label>
-                          <input
-                            type="number"
-                            value={exercise["sets"]}
-                            placeholder="3"
-                            class="input input-bordered input-sm w-full"
-                            phx-blur="update_exercise"
-                            phx-value-index={idx}
-                            phx-value-field="sets"
-                            id={"exercise-sets-#{idx}"}
-                          />
-                        </div>
-                        <div>
-                          <label class="label"><span class="label-text text-xs">Reps</span></label>
-                          <input
-                            type="number"
-                            value={exercise["reps"]}
-                            placeholder="12"
-                            class="input input-bordered input-sm w-full"
-                            phx-blur="update_exercise"
-                            phx-value-index={idx}
-                            phx-value-field="reps"
-                            id={"exercise-reps-#{idx}"}
-                          />
-                        </div>
-                        <div>
-                          <label class="label"><span class="label-text text-xs">Duration (s)</span></label>
-                          <input
-                            type="number"
-                            value={exercise["duration_seconds"]}
-                            placeholder="60"
-                            class="input input-bordered input-sm w-full"
-                            phx-blur="update_exercise"
-                            phx-value-index={idx}
-                            phx-value-field="duration_seconds"
-                            id={"exercise-duration-#{idx}"}
-                          />
-                        </div>
-                        <div>
-                          <label class="label"><span class="label-text text-xs">Rest (s)</span></label>
-                          <input
-                            type="number"
-                            value={exercise["rest_seconds"]}
-                            placeholder="30"
-                            class="input input-bordered input-sm w-full"
-                            phx-blur="update_exercise"
-                            phx-value-index={idx}
-                            phx-value-field="rest_seconds"
-                            id={"exercise-rest-#{idx}"}
-                          />
-                        </div>
+                      <div>
+                        <label class="label"><span class="label-text text-xs">Sets</span></label>
+                        <input
+                          type="number"
+                          value={exercise["sets"]}
+                          placeholder="3"
+                          class="input input-bordered input-sm w-full"
+                          phx-blur="update_exercise"
+                          phx-value-index={idx}
+                          phx-value-field="sets"
+                          id={"exercise-sets-#{idx}"}
+                        />
+                      </div>
+                      <div>
+                        <label class="label"><span class="label-text text-xs">Reps</span></label>
+                        <input
+                          type="number"
+                          value={exercise["reps"]}
+                          placeholder="12"
+                          class="input input-bordered input-sm w-full"
+                          phx-blur="update_exercise"
+                          phx-value-index={idx}
+                          phx-value-field="reps"
+                          id={"exercise-reps-#{idx}"}
+                        />
+                      </div>
+                      <div>
+                        <label class="label"><span class="label-text text-xs">Duration (s)</span></label>
+                        <input
+                          type="number"
+                          value={exercise["duration_seconds"]}
+                          placeholder="60"
+                          class="input input-bordered input-sm w-full"
+                          phx-blur="update_exercise"
+                          phx-value-index={idx}
+                          phx-value-field="duration_seconds"
+                          id={"exercise-duration-#{idx}"}
+                        />
+                      </div>
+                      <div>
+                        <label class="label"><span class="label-text text-xs">Rest (s)</span></label>
+                        <input
+                          type="number"
+                          value={exercise["rest_seconds"]}
+                          placeholder="30"
+                          class="input input-bordered input-sm w-full"
+                          phx-blur="update_exercise"
+                          phx-value-index={idx}
+                          phx-value-field="rest_seconds"
+                          id={"exercise-rest-#{idx}"}
+                        />
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  <div class="flex justify-end gap-2 pt-2">
-                    <.button type="button" class="btn-ghost btn-sm" phx-click="toggle_form" id="cancel-workout-btn">
-                      Cancel
-                    </.button>
-                    <.button type="submit" class="btn-primary btn-sm gap-2" id="submit-workout-btn">
-                      <.icon name="hero-check-mini" class="size-4" /> Create Plan
-                    </.button>
-                  </div>
-                </.form>
-              </div>
+                <div class="flex justify-end gap-2 pt-2">
+                  <.button type="button" class="btn-ghost btn-sm press-scale" phx-click="toggle_form" id="cancel-workout-btn">
+                    Cancel
+                  </.button>
+                  <.button type="submit" class="btn-primary btn-sm gap-2" id="submit-workout-btn">
+                    <.icon name="hero-check-mini" class="size-4" /> Create Plan
+                  </.button>
+                </div>
+              </.form>
             </div>
           <% end %>
 
           <%= if @workout_plans == [] do %>
-            <div class="card bg-base-200/50 border border-base-300/50" id="no-workout-plans">
+            <div class="ft-card p-6" id="no-workout-plans">
               <div class="card-body items-center text-center p-8">
                 <div class="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mb-4">
                   <.icon name="hero-fire" class="size-8 text-accent" />
@@ -443,75 +441,73 @@ defmodule FitTrackerzWeb.Member.WorkoutLive do
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div
                 :for={plan <- @workout_plans}
-                class="card bg-base-200/50 border border-base-300/50"
+                class="ft-card p-6"
                 id={"workout-plan-#{plan.id}"}
               >
-                <div class="card-body p-5">
-                  <div class="flex items-start justify-between gap-3">
-                    <div>
-                      <h2 class="text-lg font-bold flex items-center gap-2">
-                        <.icon name="hero-fire-solid" class="size-5 text-accent" />
-                        {plan.name}
-                      </h2>
-                      <div class="flex flex-wrap items-center gap-3 mt-2 text-xs text-base-content/50">
-                        <%= if plan.gym do %>
-                          <span class="flex items-center gap-1">
-                            <.icon name="hero-building-office-2-mini" class="size-3" />
-                            {plan.gym.name}
-                          </span>
-                        <% end %>
-                        <span class="badge badge-ghost badge-xs">Self-created</span>
-                      </div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                      <div class="badge badge-accent badge-outline badge-sm">
-                        {length(plan.exercises || [])} exercises
-                      </div>
-                      <%= if @plan_type == :general do %>
-                        <.button
-                          class="btn-ghost btn-xs text-error"
-                          phx-click="delete_workout"
-                          phx-value-id={plan.id}
-                          data-confirm="Are you sure you want to delete this workout plan?"
-                          id={"delete-workout-#{plan.id}"}
-                        >
-                          <.icon name="hero-trash-mini" class="size-4" />
-                        </.button>
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <h2 class="text-lg font-bold flex items-center gap-2">
+                      <.icon name="hero-fire-solid" class="size-5 text-accent" />
+                      {plan.name}
+                    </h2>
+                    <div class="flex flex-wrap items-center gap-3 mt-2 text-xs text-base-content/50">
+                      <%= if plan.gym do %>
+                        <span class="flex items-center gap-1">
+                          <.icon name="hero-building-office-2-mini" class="size-3" />
+                          {plan.gym.name}
+                        </span>
                       <% end %>
+                      <span class="badge badge-ghost badge-xs">Self-created</span>
                     </div>
                   </div>
+                  <div class="flex items-center gap-2">
+                    <div class="badge badge-accent badge-outline badge-sm">
+                      {length(plan.exercises || [])} exercises
+                    </div>
+                    <%= if @plan_type == :general do %>
+                      <.button
+                        class="btn-ghost btn-xs text-error press-scale"
+                        phx-click="delete_workout"
+                        phx-value-id={plan.id}
+                        data-confirm="Are you sure you want to delete this workout plan?"
+                        id={"delete-workout-#{plan.id}"}
+                      >
+                        <.icon name="hero-trash-mini" class="size-4" />
+                      </.button>
+                    <% end %>
+                  </div>
+                </div>
 
-                  <%!-- Exercises --%>
-                  <div class="mt-4 space-y-2">
-                    <div
-                      :for={exercise <- Enum.sort_by(plan.exercises || [], & &1.order)}
-                      class="flex items-center gap-3 p-3 rounded-lg bg-base-300/20"
-                      id={"exercise-#{plan.id}-#{exercise.order}"}
-                    >
-                      <div class="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
-                        <span class="text-xs font-bold text-accent">{exercise.order}</span>
-                      </div>
-                      <div class="flex-1 min-w-0">
-                        <p class="text-sm font-semibold truncate">{exercise.name}</p>
-                        <div class="flex flex-wrap items-center gap-2 mt-0.5">
-                          <%= if exercise.sets && exercise.reps do %>
-                            <span class="text-xs text-base-content/50">
-                              {exercise.sets} x {exercise.reps}
-                            </span>
-                          <% end %>
-                          <%= if exercise.duration_seconds do %>
-                            <span class="text-xs text-base-content/50 flex items-center gap-1">
-                              <.icon name="hero-clock-mini" class="size-3" />
-                              {format_duration(exercise.duration_seconds)}
-                            </span>
-                          <% end %>
-                          <%= if exercise.rest_seconds do %>
-                            <span class="text-xs text-base-content/40 flex items-center gap-1">
-                              <.icon name="hero-pause-mini" class="size-3" />
-                              Rest: {format_duration(exercise.rest_seconds)}
-                            </span>
-                          <% end %>
-                        </div>
+                <%!-- Exercises --%>
+                <div class="mt-4 space-y-2">
+                  <div
+                    :for={exercise <- Enum.sort_by(plan.exercises || [], & &1.order)}
+                    class="flex items-center gap-3 p-3 bg-base-200/30 rounded-xl"
+                    id={"exercise-#{plan.id}-#{exercise.order}"}
+                  >
+                    <div class="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
+                      <span class="text-xs font-bold text-accent">{exercise.order}</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-semibold truncate">{exercise.name}</p>
+                      <div class="flex flex-wrap items-center gap-2 mt-0.5">
+                        <%= if exercise.sets && exercise.reps do %>
+                          <span class="text-xs text-base-content/50">
+                            {exercise.sets} x {exercise.reps}
+                          </span>
+                        <% end %>
+                        <%= if exercise.duration_seconds do %>
+                          <span class="text-xs text-base-content/50 flex items-center gap-1">
+                            <.icon name="hero-clock-mini" class="size-3" />
+                            {format_duration(exercise.duration_seconds)}
+                          </span>
+                        <% end %>
+                        <%= if exercise.rest_seconds do %>
+                          <span class="text-xs text-base-content/40 flex items-center gap-1">
+                            <.icon name="hero-pause-mini" class="size-3" />
+                            Rest: {format_duration(exercise.rest_seconds)}
+                          </span>
+                        <% end %>
                       </div>
                     </div>
                   </div>

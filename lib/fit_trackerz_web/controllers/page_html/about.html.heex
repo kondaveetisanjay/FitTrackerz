@@ -1,12 +1,11 @@
 <%!-- Navigation Bar --%>
-<nav class="navbar bg-base-100/90 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 border-b border-base-300/50 px-4 sm:px-6 lg:px-8">
+<nav class="navbar bg-base-100/90 backdrop-blur-xl fixed top-0 left-0 right-0 z-50 border-b border-base-200/40 px-4 sm:px-6 lg:px-8">
   <div class="flex-1">
     <a href="/">
       <.brand_logo class="h-10 w-auto" />
     </a>
   </div>
-  <div class="flex-none flex items-center gap-3">
-    <%!-- Solutions Dropdown --%>
+  <div class="flex-none flex items-center gap-2">
     <div class="dropdown dropdown-hover">
       <label tabindex="0" class="btn btn-ghost btn-sm font-semibold">
         Solutions
@@ -14,7 +13,7 @@
       </label>
       <ul
         tabindex="0"
-        class="dropdown-content menu p-2 shadow-lg bg-base-200 rounded-box w-56 mt-1 border border-base-300/50"
+        class="dropdown-content menu p-2 shadow-xl bg-base-100 rounded-xl w-56 mt-1 border border-base-200/60"
       >
         <li>
           <a href="/solutions/members" class="flex items-center gap-3 py-3">
@@ -38,30 +37,29 @@
     </div>
 
     <a href="/about" class="btn btn-ghost btn-sm font-semibold">About Us</a>
-    <a href="/explore" class="btn btn-ghost btn-sm font-semibold">Explore Gyms</a>
-    <a href="/sign-in" class="btn btn-ghost btn-sm font-semibold">Sign In</a>
-    <a href="/register" class="btn btn-primary btn-sm font-semibold">Get Started</a>
+    <a href="/explore" class="btn btn-ghost btn-sm font-semibold hidden sm:inline-flex">Explore Gyms</a>
+    <a href="/sign-in" class="btn btn-ghost btn-sm font-semibold hidden sm:inline-flex">Sign In</a>
+    <a href="/register" class="btn btn-primary btn-sm font-semibold shadow-md shadow-primary/20 press-scale">Get Started</a>
   </div>
 </nav>
 
 <%!-- Hero Section --%>
 <section class="relative min-h-[60vh] flex items-center justify-center overflow-hidden pt-16">
-  <%!-- Background gradient --%>
-  <div class="absolute inset-0 bg-gradient-to-br from-base-300 via-base-100 to-base-200"></div>
-  <div class="absolute top-1/4 -left-32 w-96 h-96 bg-primary/10 rounded-full blur-3xl"></div>
-  <div class="absolute bottom-1/4 -right-32 w-96 h-96 bg-secondary/10 rounded-full blur-3xl"></div>
+  <div class="absolute inset-0 bg-gradient-to-br from-primary/5 via-base-100 to-secondary/5"></div>
+  <div class="absolute top-1/4 -left-32 w-72 h-72 bg-primary/8 rounded-full blur-2xl"></div>
+  <div class="absolute bottom-1/4 -right-32 w-72 h-72 bg-secondary/6 rounded-full blur-2xl"></div>
 
   <div class="relative z-10 text-center max-w-4xl mx-auto px-4 sm:px-6 py-20">
-    <div class="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full text-sm font-semibold mb-8">
+    <div class="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full text-sm font-semibold mb-8 animate-fade-up">
       <.icon name="hero-information-circle-solid" class="size-4" />
       <span>Our Story</span>
     </div>
 
-    <h1 class="text-5xl sm:text-6xl lg:text-7xl font-brand leading-tight">
+    <h1 class="text-5xl sm:text-6xl lg:text-7xl font-brand leading-tight animate-fade-up stagger-1">
       About <span class="text-primary">FitTrackerz</span>
     </h1>
 
-    <p class="mt-6 text-lg sm:text-xl text-base-content/60 max-w-2xl mx-auto leading-relaxed">
+    <p class="mt-6 text-lg sm:text-xl text-base-content/55 max-w-2xl mx-auto leading-relaxed animate-fade-up stagger-2">
       Revolutionizing the fitness industry by connecting gyms and members in one seamless platform.
     </p>
   </div>
@@ -70,26 +68,24 @@
 <%!-- Mission & Vision Section --%>
 <section class="py-24 px-4 sm:px-6 lg:px-8">
   <div class="max-w-6xl mx-auto">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
-      <%!-- Mission --%>
-      <div class="card bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 p-8">
-        <div class="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center mb-6">
-          <.icon name="hero-rocket-launch-solid" class="size-8 text-primary" />
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div class="ft-card p-8 border-l-4 border-l-primary/30">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center mb-6">
+          <.icon name="hero-rocket-launch-solid" class="size-7 text-primary" />
         </div>
-        <h2 class="text-3xl font-black mb-4">Our Mission</h2>
-        <p class="text-base-content/70 text-lg leading-relaxed">
+        <h2 class="text-2xl font-black mb-4">Our Mission</h2>
+        <p class="text-base-content/60 text-lg leading-relaxed">
           To empower fitness professionals and gym operators with innovative technology that streamlines operations,
           enhances member experiences, and drives business growth while making fitness accessible to everyone.
         </p>
       </div>
 
-      <%!-- Vision --%>
-      <div class="card bg-gradient-to-br from-secondary/5 to-secondary/10 border border-secondary/20 p-8">
-        <div class="w-16 h-16 rounded-2xl bg-secondary/20 flex items-center justify-center mb-6">
-          <.icon name="hero-eye-solid" class="size-8 text-secondary" />
+      <div class="ft-card p-8 border-l-4 border-l-secondary/30">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-secondary/15 to-secondary/5 flex items-center justify-center mb-6">
+          <.icon name="hero-eye-solid" class="size-7 text-secondary" />
         </div>
-        <h2 class="text-3xl font-black mb-4">Our Vision</h2>
-        <p class="text-base-content/70 text-lg leading-relaxed">
+        <h2 class="text-2xl font-black mb-4">Our Vision</h2>
+        <p class="text-base-content/60 text-lg leading-relaxed">
           To become the world's leading fitness ecosystem, creating a connected community where gyms thrive
           and members achieve their health and wellness goals through personalized experiences.
         </p>
@@ -99,23 +95,21 @@
 </section>
 
 <%!-- Our Story Section --%>
-<section class="py-24 px-4 sm:px-6 lg:px-8 bg-base-200/50">
+<section class="py-24 px-4 sm:px-6 lg:px-8 bg-base-200/30">
   <div class="max-w-4xl mx-auto">
     <div class="text-center mb-16">
       <h2 class="text-3xl sm:text-4xl font-brand mb-6">
         How It All <span class="text-primary">Started</span>
       </h2>
-      <p class="text-base-content/70 text-lg leading-relaxed">
+      <p class="text-base-content/60 text-lg leading-relaxed">
         FitTrackerz was born from a simple observation: the fitness industry needed a unified platform that could
-        bring together gym operators and members in a meaningful way. We saw gym owners struggling with
-        outdated management systems and members searching for the right fitness
-        partner without proper guidance.
+        bring together gym operators and members in a meaningful way.
       </p>
     </div>
 
-    <div class="space-y-6 text-base-content/70 text-lg leading-relaxed">
+    <div class="ft-card p-8 space-y-6 text-base-content/60 text-lg leading-relaxed">
       <p>
-        In 2024, our founding team—a group of fitness enthusiasts, gym operators, and technology experts—came
+        In 2024, our founding team -- a group of fitness enthusiasts, gym operators, and technology experts -- came
         together with a shared vision: to build a comprehensive ecosystem that addresses every pain point in the
         fitness journey.
       </p>
@@ -141,69 +135,63 @@
       </h2>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-      <%!-- Value 1 --%>
-      <div class="card bg-base-200 border border-base-300/50 p-6 hover:shadow-lg transition-shadow">
-        <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="ft-card ft-card-hover p-6">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center mb-4">
           <.icon name="hero-heart-solid" class="size-6 text-primary" />
         </div>
-        <h3 class="text-xl font-bold mb-3">Member-Centric</h3>
-        <p class="text-base-content/60 leading-relaxed">
-          Every decision we make prioritizes the needs and experiences of our users—from gym operators to members.
+        <h3 class="text-lg font-bold mb-2">Member-Centric</h3>
+        <p class="text-base-content/55 leading-relaxed text-sm">
+          Every decision we make prioritizes the needs and experiences of our users -- from gym operators to members.
         </p>
       </div>
 
-      <%!-- Value 2 --%>
-      <div class="card bg-base-200 border border-base-300/50 p-6 hover:shadow-lg transition-shadow">
-        <div class="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center mb-4">
+      <div class="ft-card ft-card-hover p-6">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-secondary/15 to-secondary/5 flex items-center justify-center mb-4">
           <.icon name="hero-light-bulb-solid" class="size-6 text-secondary" />
         </div>
-        <h3 class="text-xl font-bold mb-3">Innovation</h3>
-        <p class="text-base-content/60 leading-relaxed">
+        <h3 class="text-lg font-bold mb-2">Innovation</h3>
+        <p class="text-base-content/55 leading-relaxed text-sm">
           We continuously push boundaries with cutting-edge technology to solve real fitness industry challenges.
         </p>
       </div>
 
-      <%!-- Value 3 --%>
-      <div class="card bg-base-200 border border-base-300/50 p-6 hover:shadow-lg transition-shadow">
-        <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-4">
+      <div class="ft-card ft-card-hover p-6">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center mb-4">
           <.icon name="hero-shield-check-solid" class="size-6 text-accent" />
         </div>
-        <h3 class="text-xl font-bold mb-3">Integrity</h3>
-        <p class="text-base-content/60 leading-relaxed">
+        <h3 class="text-lg font-bold mb-2">Integrity</h3>
+        <p class="text-base-content/55 leading-relaxed text-sm">
           We operate with transparency, honesty, and reliability in everything we do for our community.
         </p>
       </div>
 
-      <%!-- Value 4 --%>
-      <div class="card bg-base-200 border border-base-300/50 p-6 hover:shadow-lg transition-shadow">
-        <div class="w-12 h-12 rounded-xl bg-success/10 flex items-center justify-center mb-4">
+      <div class="ft-card ft-card-hover p-6">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-success/15 to-success/5 flex items-center justify-center mb-4">
           <.icon name="hero-users-solid" class="size-6 text-success" />
         </div>
-        <h3 class="text-xl font-bold mb-3">Community</h3>
-        <p class="text-base-content/60 leading-relaxed">
+        <h3 class="text-lg font-bold mb-2">Community</h3>
+        <p class="text-base-content/55 leading-relaxed text-sm">
           We believe in building strong connections and fostering a supportive fitness ecosystem for all.
         </p>
       </div>
 
-      <%!-- Value 5 --%>
-      <div class="card bg-base-200 border border-base-300/50 p-6 hover:shadow-lg transition-shadow">
-        <div class="w-12 h-12 rounded-xl bg-warning/10 flex items-center justify-center mb-4">
+      <div class="ft-card ft-card-hover p-6">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-warning/15 to-warning/5 flex items-center justify-center mb-4">
           <.icon name="hero-chart-bar-square-solid" class="size-6 text-warning" />
         </div>
-        <h3 class="text-xl font-bold mb-3">Excellence</h3>
-        <p class="text-base-content/60 leading-relaxed">
+        <h3 class="text-lg font-bold mb-2">Excellence</h3>
+        <p class="text-base-content/55 leading-relaxed text-sm">
           We strive for the highest quality in our platform, support, and service delivery every single day.
         </p>
       </div>
 
-      <%!-- Value 6 --%>
-      <div class="card bg-base-200 border border-base-300/50 p-6 hover:shadow-lg transition-shadow">
-        <div class="w-12 h-12 rounded-xl bg-info/10 flex items-center justify-center mb-4">
+      <div class="ft-card ft-card-hover p-6">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-info/15 to-info/5 flex items-center justify-center mb-4">
           <.icon name="hero-bolt-solid" class="size-6 text-info" />
         </div>
-        <h3 class="text-xl font-bold mb-3">Agility</h3>
-        <p class="text-base-content/60 leading-relaxed">
+        <h3 class="text-lg font-bold mb-2">Agility</h3>
+        <p class="text-base-content/55 leading-relaxed text-sm">
           We adapt quickly to industry changes and user feedback, continuously evolving our platform.
         </p>
       </div>
@@ -212,26 +200,26 @@
 </section>
 
 <%!-- Team Section --%>
-<section class="py-24 px-4 sm:px-6 lg:px-8 bg-base-200/50">
+<section class="py-24 px-4 sm:px-6 lg:px-8 bg-base-200/30">
   <div class="max-w-6xl mx-auto">
     <div class="text-center mb-16">
       <h2 class="text-3xl sm:text-4xl font-brand mb-4">
         Meet Our <span class="text-primary">Team</span>
       </h2>
-      <p class="text-base-content/60 text-lg max-w-2xl mx-auto">
+      <p class="text-base-content/55 text-lg max-w-2xl mx-auto">
         A diverse group of passionate individuals dedicated to transforming the fitness industry.
       </p>
     </div>
 
-    <div class="text-center">
-      <p class="text-base-content/70 text-lg leading-relaxed mb-8">
+    <div class="ft-card p-10 text-center">
+      <p class="text-base-content/60 text-lg leading-relaxed mb-8">
         Our team combines decades of experience in fitness management, software development, and user experience
         design. We're gym enthusiasts, competitive athletes, and tech innovators united by a
         common goal: making fitness better for everyone.
       </p>
-      <div class="inline-flex items-center gap-2 text-primary">
+      <div class="inline-flex items-center gap-3 bg-primary/10 text-primary px-6 py-3 rounded-2xl">
         <.icon name="hero-user-group-solid" class="size-6" />
-        <span class="font-semibold text-lg">50+ Team Members Worldwide</span>
+        <span class="font-bold text-lg">50+ Team Members Worldwide</span>
       </div>
     </div>
   </div>
@@ -240,17 +228,17 @@
 <%!-- CTA Section --%>
 <section class="py-24 px-4 sm:px-6 lg:px-8">
   <div class="max-w-3xl mx-auto text-center">
-    <div class="card bg-gradient-to-r from-primary/10 via-base-100 to-secondary/10 border border-base-300 shadow-xl p-8 sm:p-12">
+    <div class="ft-card bg-gradient-to-r from-primary/5 via-base-100 to-secondary/5 p-8 sm:p-12">
       <h2 class="text-3xl sm:text-4xl font-brand mb-4">
         Join the FitTrackerz <span class="text-primary">Community</span>
       </h2>
-      <p class="text-base-content/60 text-lg mb-8">
+      <p class="text-base-content/55 text-lg mb-8">
         Whether you're a gym operator or fitness enthusiast, we have the perfect solution for you.
       </p>
       <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
         <a
           href="/register"
-          class="btn btn-primary btn-lg gap-2 shadow-lg shadow-primary/25 font-bold px-8"
+          class="btn btn-primary btn-lg gap-2 shadow-lg shadow-primary/25 font-bold px-8 press-scale"
         >
           <.icon name="hero-rocket-launch-solid" class="size-5" /> Get Started Today
         </a>
@@ -261,13 +249,13 @@
 </section>
 
 <%!-- Footer --%>
-<footer class="py-12 px-4 sm:px-6 lg:px-8 border-t border-base-300">
+<footer class="py-12 px-4 sm:px-6 lg:px-8 border-t border-base-200/60">
   <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
     <div>
       <.brand_logo class="h-10 w-auto" />
     </div>
     <p class="text-sm text-base-content/40">
-      © 2026 FitTrackerz. All rights reserved.
+      &copy; 2026 FitTrackerz. All rights reserved.
     </p>
   </div>
 </footer>

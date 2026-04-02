@@ -193,38 +193,36 @@ defmodule FitTrackerzWeb.Explore.GymDetailLive do
             <%!-- Right: Location + Map (2 cols) --%>
             <div class="lg:col-span-2">
               <%= if @primary_branch do %>
-                <div class="glass-card">
-                  <div class="card-body p-5">
-                    <h3 class="font-semibold flex items-center gap-2 mb-3">
-                      <.icon name="hero-map-pin-solid" class="size-5 text-error" /> Location
-                    </h3>
-                    <p class="text-sm text-base-content/70">
-                      {@primary_branch.address}
-                    </p>
-                    <p class="text-sm font-medium mt-1">
-                      {@primary_branch.city}, {@primary_branch.state} {@primary_branch.postal_code}
-                    </p>
+                <div class="ft-card p-6">
+                  <h3 class="font-semibold flex items-center gap-2 mb-3">
+                    <.icon name="hero-map-pin-solid" class="size-5 text-error" /> Location
+                  </h3>
+                  <p class="text-sm text-base-content/70">
+                    {@primary_branch.address}
+                  </p>
+                  <p class="text-sm font-medium mt-1">
+                    {@primary_branch.city}, {@primary_branch.state} {@primary_branch.postal_code}
+                  </p>
 
-                    <%= if @primary_branch.latitude && @primary_branch.longitude do %>
-                      <div
-                        id="gym-detail-map"
-                        phx-hook="GymDetailMap"
-                        data-lat={@primary_branch.latitude}
-                        data-lng={@primary_branch.longitude}
-                        class="w-full h-48 rounded-lg bg-base-300 mt-3 shadow-lg"
-                      >
-                      </div>
-                      <a
-                        href={directions_url(@primary_branch.latitude, @primary_branch.longitude)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="btn btn-ghost btn-sm gap-1 mt-2"
-                      >
-                        <.icon name="hero-arrow-top-right-on-square-mini" class="size-4" />
-                        Get Directions
-                      </a>
-                    <% end %>
-                  </div>
+                  <%= if @primary_branch.latitude && @primary_branch.longitude do %>
+                    <div
+                      id="gym-detail-map"
+                      phx-hook="GymDetailMap"
+                      data-lat={@primary_branch.latitude}
+                      data-lng={@primary_branch.longitude}
+                      class="w-full h-48 rounded-lg bg-base-300 mt-3 shadow-lg"
+                    >
+                    </div>
+                    <a
+                      href={directions_url(@primary_branch.latitude, @primary_branch.longitude)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="btn btn-ghost btn-sm gap-1 mt-2"
+                    >
+                      <.icon name="hero-arrow-top-right-on-square-mini" class="size-4" />
+                      Get Directions
+                    </a>
+                  <% end %>
                 </div>
               <% end %>
             </div>
@@ -232,7 +230,7 @@ defmodule FitTrackerzWeb.Explore.GymDetailLive do
 
           <%!-- Quick Stats --%>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
-            <div class="glass-card flex items-center gap-3 p-3">
+            <div class="ft-card flex items-center gap-3 p-3">
               <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                 <.icon name="hero-map-pin-solid" class="size-5 text-primary" />
               </div>
@@ -241,7 +239,7 @@ defmodule FitTrackerzWeb.Explore.GymDetailLive do
                 <p class="text-xs text-base-content/50">Location(s)</p>
               </div>
             </div>
-            <div class="glass-card flex items-center gap-3 p-3">
+            <div class="ft-card flex items-center gap-3 p-3">
               <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                 <.icon name="hero-calendar-days-solid" class="size-5 text-primary" />
               </div>
@@ -250,7 +248,7 @@ defmodule FitTrackerzWeb.Explore.GymDetailLive do
                 <p class="text-xs text-base-content/50">Class Types</p>
               </div>
             </div>
-            <div class="glass-card flex items-center gap-3 p-3">
+            <div class="ft-card flex items-center gap-3 p-3">
               <div class="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center shrink-0">
                 <.icon name="hero-credit-card-solid" class="size-5 text-secondary" />
               </div>
@@ -282,7 +280,7 @@ defmodule FitTrackerzWeb.Explore.GymDetailLive do
                       <% months = PricingHelpers.duration_months(plan.duration) %>
                       <% per_month = PricingHelpers.per_month_price(plan.price_in_paise, plan.duration) %>
                       <% savings = if @monthly_price, do: PricingHelpers.savings_percentage(plan.price_in_paise, plan.duration, @monthly_price), else: 0 %>
-                      <div class={["glass-card overflow-hidden", if(savings > 25, do: "ring-2 ring-primary", else: "")]}>
+                      <div class={["ft-card overflow-hidden", if(savings > 25, do: "ring-2 ring-primary", else: "")]}>
                         <%= if savings > 25 do %>
                           <div class="bg-gradient-to-r from-primary to-primary/80 text-primary-content text-center py-1.5 text-xs font-bold uppercase tracking-wider">
                             Best Value
@@ -301,7 +299,7 @@ defmodule FitTrackerzWeb.Explore.GymDetailLive do
                               <span class="badge badge-success badge-sm mt-1">Save {savings}%</span>
                             <% end %>
                           <% end %>
-                          <a href="/register" class="btn btn-primary btn-sm mt-3">Join Now</a>
+                          <a href="/register" class="btn btn-primary btn-sm mt-3 press-scale">Join Now</a>
                         </div>
                       </div>
                     <% end %>
@@ -332,22 +330,20 @@ defmodule FitTrackerzWeb.Explore.GymDetailLive do
               <h2 class="text-2xl font-brand mb-4">Classes & Services</h2>
               <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 <%= for class_def <- @class_defs do %>
-                  <div class="card bg-base-200/50 border border-base-300/50">
-                    <div class="card-body p-4">
-                      <h4 class="font-semibold">{class_def.name}</h4>
-                      <div class="flex items-center gap-2 mt-1">
-                        <span class="badge badge-xs badge-outline">
-                          {Phoenix.Naming.humanize(class_def.class_type)}
-                        </span>
+                  <div class="ft-card p-4">
+                    <h4 class="font-semibold">{class_def.name}</h4>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="badge badge-xs badge-outline">
+                        {Phoenix.Naming.humanize(class_def.class_type)}
+                      </span>
+                      <span class="text-xs text-base-content/50">
+                        {class_def.default_duration_minutes} min
+                      </span>
+                      <%= if class_def.max_participants do %>
                         <span class="text-xs text-base-content/50">
-                          {class_def.default_duration_minutes} min
+                          · Max {class_def.max_participants}
                         </span>
-                        <%= if class_def.max_participants do %>
-                          <span class="text-xs text-base-content/50">
-                            · Max {class_def.max_participants}
-                          </span>
-                        <% end %>
-                      </div>
+                      <% end %>
                     </div>
                   </div>
                 <% end %>
@@ -363,7 +359,7 @@ defmodule FitTrackerzWeb.Explore.GymDetailLive do
             <p class="text-base-content/70 mb-4">
               Join {@gym.name} today and transform your life.
             </p>
-            <a href="/register" class="btn btn-primary btn-lg gap-2">
+            <a href="/register" class="btn btn-primary btn-lg gap-2 press-scale">
               <.icon name="hero-rocket-launch-mini" class="size-5" />
               Register Free & Join
             </a>

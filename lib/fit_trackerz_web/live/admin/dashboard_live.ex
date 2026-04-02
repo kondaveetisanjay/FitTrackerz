@@ -70,7 +70,7 @@ defmodule FitTrackerzWeb.Admin.DashboardLive do
     <Layouts.app flash={@flash} current_user={@current_user}>
       <div class="space-y-8">
         <%!-- Page Header --%>
-        <div class="relative rounded-2xl overflow-hidden gradient-mesh bg-base-200/50 border border-base-300/30">
+        <div class="relative rounded-2xl overflow-hidden bg-gradient-to-br from-primary/5 via-base-100 to-secondary/5 ft-card">
           <div class="relative p-6 sm:p-8">
             <p class="text-sm text-base-content/40 font-medium tracking-wide">Platform Admin</p>
             <h1 class="text-2xl sm:text-3xl font-brand mt-1.5">
@@ -92,6 +92,7 @@ defmodule FitTrackerzWeb.Admin.DashboardLive do
             subtitle="View all users"
             href="/admin/users"
             id="stat-users"
+            class="animate-fade-up"
           />
           <.stat_card
             label="Verified Gyms"
@@ -101,6 +102,7 @@ defmodule FitTrackerzWeb.Admin.DashboardLive do
             subtitle="Manage gyms"
             href="/admin/gyms"
             id="stat-gyms"
+            class="animate-fade-up [animation-delay:100ms]"
           />
           <.stat_card
             label="Subscriptions"
@@ -109,81 +111,78 @@ defmodule FitTrackerzWeb.Admin.DashboardLive do
             color="warning"
             subtitle="Active plans"
             id="stat-subscriptions"
+            class="animate-fade-up [animation-delay:200ms]"
           />
         </div>
 
         <%!-- Quick Actions & Pending --%>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div class="premium-card" id="quick-actions">
-            <div class="p-5">
-              <.section_header icon="hero-bolt-solid" icon_color="primary" title="Quick Actions" />
+          <div class="ft-card p-6" id="quick-actions">
+            <.section_header icon="hero-bolt-solid" icon_color="primary" title="Quick Actions" />
 
-              <div class="grid grid-cols-2 gap-3 mt-4">
-                <.link
-                  navigate="/admin/users"
-                  class="flex items-center gap-3 p-3.5 rounded-xl bg-base-300/20 hover:bg-base-300/30 transition-colors group"
-                >
-                  <div class="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center group-hover:scale-105 transition-transform">
-                    <.icon name="hero-user-group" class="size-4 text-primary" />
-                  </div>
-                  <span class="text-sm font-semibold">Manage Users</span>
-                </.link>
-                <.link
-                  navigate="/admin/gyms"
-                  class="flex items-center gap-3 p-3.5 rounded-xl bg-base-300/20 hover:bg-base-300/30 transition-colors group"
-                >
-                  <div class="w-9 h-9 rounded-lg bg-secondary/10 flex items-center justify-center group-hover:scale-105 transition-transform">
-                    <.icon name="hero-building-office-2" class="size-4 text-secondary" />
-                  </div>
-                  <span class="text-sm font-semibold">Manage Gyms</span>
-                </.link>
-              </div>
+            <div class="grid grid-cols-2 gap-3 mt-4">
+              <.link
+                navigate="/admin/users"
+                class="flex items-center gap-3 p-3.5 rounded-xl bg-base-200/30 hover:bg-base-200/50 transition-colors group"
+              >
+                <div class="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <.icon name="hero-user-group" class="size-4 text-primary" />
+                </div>
+                <span class="text-sm font-semibold">Manage Users</span>
+              </.link>
+              <.link
+                navigate="/admin/gyms"
+                class="flex items-center gap-3 p-3.5 rounded-xl bg-base-200/30 hover:bg-base-200/50 transition-colors group"
+              >
+                <div class="w-9 h-9 rounded-lg bg-secondary/10 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <.icon name="hero-building-office-2" class="size-4 text-secondary" />
+                </div>
+                <span class="text-sm font-semibold">Manage Gyms</span>
+              </.link>
             </div>
           </div>
 
-          <div class="premium-card" id="pending-verifications">
-            <div class="p-5">
-              <.section_header icon="hero-clock-solid" icon_color="warning" title="Pending Verifications">
-                <:actions>
-                  <%= if @pending_count > 0 do %>
-                    <span class="badge badge-warning badge-sm">{@pending_count}</span>
-                  <% end %>
-                </:actions>
-              </.section_header>
-
-              <div class="mt-4 space-y-3">
-                <%= if @pending_gyms == [] do %>
-                  <div class="flex items-center gap-3 p-3.5 rounded-xl bg-success/5 border border-success/10">
-                    <div class="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center">
-                      <.icon name="hero-check-circle" class="size-4 text-success" />
-                    </div>
-                    <p class="text-sm text-base-content/50">
-                      All gyms are verified. No pending verifications.
-                    </p>
-                  </div>
-                <% else %>
-                  <%= for gym <- @pending_gyms do %>
-                    <div class="flex items-center justify-between p-3.5 rounded-xl bg-base-300/20 hover:bg-base-300/30 transition-colors">
-                      <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-warning/15 to-warning/5 flex items-center justify-center">
-                          <.icon name="hero-building-office-2" class="size-4 text-warning" />
-                        </div>
-                        <div>
-                          <p class="text-sm font-bold">{gym.name}</p>
-                          <p class="text-xs text-base-content/35 mt-0.5">by {gym.owner.name}</p>
-                        </div>
-                      </div>
-                      <button
-                        phx-click="verify_gym"
-                        phx-value-id={gym.id}
-                        class="btn btn-success btn-xs font-semibold shadow-sm"
-                      >
-                        Verify
-                      </button>
-                    </div>
-                  <% end %>
+          <div class="ft-card p-6" id="pending-verifications">
+            <.section_header icon="hero-clock-solid" icon_color="warning" title="Pending Verifications">
+              <:actions>
+                <%= if @pending_count > 0 do %>
+                  <span class="badge badge-warning badge-sm">{@pending_count}</span>
                 <% end %>
-              </div>
+              </:actions>
+            </.section_header>
+
+            <div class="mt-4 space-y-3">
+              <%= if @pending_gyms == [] do %>
+                <div class="flex items-center gap-3 p-3.5 rounded-xl bg-success/5 border border-success/10">
+                  <div class="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center">
+                    <.icon name="hero-check-circle" class="size-4 text-success" />
+                  </div>
+                  <p class="text-sm text-base-content/50">
+                    All gyms are verified. No pending verifications.
+                  </p>
+                </div>
+              <% else %>
+                <%= for gym <- @pending_gyms do %>
+                  <div class="flex items-center justify-between p-3.5 bg-base-200/30 hover:bg-base-200/50 rounded-xl transition-colors">
+                    <div class="flex items-center gap-3">
+                      <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-warning/15 to-warning/5 flex items-center justify-center">
+                        <.icon name="hero-building-office-2" class="size-4 text-warning" />
+                      </div>
+                      <div>
+                        <p class="text-sm font-bold">{gym.name}</p>
+                        <p class="text-xs text-base-content/35 mt-0.5">by {gym.owner.name}</p>
+                      </div>
+                    </div>
+                    <button
+                      phx-click="verify_gym"
+                      phx-value-id={gym.id}
+                      class="btn btn-success btn-xs font-semibold shadow-sm"
+                    >
+                      Verify
+                    </button>
+                  </div>
+                <% end %>
+              <% end %>
             </div>
           </div>
         </div>

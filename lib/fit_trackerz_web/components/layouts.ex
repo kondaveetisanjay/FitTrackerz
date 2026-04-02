@@ -1,30 +1,11 @@
 defmodule FitTrackerzWeb.Layouts do
   @moduledoc """
-  This module holds layouts and related functionality
-  used by your application.
+  Layout components for FitTrackerz application shell.
   """
   use FitTrackerzWeb, :html
 
-  # Embed all files in layouts/* within this module.
-  # The default root.html.heex file contains the HTML
-  # skeleton of your application, namely HTML headers
-  # and other static content.
   embed_templates "layouts/*"
 
-  @doc """
-  Renders your app layout.
-
-  This function is typically invoked from every template,
-  and it often contains your application menu, sidebar,
-  or similar.
-
-  ## Examples
-
-      <Layouts.app flash={@flash}>
-        <h1>Content</h1>
-      </Layouts.app>
-
-  """
   attr :flash, :map, required: true, doc: "the map of flash messages"
 
   attr :current_scope, :map,
@@ -45,8 +26,11 @@ defmodule FitTrackerzWeb.Layouts do
 
         <%!-- Main Content Area --%>
         <div class="drawer-content flex flex-col min-h-screen bg-base-100">
+          <%!-- Gradient accent line --%>
+          <div class="h-1 bg-gradient-to-r from-primary via-secondary to-accent animate-gradient-shift" style="background-size: 200% 100%;"></div>
+
           <%!-- Top Navbar --%>
-          <header class="navbar bg-base-100/80 backdrop-blur-xl border-b border-base-300/30 px-4 lg:px-8 sticky top-0 z-30">
+          <header class="navbar bg-base-100/90 backdrop-blur-xl border-b border-base-200/60 px-4 lg:px-8 sticky top-0 z-30">
             <div class="flex-none lg:hidden">
               <label
                 for="sidebar-toggle"
@@ -77,7 +61,7 @@ defmodule FitTrackerzWeb.Layouts do
                 </div>
                 <ul
                   tabindex="0"
-                  class="dropdown-content menu bg-base-100 rounded-xl z-50 w-56 p-2 shadow-xl border border-base-300/50 mt-2"
+                  class="dropdown-content menu bg-base-100 rounded-xl z-50 w-56 p-2 shadow-xl border border-base-200/60 mt-2"
                 >
                   <li class="menu-title text-xs px-3 py-1 text-base-content/40">
                     {format_role(@user_role)} Portal
@@ -103,33 +87,34 @@ defmodule FitTrackerzWeb.Layouts do
         <%!-- Sidebar --%>
         <div class="drawer-side z-40">
           <label for="sidebar-toggle" aria-label="Close menu" class="drawer-overlay"></label>
-          <aside class="w-72 min-h-full bg-base-200/80 backdrop-blur-xl border-r border-base-300/30 flex flex-col relative">
-            <%!-- Sidebar gradient accent --%>
-            <div class="absolute left-0 top-0 bottom-0 w-[3px] bg-gradient-to-b from-primary via-secondary to-primary/30"></div>
+          <aside class="w-72 min-h-full bg-base-200/80 backdrop-blur-xl border-r border-base-300/30 flex flex-col relative overflow-hidden">
+            <%!-- Sidebar ambient glow --%>
+            <div class="absolute top-0 left-0 w-full h-48 bg-gradient-to-b from-primary/8 to-transparent pointer-events-none"></div>
+            <div class="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-accent/5 to-transparent pointer-events-none"></div>
 
             <%!-- Sidebar Header --%>
-            <div class="p-5 pl-6 border-b border-base-300/30">
+            <div class="relative p-5 border-b border-base-300/30">
               <.link navigate="/dashboard" class="flex items-center gap-2">
                 <.brand_logo class="h-10 w-auto" />
               </.link>
-              <div class="flex items-center gap-2 mt-2">
-                <div class="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></div>
-                <p class="text-[11px] text-base-content/40 font-medium tracking-wide uppercase">
+              <div class="flex items-center gap-2 mt-2.5">
+                <div class="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px] shadow-primary/50 animate-pulse"></div>
+                <p class="text-[11px] text-base-content/50 font-bold tracking-widest uppercase">
                   {format_role(@user_role)} Portal
                 </p>
               </div>
             </div>
 
             <%!-- Navigation Links --%>
-            <nav class="flex-1 p-4 pl-5 space-y-0.5 overflow-y-auto" id="sidebar-nav" phx-hook="ActiveNav">
+            <nav class="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto" id="sidebar-nav" phx-hook="ActiveNav">
               <.sidebar_nav role={@user_role} />
             </nav>
 
             <%!-- Sidebar Footer --%>
-            <div class="p-4 pl-5 border-t border-base-300/30">
-              <div class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-base-300/30">
-                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0 ring-1 ring-primary/10">
-                  <span class="text-sm font-bold text-primary">
+            <div class="relative p-4 border-t border-base-300/30">
+              <div class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-base-300/30 hover:bg-base-300/50 transition-colors border border-base-300/20">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shrink-0 shadow-[0_0_12px] shadow-primary/30">
+                  <span class="text-sm font-bold text-white">
                     {String.first(@current_user.name || "U")}
                   </span>
                 </div>
@@ -144,7 +129,8 @@ defmodule FitTrackerzWeb.Layouts do
       </div>
     <% else %>
       <%!-- Public layout (no sidebar) --%>
-      <header class="navbar px-4 sm:px-6 lg:px-8 bg-base-100/80 backdrop-blur-xl sticky top-0 z-50 border-b border-base-300/20">
+      <div class="h-1 bg-gradient-to-r from-primary via-secondary to-accent animate-gradient-shift" style="background-size: 200% 100%;"></div>
+      <header class="navbar px-4 sm:px-6 lg:px-8 bg-base-100/90 backdrop-blur-xl sticky top-0 z-50 border-b border-base-200/40">
         <div class="flex-1">
           <.link navigate="/" class="flex-1 flex w-fit items-center gap-2">
             <.brand_logo class="h-10 w-auto" />
@@ -152,12 +138,12 @@ defmodule FitTrackerzWeb.Layouts do
         </div>
         <div class="flex-none">
           <ul class="flex flex-column px-1 gap-1 items-center">
-            <li>
+            <li class="hidden sm:block">
               <.link navigate="/explore" class="btn btn-ghost btn-sm font-semibold rounded-lg hover:bg-primary/8">
                 Explore Gyms
               </.link>
             </li>
-            <li>
+            <li class="hidden sm:block">
               <.link navigate="/explore/contests" class="btn btn-ghost btn-sm font-semibold rounded-lg hover:bg-primary/8">
                 Contests
               </.link>
@@ -166,7 +152,7 @@ defmodule FitTrackerzWeb.Layouts do
               <.theme_toggle />
             </li>
             <li>
-              <.link navigate="/sign-in" class="btn btn-primary btn-sm rounded-lg font-bold shadow-md shadow-primary/20">
+              <.link navigate="/sign-in" class="btn btn-primary btn-sm rounded-lg font-bold shadow-md shadow-primary/20 press-scale">
                 Sign In
               </.link>
             </li>
@@ -185,9 +171,8 @@ defmodule FitTrackerzWeb.Layouts do
     """
   end
 
-  @doc """
-  Renders role-specific sidebar navigation links.
-  """
+  ## Sidebar Navigation
+
   attr :role, :atom, required: true
 
   def sidebar_nav(%{role: :platform_admin} = assigns) do
@@ -228,11 +213,7 @@ defmodule FitTrackerzWeb.Layouts do
     <.nav_section label="Fitness" />
     <.nav_link href="/member/workout" icon="hero-fire-solid" label="My Workout" />
     <.nav_link href="/member/diet" icon="hero-heart-solid" label="My Diet Plan" />
-    <.nav_link
-      href="/member/attendance"
-      icon="hero-clipboard-document-check-solid"
-      label="Attendance"
-    />
+    <.nav_link href="/member/attendance" icon="hero-clipboard-document-check-solid" label="Attendance" />
 
     <.nav_section label="Classes" />
     <.nav_link href="/member/classes" icon="hero-calendar-days-solid" label="Browse Classes" />
@@ -247,13 +228,10 @@ defmodule FitTrackerzWeb.Layouts do
 
   defp nav_section(assigns) do
     ~H"""
-    <div class="pt-5 pb-2 first:pt-0">
-      <div class="flex items-center gap-2 px-3">
-        <p class="text-[10px] font-bold text-base-content/30 uppercase tracking-widest">
-          {@label}
-        </p>
-        <div class="flex-1 h-px bg-base-300/30"></div>
-      </div>
+    <div class="pt-6 pb-2 first:pt-1">
+      <p class="text-[10px] font-bold text-base-content/30 uppercase tracking-[0.15em] px-3">
+        {@label}
+      </p>
     </div>
     """
   end
@@ -266,23 +244,16 @@ defmodule FitTrackerzWeb.Layouts do
     ~H"""
     <.link
       navigate={@href}
-      class="group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-base-content/60 hover:text-base-content hover:bg-base-300/40 transition-all duration-200 data-[active=true]:bg-primary/10 data-[active=true]:text-primary data-[active=true]:font-semibold"
+      class="group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-base-content/50 hover:text-base-content hover:bg-primary/8 transition-all duration-200 data-[active=true]:bg-primary/12 data-[active=true]:text-primary data-[active=true]:font-bold data-[active=true]:shadow-[inset_3px_0_0] data-[active=true]:shadow-primary data-[active=true]:rounded-l-none"
     >
-      <div class="w-8 h-8 rounded-lg bg-base-300/30 flex items-center justify-center transition-colors group-hover:bg-primary/10 group-data-[active=true]:bg-primary/15">
-        <.icon name={@icon} class="size-4 transition-colors group-hover:text-primary group-data-[active=true]:text-primary" />
-      </div>
+      <.icon name={@icon} class="size-[18px] transition-colors text-base-content/30 group-hover:text-primary/60 group-data-[active=true]:text-primary group-data-[active=true]:drop-shadow-[0_0_6px_var(--color-primary)]" />
       <span>{@label}</span>
     </.link>
     """
   end
 
-  @doc """
-  Shows the flash group with standard titles and content.
+  ## Flash Group
 
-  ## Examples
-
-      <.flash_group flash={@flash} />
-  """
   attr :flash, :map, required: true, doc: "the map of flash messages"
   attr :id, :string, default: "flash-group", doc: "the optional id of flash container"
 
@@ -319,11 +290,8 @@ defmodule FitTrackerzWeb.Layouts do
     """
   end
 
-  @doc """
-  Provides dark vs light theme toggle based on themes defined in app.css.
+  ## Theme Toggle
 
-  See <head> in root.html.heex which applies the theme before page load.
-  """
   def theme_toggle(assigns) do
     ~H"""
     <div class="card relative flex flex-row items-center border-2 border-base-300 bg-base-300 rounded-full">
@@ -356,9 +324,8 @@ defmodule FitTrackerzWeb.Layouts do
     """
   end
 
-  @doc """
-  A browser-history back button.
-  """
+  ## Back Button
+
   def back_button(assigns) do
     ~H"""
     <button
@@ -370,6 +337,8 @@ defmodule FitTrackerzWeb.Layouts do
     </button>
     """
   end
+
+  ## Helpers
 
   defp get_user_role(nil), do: :member
   defp get_user_role(%{role: role}) when is_atom(role), do: role

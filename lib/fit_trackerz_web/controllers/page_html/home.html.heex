@@ -1,5 +1,5 @@
 <%!-- Navigation Bar --%>
-<nav class="navbar bg-base-100/80 backdrop-blur-xl fixed top-0 left-0 right-0 z-50 border-b border-base-300/20 px-4 sm:px-6 lg:px-8">
+<nav class="navbar bg-base-100/90 backdrop-blur-xl fixed top-0 left-0 right-0 z-50 border-b border-base-200/40 px-4 sm:px-6 lg:px-8">
   <div class="flex-1">
     <a href="/">
       <.brand_logo class="h-10 w-auto" />
@@ -16,11 +16,11 @@
       </label>
       <ul
         tabindex="0"
-        class="dropdown-content menu p-2 shadow-xl bg-base-100 rounded-xl w-56 mt-2 border border-base-300/30"
+        class="dropdown-content menu p-2 shadow-xl bg-base-100 rounded-xl w-56 mt-2 border border-base-200/60"
       >
         <li>
           <a href="/solutions/members" class="flex items-center gap-3 py-3 rounded-lg">
-            <div class="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-secondary/15 to-secondary/5 flex items-center justify-center">
               <.icon name="hero-user-solid" class="size-4 text-secondary" />
             </div>
             <div>
@@ -31,7 +31,7 @@
         </li>
         <li>
           <a href="/solutions/operators" class="flex items-center gap-3 py-3 rounded-lg">
-            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center">
               <.icon name="hero-building-office-2-solid" class="size-4 text-primary" />
             </div>
             <div>
@@ -43,11 +43,11 @@
       </ul>
     </div>
 
-    <a href="/about" class="btn btn-ghost btn-sm font-semibold rounded-lg hover:bg-primary/8">About Us</a>
-    <a href="/explore" class="btn btn-ghost btn-sm font-semibold rounded-lg hover:bg-primary/8">Explore Gyms</a>
+    <a href="/about" class="btn btn-ghost btn-sm font-semibold rounded-lg hover:bg-primary/8 hidden sm:inline-flex">About Us</a>
+    <a href="/explore" class="btn btn-ghost btn-sm font-semibold rounded-lg hover:bg-primary/8 hidden sm:inline-flex">Explore Gyms</a>
     <a href="/explore/contests" class="btn btn-ghost btn-sm font-semibold rounded-lg hover:bg-primary/8">Contests</a>
-    <a href="/sign-in" class="btn btn-ghost btn-sm font-semibold rounded-lg hover:bg-primary/8">Sign In</a>
-    <a href="/register" class="btn btn-primary btn-sm font-bold rounded-lg shadow-md shadow-primary/20">Get Started</a>
+    <a href="/sign-in" class="btn btn-ghost btn-sm font-semibold rounded-lg hover:bg-primary/8 hidden sm:inline-flex">Sign In</a>
+    <a href="/register" class="btn btn-primary btn-sm font-bold rounded-lg press-scale shadow-md shadow-primary/20">Get Started</a>
   </div>
 
   <%!-- Mobile Menu Button --%>
@@ -69,7 +69,7 @@
 >
   <div class="flex flex-col h-full">
     <%!-- Mobile Menu Header --%>
-    <div class="flex items-center justify-between p-4 border-b border-base-300">
+    <div class="flex items-center justify-between p-4 border-b border-base-200/60">
       <a href="/">
         <.brand_logo class="h-10 w-auto" />
       </a>
@@ -96,7 +96,7 @@
               <.icon name="hero-user-solid" class="size-5 text-secondary" />
               <div>
                 <div class="font-semibold text-sm">For Members</div>
-                <div class="text-xs text-base-content/60">Find your perfect gym</div>
+                <div class="text-xs text-base-content/55">Find your perfect gym</div>
               </div>
             </a>
             <a
@@ -106,7 +106,7 @@
               <.icon name="hero-building-office-2-solid" class="size-5 text-primary" />
               <div>
                 <div class="font-semibold text-sm">For Gym Operators</div>
-                <div class="text-xs text-base-content/60">Manage your gym efficiently</div>
+                <div class="text-xs text-base-content/55">Manage your gym efficiently</div>
               </div>
             </a>
           </div>
@@ -134,23 +134,23 @@
 <section class="relative min-h-screen flex items-center overflow-hidden pt-16">
   <%!-- Background – gradient with animated glows --%>
   <div class="absolute inset-0 bg-gradient-to-br from-base-100 via-base-100 to-base-200"></div>
-  <div class="absolute top-1/4 -left-32 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-float-slow"></div>
-  <div class="absolute bottom-1/4 -right-32 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-float-slow" style="animation-delay: 2s;"></div>
-  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl animate-float-slow" style="animation-delay: 4s;"></div>
+  <div class="absolute top-1/4 -left-32 w-96 h-96 bg-primary/10 rounded-full blur-2xl animate-float-slow"></div>
+  <div class="absolute bottom-1/4 -right-32 w-96 h-96 bg-secondary/10 rounded-full blur-2xl animate-float-slow" style="animation-delay: 2s;"></div>
+  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-2xl animate-float-slow" style="animation-delay: 4s;"></div>
 
   <%!-- Floating Fitness Icons (decorative) --%>
   <div class="absolute inset-0 overflow-hidden pointer-events-none">
-    <div class="absolute top-[15%] left-[8%] animate-float opacity-[0.10]">
+    <div class="absolute top-[15%] left-[8%] animate-float opacity-40 drop-shadow-[0_0_20px_var(--color-primary)]">
       <svg width="80" height="80" viewBox="0 0 24 24" fill="currentColor" class="text-primary">
         <path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 4.14 2.71 2.71 4.14l1.43 1.43L2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22l1.43-1.43L16.29 22l2.14-2.14 1.43 1.43 1.43-1.43-1.43-1.43L22 16.29z"/>
       </svg>
     </div>
-    <div class="absolute top-[20%] right-[10%] animate-float-delayed opacity-[0.10]">
-      <svg width="70" height="70" viewBox="0 0 24 24" fill="currentColor" class="text-secondary">
+    <div class="absolute top-[20%] right-[10%] animate-float-delayed opacity-40 drop-shadow-[0_0_20px_var(--color-accent)]">
+      <svg width="70" height="70" viewBox="0 0 24 24" fill="currentColor" class="text-accent">
         <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
       </svg>
     </div>
-    <div class="absolute bottom-[25%] left-[5%] animate-float opacity-[0.10]" style="animation-delay: 1s;">
+    <div class="absolute bottom-[25%] left-[5%] animate-float opacity-35 drop-shadow-[0_0_20px_var(--color-primary)]" style="animation-delay: 1s;">
       <svg width="90" height="90" viewBox="0 0 24 24" fill="currentColor" class="text-primary">
         <path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.7-1.6 8.1-4.9-1-.4 2 7 1.4z"/>
       </svg>
@@ -162,28 +162,28 @@
       <%!-- Left Column (55%) --%>
       <div class="flex-1 lg:max-w-[55%]">
         <%!-- Pill Badge --%>
-        <div class="inline-flex items-center gap-2.5 bg-primary/8 text-primary px-5 py-2 rounded-full text-sm font-bold mb-8 border border-primary/15 backdrop-blur-sm">
+        <div class="inline-flex items-center gap-2.5 bg-primary/8 text-primary px-5 py-2 rounded-full text-sm font-bold mb-8 border border-primary/15 backdrop-blur-sm animate-fade-up">
           <div class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></div>
           <span>The Future of Fitness Management</span>
         </div>
 
-        <h1 class="font-brand text-4xl sm:text-5xl lg:text-6xl xl:text-7xl leading-tight">
+        <h1 class="font-brand text-4xl sm:text-5xl lg:text-6xl xl:text-7xl leading-tight animate-fade-up stagger-1">
           DISCOVER, CONNECT & TRANSFORM YOUR <span class="text-primary">FITNESS JOURNEY</span>
         </h1>
 
-        <p class="mt-6 text-lg sm:text-xl text-base-content/50 max-w-xl leading-relaxed">
+        <p class="mt-6 text-lg sm:text-xl text-base-content/55 max-w-xl leading-relaxed animate-fade-up stagger-2">
           The all-in-one platform connecting gyms and members. Find gyms, book classes, track progress, and grow your fitness business.
         </p>
 
         <%!-- CTAs --%>
-        <div class="mt-10 flex flex-col sm:flex-row items-start gap-4">
+        <div class="mt-10 flex flex-col sm:flex-row items-start gap-4 animate-fade-up stagger-3">
           <a
             href="/explore"
-            class="btn btn-primary btn-lg gap-2 shadow-lg shadow-primary/25 hover:shadow-primary/40 font-bold px-8 transition-shadow"
+            class="btn btn-primary btn-lg gap-2 shadow-lg shadow-primary/25 hover:shadow-primary/40 font-bold px-8 transition-shadow press-scale"
           >
             <.icon name="hero-magnifying-glass" class="size-5" /> Explore Gyms
           </a>
-          <a href="/register" class="btn btn-ghost btn-lg gap-2 font-semibold border border-base-300/50 hover:border-primary/20">
+          <a href="/register" class="btn btn-ghost btn-lg gap-2 font-semibold border border-base-300/50 hover:border-primary/20 press-scale">
             <.icon name="hero-rocket-launch-solid" class="size-5" /> Start Free Trial
           </a>
         </div>
@@ -206,13 +206,13 @@
       <%!-- Right Column (45%) – Floating UI Mockup Cards --%>
       <div class="hidden lg:block flex-1 relative h-[500px]">
         <%!-- Dashboard Card --%>
-        <div class="glass-card absolute top-4 right-0 w-64 p-5 animate-float">
+        <div class="ft-card absolute top-4 right-0 w-64 p-5 animate-float">
           <div class="flex items-center gap-3 mb-4">
-            <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center">
               <.icon name="hero-chart-bar-solid" class="size-5 text-primary" />
             </div>
             <div>
-              <p class="text-xs text-base-content/50">Dashboard</p>
+              <p class="text-xs text-base-content/55">Dashboard</p>
               <p class="text-sm font-bold">Revenue +24%</p>
             </div>
           </div>
@@ -229,29 +229,29 @@
         </div>
 
         <%!-- Members Card --%>
-        <div class="glass-card absolute top-48 left-0 w-56 p-5 animate-float-delayed">
+        <div class="ft-card absolute top-48 left-0 w-56 p-5 animate-float-delayed">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-secondary/15 to-secondary/5 flex items-center justify-center">
               <.icon name="hero-user-group-solid" class="size-5 text-secondary" />
             </div>
             <div>
-              <p class="text-xs text-base-content/50">Members</p>
+              <p class="text-xs text-base-content/55">Members</p>
               <p class="text-lg font-bold">500+</p>
             </div>
           </div>
-          <p class="text-xs text-base-content/50 mt-3">Active Members</p>
+          <p class="text-xs text-base-content/55 mt-3">Active Members</p>
           <div class="w-full bg-base-300/50 rounded-full h-2 mt-1">
             <div class="bg-secondary h-2 rounded-full" style="width: 78%"></div>
           </div>
         </div>
 
         <%!-- Member Profile Card --%>
-        <div class="glass-card absolute bottom-8 right-8 w-60 p-4 animate-float" style="animation-delay: 3s;">
+        <div class="ft-card absolute bottom-8 right-8 w-60 p-4 animate-float" style="animation-delay: 3s;">
           <div class="flex items-center gap-3">
             <div class="w-11 h-11 rounded-full bg-primary text-primary-content flex items-center justify-center font-bold">SM</div>
             <div>
               <p class="text-sm font-semibold">Sarah M.</p>
-              <p class="text-xs text-base-content/50">Gold Plan</p>
+              <p class="text-xs text-base-content/55">Gold Plan</p>
             </div>
             <div class="ml-auto">
               <span class="badge badge-success badge-xs">Active</span>
@@ -263,21 +263,21 @@
 
     <%!-- Stats Row --%>
     <div class="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl mx-auto">
-      <div class="premium-card text-center p-5">
+      <div class="ft-card text-center p-5">
         <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center mx-auto mb-3">
           <.icon name="hero-building-office-2-solid" class="size-6 text-primary" />
         </div>
         <p class="text-3xl sm:text-4xl font-brand text-primary">100+</p>
         <p class="text-[11px] text-base-content/35 mt-1.5 font-bold uppercase tracking-widest">Active Gyms</p>
       </div>
-      <div class="premium-card text-center p-5">
+      <div class="ft-card text-center p-5">
         <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center mx-auto mb-3">
           <.icon name="hero-user-group-solid" class="size-6 text-primary" />
         </div>
         <p class="text-3xl sm:text-4xl font-brand text-primary">10K+</p>
         <p class="text-[11px] text-base-content/35 mt-1.5 font-bold uppercase tracking-widest">Members</p>
       </div>
-      <div class="premium-card text-center p-5">
+      <div class="ft-card text-center p-5">
         <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-secondary/15 to-secondary/5 flex items-center justify-center mx-auto mb-3">
           <.icon name="hero-map-pin-solid" class="size-6 text-secondary" />
         </div>
@@ -289,7 +289,7 @@
 </section>
 
 <%!-- About Us Preview Section --%>
-<section class="py-20 px-4 sm:px-6 lg:px-8 bg-base-200/50">
+<section class="py-20 px-4 sm:px-6 lg:px-8 bg-base-200/30">
   <div class="max-w-6xl mx-auto">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
       <%!-- Left: Visual illustration --%>
@@ -299,24 +299,24 @@
           <div class="absolute inset-8 rounded-full bg-primary/5 border-2 border-dashed border-primary/15 about-rotate"></div>
           <%!-- Center icon --%>
           <div class="absolute inset-0 flex items-center justify-center">
-            <div class="w-24 h-24 rounded-2xl bg-primary/10 flex items-center justify-center shadow-lg border border-primary/20">
+            <div class="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center shadow-lg border border-primary/20">
               <.icon name="hero-bolt-solid" class="size-12 text-primary" />
             </div>
           </div>
           <%!-- Orbiting feature badges --%>
-          <div class="glass-card absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 flex items-center gap-2 animate-float">
+          <div class="ft-card absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 flex items-center gap-2 animate-float">
             <.icon name="hero-building-office-2-solid" class="size-5 text-primary" />
             <span class="text-sm font-semibold">Gym Management</span>
           </div>
-          <div class="glass-card absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 flex items-center gap-2 animate-float-delayed">
+          <div class="ft-card absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 flex items-center gap-2 animate-float-delayed">
             <.icon name="hero-chart-bar-solid" class="size-5 text-secondary" />
             <span class="text-sm font-semibold">Analytics</span>
           </div>
-          <div class="glass-card absolute top-1/2 -translate-y-1/2 left-0 px-4 py-2 flex items-center gap-2 animate-float">
+          <div class="ft-card absolute top-1/2 -translate-y-1/2 left-0 px-4 py-2 flex items-center gap-2 animate-float">
             <.icon name="hero-calendar-days-solid" class="size-5 text-primary" />
             <span class="text-sm font-semibold">Scheduling</span>
           </div>
-          <div class="glass-card absolute top-1/2 -translate-y-1/2 right-0 px-4 py-2 flex items-center gap-2 animate-float-delayed">
+          <div class="ft-card absolute top-1/2 -translate-y-1/2 right-0 px-4 py-2 flex items-center gap-2 animate-float-delayed">
             <.icon name="hero-credit-card-solid" class="size-5 text-secondary" />
             <span class="text-sm font-semibold">Billing</span>
           </div>
@@ -340,35 +340,35 @@
 
         <div class="space-y-4 mb-8">
           <div class="flex items-start gap-3">
-            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center shrink-0 mt-0.5">
               <.icon name="hero-shield-check-solid" class="size-4 text-primary" />
             </div>
             <div>
               <p class="font-semibold text-sm">Verified Gyms</p>
-              <p class="text-xs text-base-content/50">Every gym is verified for quality and safety standards</p>
+              <p class="text-xs text-base-content/55">Every gym is verified for quality and safety standards</p>
             </div>
           </div>
           <div class="flex items-start gap-3">
-            <div class="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center shrink-0 mt-0.5">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-secondary/15 to-secondary/5 flex items-center justify-center shrink-0 mt-0.5">
               <.icon name="hero-globe-alt-solid" class="size-4 text-secondary" />
             </div>
             <div>
               <p class="font-semibold text-sm">Pan-India Coverage</p>
-              <p class="text-xs text-base-content/50">Find gyms across 50+ cities nationwide</p>
+              <p class="text-xs text-base-content/55">Find gyms across 50+ cities nationwide</p>
             </div>
           </div>
           <div class="flex items-start gap-3">
-            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center shrink-0 mt-0.5">
               <.icon name="hero-sparkles-solid" class="size-4 text-primary" />
             </div>
             <div>
               <p class="font-semibold text-sm">AI-Powered Insights</p>
-              <p class="text-xs text-base-content/50">Smart recommendations for workouts, diet, and gym matching</p>
+              <p class="text-xs text-base-content/55">Smart recommendations for workouts, diet, and gym matching</p>
             </div>
           </div>
         </div>
 
-        <a href="/about" class="btn btn-primary btn-lg gap-2 shadow-lg shadow-primary/25 font-bold">
+        <a href="/about" class="btn btn-primary btn-lg gap-2 shadow-lg shadow-primary/25 font-bold press-scale">
           <.icon name="hero-arrow-right" class="size-5" /> Learn More About Us
         </a>
       </div>
@@ -476,12 +476,12 @@
       <h2 class="font-brand text-3xl sm:text-4xl">
         HOW IT <span class="text-primary">WORKS</span>
       </h2>
-      <p class="mt-4 text-base-content/60 text-lg">
+      <p class="mt-4 text-base-content/55 text-lg">
         Get started in three simple steps
       </p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
       <%!-- Connecting line with gradient dots (desktop only) --%>
       <div class="hidden md:block absolute top-16 left-[calc(33.33%+1rem)] right-[calc(33.33%+1rem)] h-0.5 bg-gradient-to-r from-primary/20 via-primary/40 to-primary/20">
         <div class="absolute left-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary/40"></div>
@@ -489,13 +489,13 @@
         <div class="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary/40"></div>
       </div>
 
-      <div class="glass-card text-center p-8 relative group">
+      <div class="ft-card text-center p-8 relative group">
         <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-content text-xs font-bold px-3 py-0.5 rounded-full">STEP 1</div>
-        <div class="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4 border border-primary/20 group-hover:scale-110 transition-transform">
+        <div class="w-16 h-16 rounded-2xl ring-4 ring-primary/5 bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center mx-auto mb-4 border border-primary/20 group-hover:scale-110 transition-transform">
           <.icon name="hero-user-plus-solid" class="size-8 text-primary" />
         </div>
         <h3 class="text-xl font-semibold mb-2">Register for Free</h3>
-        <p class="text-base-content/60 text-sm">
+        <p class="text-base-content/55 text-sm">
           Create your account in seconds. No credit card required.
         </p>
         <div class="flex justify-center gap-1 mt-4">
@@ -503,13 +503,13 @@
           <span class="text-xs text-base-content/40">Takes 30 seconds</span>
         </div>
       </div>
-      <div class="glass-card text-center p-8 relative group">
+      <div class="ft-card text-center p-8 relative group">
         <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-content text-xs font-bold px-3 py-0.5 rounded-full">STEP 2</div>
-        <div class="w-16 h-16 rounded-2xl bg-secondary/10 flex items-center justify-center mx-auto mb-4 border border-secondary/20 group-hover:scale-110 transition-transform">
+        <div class="w-16 h-16 rounded-2xl ring-4 ring-secondary/5 bg-gradient-to-br from-secondary/15 to-secondary/5 flex items-center justify-center mx-auto mb-4 border border-secondary/20 group-hover:scale-110 transition-transform">
           <.icon name="hero-magnifying-glass-solid" class="size-8 text-secondary" />
         </div>
         <h3 class="text-xl font-semibold mb-2">Explore Nearby Gyms</h3>
-        <p class="text-base-content/60 text-sm">
+        <p class="text-base-content/55 text-sm">
           Browse gyms by location, compare pricing and amenities.
         </p>
         <div class="flex justify-center gap-1 mt-4">
@@ -517,13 +517,13 @@
           <span class="text-xs text-base-content/40">GPS auto-detect</span>
         </div>
       </div>
-      <div class="glass-card text-center p-8 relative group">
+      <div class="ft-card text-center p-8 relative group">
         <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-content text-xs font-bold px-3 py-0.5 rounded-full">STEP 3</div>
-        <div class="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4 border border-primary/20 group-hover:scale-110 transition-transform">
+        <div class="w-16 h-16 rounded-2xl ring-4 ring-primary/5 bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center mx-auto mb-4 border border-primary/20 group-hover:scale-110 transition-transform">
           <.icon name="hero-fire-solid" class="size-8 text-primary" />
         </div>
         <h3 class="text-xl font-semibold mb-2">Join & Train</h3>
-        <p class="text-base-content/60 text-sm">
+        <p class="text-base-content/55 text-sm">
           Pick a plan that fits your budget and start your fitness journey.
         </p>
         <div class="flex justify-center gap-1 mt-4">
@@ -536,10 +536,10 @@
 </section>
 
 <%!-- Features Section --%>
-<section id="features" class="py-24 px-4 sm:px-6 lg:px-8 bg-base-200/50 relative">
+<section id="features" class="py-24 px-4 sm:px-6 lg:px-8 bg-base-200/30 relative">
   <%!-- Decorative top accent --%>
   <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
-    <div class="w-12 h-12 rounded-xl bg-base-100 border border-base-300/50 flex items-center justify-center shadow-sm rotate-45">
+    <div class="w-12 h-12 rounded-xl bg-base-100 border border-base-200/60 flex items-center justify-center shadow-sm rotate-45">
       <.icon name="hero-sparkles-solid" class="size-5 text-primary -rotate-45" />
     </div>
   </div>
@@ -548,21 +548,21 @@
       <h2 class="font-brand text-3xl sm:text-4xl">
         EVERYTHING YOU NEED TO <span class="text-primary">SUCCEED</span>
       </h2>
-      <p class="mt-4 text-base-content/60 text-lg max-w-2xl mx-auto">
+      <p class="mt-4 text-base-content/55 text-lg max-w-2xl mx-auto">
         Powerful tools for every role in your fitness ecosystem.
       </p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <%!-- Hero Feature: Gym Management (2 col x 2 row) --%>
-      <div class="glass-card group overflow-hidden relative md:col-span-2 lg:col-span-2 lg:row-span-2 p-0">
+      <div class="ft-card group overflow-hidden relative md:col-span-2 lg:col-span-2 lg:row-span-2 p-0">
         <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-primary/30"></div>
         <div class="p-6 lg:p-8">
-          <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
             <.icon name="hero-building-office-2-solid" class="size-7 text-primary" />
           </div>
           <h3 class="text-xl font-bold mb-2">Gym Management</h3>
-          <p class="text-base-content/60 text-sm leading-relaxed mb-6">
+          <p class="text-base-content/55 text-sm leading-relaxed mb-6">
             Manage multiple branches, track member counts, manage member subscriptions, and monitor gym performance from one dashboard.
           </p>
           <%!-- Mini Dashboard Mockup --%>
@@ -592,43 +592,43 @@
       </div>
 
       <%!-- Scheduling (1x1) --%>
-      <div class="glass-card group overflow-hidden relative p-0">
+      <div class="ft-card group overflow-hidden relative p-0">
         <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-secondary to-secondary/30"></div>
         <div class="p-5">
-          <div class="w-11 h-11 rounded-xl bg-secondary/10 flex items-center justify-center mb-3 group-hover:bg-secondary/20 transition-colors">
+          <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-secondary/15 to-secondary/5 flex items-center justify-center mb-3 group-hover:bg-secondary/20 transition-colors">
             <.icon name="hero-calendar-days-solid" class="size-5 text-secondary" />
           </div>
           <h3 class="font-bold mb-1">Class Scheduling</h3>
-          <p class="text-base-content/60 text-xs leading-relaxed">
+          <p class="text-base-content/55 text-xs leading-relaxed">
             Schedule sessions, and let members book with real-time availability.
           </p>
         </div>
       </div>
 
       <%!-- Workout Plans (1x1) --%>
-      <div class="glass-card group overflow-hidden relative p-0">
+      <div class="ft-card group overflow-hidden relative p-0">
         <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-primary/30"></div>
         <div class="p-5">
-          <div class="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
+          <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
             <.icon name="hero-fire-solid" class="size-5 text-primary" />
           </div>
           <h3 class="font-bold mb-1">Workout Plans</h3>
-          <p class="text-base-content/60 text-xs leading-relaxed">
+          <p class="text-base-content/55 text-xs leading-relaxed">
             Create personalized plans or use templates. Track exercises, sets, reps, and rest periods.
           </p>
         </div>
       </div>
 
       <%!-- Diet & Nutrition (2x1 wide) --%>
-      <div class="glass-card group overflow-hidden relative md:col-span-2 p-0">
+      <div class="ft-card group overflow-hidden relative md:col-span-2 p-0">
         <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-secondary to-secondary/30"></div>
         <div class="p-5 flex items-start gap-4">
-          <div class="w-11 h-11 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0 group-hover:bg-secondary/20 transition-colors">
+          <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-secondary/15 to-secondary/5 flex items-center justify-center shrink-0 group-hover:bg-secondary/20 transition-colors">
             <.icon name="hero-heart-solid" class="size-5 text-secondary" />
           </div>
           <div>
             <h3 class="font-bold mb-1">Diet & Nutrition</h3>
-            <p class="text-base-content/60 text-xs leading-relaxed">
+            <p class="text-base-content/55 text-xs leading-relaxed">
               Build meal plans with calorie targets, macros tracking, and dietary preferences including vegetarian, vegan, and more.
             </p>
           </div>
@@ -636,15 +636,15 @@
       </div>
 
       <%!-- Billing (2x1 wide on lg, or 1x1) --%>
-      <div class="glass-card group overflow-hidden relative lg:col-span-3 p-0">
+      <div class="ft-card group overflow-hidden relative lg:col-span-3 p-0">
         <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-secondary to-secondary/30"></div>
         <div class="p-5 flex items-start gap-4">
-          <div class="w-11 h-11 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0 group-hover:bg-secondary/20 transition-colors">
+          <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-secondary/15 to-secondary/5 flex items-center justify-center shrink-0 group-hover:bg-secondary/20 transition-colors">
             <.icon name="hero-credit-card-solid" class="size-5 text-secondary" />
           </div>
           <div>
             <h3 class="font-bold mb-1">Billing & Subscriptions</h3>
-            <p class="text-base-content/60 text-xs leading-relaxed">
+            <p class="text-base-content/55 text-xs leading-relaxed">
               Flexible subscription plans from day passes to annual memberships. Track payments and manage renewals effortlessly.
             </p>
           </div>
@@ -652,14 +652,14 @@
       </div>
 
       <%!-- Attendance (1x1) --%>
-      <div class="glass-card group overflow-hidden relative p-0">
+      <div class="ft-card group overflow-hidden relative p-0">
         <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-primary/30"></div>
         <div class="p-5">
-          <div class="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
+          <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
             <.icon name="hero-chart-bar-solid" class="size-5 text-primary" />
           </div>
           <h3 class="font-bold mb-1">Attendance Tracking</h3>
-          <p class="text-base-content/60 text-xs leading-relaxed">
+          <p class="text-base-content/55 text-xs leading-relaxed">
             Track check-ins, monitor patterns, and keep complete visit records.
           </p>
         </div>
@@ -669,10 +669,10 @@
 </section>
 
 <%!-- Role Cards Section --%>
-<section class="py-24 px-4 sm:px-6 lg:px-8 bg-base-200/50 relative">
+<section class="py-24 px-4 sm:px-6 lg:px-8 bg-base-200/30 relative">
   <%!-- Decorative top accent --%>
   <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
-    <div class="w-12 h-12 rounded-xl bg-base-100 border border-base-300/50 flex items-center justify-center shadow-sm rotate-45">
+    <div class="w-12 h-12 rounded-xl bg-base-100 border border-base-200/60 flex items-center justify-center shadow-sm rotate-45">
       <.icon name="hero-users-solid" class="size-5 text-primary -rotate-45" />
     </div>
   </div>
@@ -681,21 +681,21 @@
       <h2 class="font-brand text-3xl sm:text-4xl">
         BUILT FOR <span class="text-primary">EVERYONE</span>
       </h2>
-      <p class="mt-4 text-base-content/60 text-lg max-w-2xl mx-auto">
+      <p class="mt-4 text-base-content/55 text-lg max-w-2xl mx-auto">
         Whether you own a gym or just want to get fit, FitTrackerz has you covered.
       </p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 max-w-3xl mx-auto gap-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 max-w-3xl mx-auto gap-6">
       <%!-- Gym Operator Card --%>
-      <div class="glass-card overflow-hidden relative">
+      <div class="ft-card overflow-hidden relative">
         <div class="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-bl-[3rem]"></div>
         <div class="p-8 items-center text-center relative">
-          <div class="w-20 h-20 rounded-3xl bg-primary/15 flex items-center justify-center mx-auto mb-4 border border-primary/20">
+          <div class="w-20 h-20 rounded-3xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center mx-auto mb-4 border border-primary/20">
             <.icon name="hero-building-office-2-solid" class="size-9 text-primary" />
           </div>
           <h3 class="text-xl font-brand">GYM OPERATORS</h3>
-          <ul class="text-sm text-base-content/60 space-y-2 mt-4 text-left">
+          <ul class="text-sm text-base-content/55 space-y-2 mt-4 text-left">
             <li class="flex items-start gap-2">
               <.icon name="hero-check-circle-solid" class="size-4 text-primary mt-0.5 shrink-0" />
               <span>Multi-branch management</span>
@@ -714,7 +714,7 @@
             </li>
           </ul>
           <div class="mt-6">
-            <a href="/register" class="btn btn-primary btn-sm font-bold">
+            <a href="/register" class="btn btn-primary btn-sm font-bold press-scale">
               Register as Operator
             </a>
           </div>
@@ -722,14 +722,14 @@
       </div>
 
       <%!-- Member Card --%>
-      <div class="glass-card overflow-hidden relative">
+      <div class="ft-card overflow-hidden relative">
         <div class="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-bl-[3rem]"></div>
         <div class="p-8 items-center text-center relative">
-          <div class="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center mx-auto mb-4 border border-primary/20">
+          <div class="w-20 h-20 rounded-3xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center mx-auto mb-4 border border-primary/20">
             <.icon name="hero-user-solid" class="size-9 text-primary" />
           </div>
           <h3 class="text-xl font-brand">MEMBERS</h3>
-          <ul class="text-sm text-base-content/60 space-y-2 mt-4 text-left">
+          <ul class="text-sm text-base-content/55 space-y-2 mt-4 text-left">
             <li class="flex items-start gap-2">
               <.icon name="hero-check-circle-solid" class="size-4 text-primary mt-0.5 shrink-0" />
               <span>Book classes instantly</span>
@@ -748,7 +748,7 @@
             </li>
           </ul>
           <div class="mt-6">
-            <a href="/register" class="btn btn-primary btn-sm font-bold">Join as Member</a>
+            <a href="/register" class="btn btn-primary btn-sm font-bold press-scale">Join as Member</a>
           </div>
         </div>
       </div>
@@ -763,14 +763,14 @@
       <h2 class="font-brand text-3xl sm:text-4xl">
         FEATURED <span class="text-primary">GYMS</span>
       </h2>
-      <p class="mt-4 text-base-content/60 text-lg">
+      <p class="mt-4 text-base-content/55 text-lg">
         Top-rated gyms trusted by thousands of members
       </p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
       <%!-- Gym Card 1 --%>
-      <div class="glass-card overflow-hidden group">
+      <div class="ft-card overflow-hidden group">
         <figure class="h-48 bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/5 flex items-center justify-center relative overflow-hidden">
           <div class="absolute inset-0 opacity-15">
             <div class="absolute top-4 right-4 w-20 h-20 border-2 border-primary/30 rounded-full"></div>
@@ -802,9 +802,9 @@
             <.icon name="hero-star-solid" class="size-4 text-secondary" />
             <.icon name="hero-star-solid" class="size-4 text-secondary" />
             <.icon name="hero-star-solid" class="size-4 text-secondary" />
-            <span class="text-sm text-base-content/60 ml-1">(4.8)</span>
+            <span class="text-sm text-base-content/55 ml-1">(4.8)</span>
           </div>
-          <div class="flex items-center gap-2 mt-1 text-sm text-base-content/60">
+          <div class="flex items-center gap-2 mt-1 text-sm text-base-content/55">
             <.icon name="hero-map-pin" class="size-4" />
             <span>Hyderabad</span>
           </div>
@@ -816,7 +816,7 @@
       </div>
 
       <%!-- Gym Card 2 --%>
-      <div class="glass-card overflow-hidden group">
+      <div class="ft-card overflow-hidden group">
         <figure class="h-48 bg-gradient-to-br from-secondary/20 via-secondary/10 to-primary/5 flex items-center justify-center relative overflow-hidden">
           <div class="absolute inset-0 opacity-15">
             <div class="absolute top-6 left-6 w-24 h-24 border-2 border-secondary/30 rounded-xl rotate-12"></div>
@@ -840,9 +840,9 @@
             <.icon name="hero-star-solid" class="size-4 text-secondary" />
             <.icon name="hero-star-solid" class="size-4 text-secondary" />
             <.icon name="hero-star" class="size-4 text-base-300" />
-            <span class="text-sm text-base-content/60 ml-1">(4.5)</span>
+            <span class="text-sm text-base-content/55 ml-1">(4.5)</span>
           </div>
-          <div class="flex items-center gap-2 mt-1 text-sm text-base-content/60">
+          <div class="flex items-center gap-2 mt-1 text-sm text-base-content/55">
             <.icon name="hero-map-pin" class="size-4" />
             <span>Mumbai</span>
           </div>
@@ -854,7 +854,7 @@
       </div>
 
       <%!-- Gym Card 3 --%>
-      <div class="glass-card overflow-hidden group">
+      <div class="ft-card overflow-hidden group">
         <figure class="h-48 bg-gradient-to-br from-primary/15 via-secondary/10 to-primary/5 flex items-center justify-center relative overflow-hidden">
           <div class="absolute inset-0 opacity-15">
             <div class="absolute top-4 left-1/2 w-28 h-28 border-2 border-primary/30 rounded-full -translate-x-1/2"></div>
@@ -878,9 +878,9 @@
             <.icon name="hero-star-solid" class="size-4 text-secondary" />
             <.icon name="hero-star-solid" class="size-4 text-secondary" />
             <.icon name="hero-star-solid" class="size-4 text-secondary" />
-            <span class="text-sm text-base-content/60 ml-1">(4.9)</span>
+            <span class="text-sm text-base-content/55 ml-1">(4.9)</span>
           </div>
-          <div class="flex items-center gap-2 mt-1 text-sm text-base-content/60">
+          <div class="flex items-center gap-2 mt-1 text-sm text-base-content/55">
             <.icon name="hero-map-pin" class="size-4" />
             <span>Bangalore</span>
           </div>
@@ -893,7 +893,7 @@
     </div>
 
     <div class="text-center mt-12">
-      <a href="/explore" class="btn btn-outline btn-primary btn-lg font-bold">
+      <a href="/explore" class="btn btn-outline btn-primary btn-lg font-bold press-scale">
         <.icon name="hero-magnifying-glass" class="size-5" /> Explore All Gyms
       </a>
     </div>
@@ -901,13 +901,13 @@
 </section>
 
 <%!-- Testimonials Section --%>
-<section class="py-24 px-4 sm:px-6 lg:px-8 bg-base-200/50">
+<section class="py-24 px-4 sm:px-6 lg:px-8 bg-base-200/30">
   <div class="max-w-6xl mx-auto">
     <div class="text-center mb-16">
       <h2 class="font-brand text-3xl sm:text-4xl">
         WHAT OUR USERS <span class="text-primary">SAY</span>
       </h2>
-      <p class="mt-4 text-base-content/60 text-lg">
+      <p class="mt-4 text-base-content/55 text-lg">
         Real stories from real people who transformed their fitness journey
       </p>
     </div>
@@ -915,14 +915,14 @@
     <%!-- Dual-Row Infinite Marquee --%>
     <div class="relative overflow-hidden">
       <%!-- Gradient fade edges --%>
-      <div class="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-base-200/50 to-transparent z-10 pointer-events-none"></div>
-      <div class="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-base-200/50 to-transparent z-10 pointer-events-none"></div>
+      <div class="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-base-200/30 to-transparent z-10 pointer-events-none"></div>
+      <div class="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-base-200/30 to-transparent z-10 pointer-events-none"></div>
 
       <%!-- Row 1: Scrolling Left --%>
       <div class="flex gap-6 mb-6 animate-marquee-left" style="width: max-content;">
         <%= for _pass <- 1..2 do %>
           <%!-- Card 1 --%>
-          <div class="glass-card w-80 shrink-0 p-6">
+          <div class="ft-card w-80 shrink-0 p-6">
             <div class="flex items-center gap-1 mb-3">
               <.icon name="hero-star-solid" class="size-4 text-secondary" />
               <.icon name="hero-star-solid" class="size-4 text-secondary" />
@@ -937,13 +937,13 @@
               <div class="w-10 h-10 rounded-full bg-primary text-primary-content flex items-center justify-center text-sm font-bold">PK</div>
               <div>
                 <p class="font-semibold text-sm">Priya Kapoor</p>
-                <p class="text-xs text-base-content/50">Member since 2024</p>
+                <p class="text-xs text-base-content/55">Member since 2024</p>
               </div>
             </div>
           </div>
 
           <%!-- Card 2 --%>
-          <div class="glass-card w-80 shrink-0 p-6">
+          <div class="ft-card w-80 shrink-0 p-6">
             <div class="flex items-center gap-1 mb-3">
               <.icon name="hero-star-solid" class="size-4 text-secondary" />
               <.icon name="hero-star-solid" class="size-4 text-secondary" />
@@ -958,13 +958,13 @@
               <div class="w-10 h-10 rounded-full bg-secondary text-secondary-content flex items-center justify-center text-sm font-bold">RV</div>
               <div>
                 <p class="font-semibold text-sm">Rahul Verma</p>
-                <p class="text-xs text-base-content/50">Gym Operations Lead</p>
+                <p class="text-xs text-base-content/55">Gym Operations Lead</p>
               </div>
             </div>
           </div>
 
           <%!-- Card 3 --%>
-          <div class="glass-card w-80 shrink-0 p-6">
+          <div class="ft-card w-80 shrink-0 p-6">
             <div class="flex items-center gap-1 mb-3">
               <.icon name="hero-star-solid" class="size-4 text-secondary" />
               <.icon name="hero-star-solid" class="size-4 text-secondary" />
@@ -979,7 +979,7 @@
               <div class="w-10 h-10 rounded-full bg-primary text-primary-content flex items-center justify-center text-sm font-bold">AS</div>
               <div>
                 <p class="font-semibold text-sm">Ankit Sharma</p>
-                <p class="text-xs text-base-content/50">Gym Owner</p>
+                <p class="text-xs text-base-content/55">Gym Owner</p>
               </div>
             </div>
           </div>
@@ -990,7 +990,7 @@
       <div class="flex gap-6 animate-marquee-right" style="width: max-content;">
         <%= for _pass <- 1..2 do %>
           <%!-- Card 4 --%>
-          <div class="glass-card w-80 shrink-0 p-6">
+          <div class="ft-card w-80 shrink-0 p-6">
             <div class="flex items-center gap-1 mb-3">
               <.icon name="hero-star-solid" class="size-4 text-secondary" />
               <.icon name="hero-star-solid" class="size-4 text-secondary" />
@@ -1005,13 +1005,13 @@
               <div class="w-10 h-10 rounded-full bg-accent text-accent-content flex items-center justify-center text-sm font-bold">NP</div>
               <div>
                 <p class="font-semibold text-sm">Neha Patel</p>
-                <p class="text-xs text-base-content/50">Yoga Enthusiast</p>
+                <p class="text-xs text-base-content/55">Yoga Enthusiast</p>
               </div>
             </div>
           </div>
 
           <%!-- Card 5 --%>
-          <div class="glass-card w-80 shrink-0 p-6">
+          <div class="ft-card w-80 shrink-0 p-6">
             <div class="flex items-center gap-1 mb-3">
               <.icon name="hero-star-solid" class="size-4 text-secondary" />
               <.icon name="hero-star-solid" class="size-4 text-secondary" />
@@ -1026,13 +1026,13 @@
               <div class="w-10 h-10 rounded-full bg-secondary text-secondary-content flex items-center justify-center text-sm font-bold">VR</div>
               <div>
                 <p class="font-semibold text-sm">Vikram Reddy</p>
-                <p class="text-xs text-base-content/50">Bodybuilder</p>
+                <p class="text-xs text-base-content/55">Bodybuilder</p>
               </div>
             </div>
           </div>
 
           <%!-- Card 6 --%>
-          <div class="glass-card w-80 shrink-0 p-6">
+          <div class="ft-card w-80 shrink-0 p-6">
             <div class="flex items-center gap-1 mb-3">
               <.icon name="hero-star-solid" class="size-4 text-secondary" />
               <.icon name="hero-star-solid" class="size-4 text-secondary" />
@@ -1047,7 +1047,7 @@
               <div class="w-10 h-10 rounded-full bg-primary text-primary-content flex items-center justify-center text-sm font-bold">DG</div>
               <div>
                 <p class="font-semibold text-sm">Deepika Gupta</p>
-                <p class="text-xs text-base-content/50">Gym Manager</p>
+                <p class="text-xs text-base-content/55">Gym Manager</p>
               </div>
             </div>
           </div>
@@ -1064,14 +1064,14 @@
       <h2 class="font-brand text-3xl sm:text-4xl">
         FREQUENTLY ASKED <span class="text-primary">QUESTIONS</span>
       </h2>
-      <p class="mt-4 text-base-content/60 text-lg">
+      <p class="mt-4 text-base-content/55 text-lg">
         Everything you need to know about FitTrackerz
       </p>
     </div>
 
     <div class="space-y-4">
       <%!-- FAQ 1 --%>
-      <div class="collapse collapse-plus glass-card">
+      <div class="collapse collapse-plus ft-card">
         <input type="radio" name="faq-accordion" checked="checked" />
         <div class="collapse-title text-lg font-semibold flex items-center gap-2">
           <.icon name="hero-currency-rupee-solid" class="size-5 text-primary shrink-0" />
@@ -1085,7 +1085,7 @@
       </div>
 
       <%!-- FAQ 2 --%>
-      <div class="collapse collapse-plus glass-card">
+      <div class="collapse collapse-plus ft-card">
         <input type="radio" name="faq-accordion" />
         <div class="collapse-title text-lg font-semibold flex items-center gap-2">
           <.icon name="hero-map-pin-solid" class="size-5 text-primary shrink-0" />
@@ -1100,7 +1100,7 @@
 
 
       <%!-- FAQ 4 --%>
-      <div class="collapse collapse-plus glass-card">
+      <div class="collapse collapse-plus ft-card">
         <input type="radio" name="faq-accordion" />
         <div class="collapse-title text-lg font-semibold flex items-center gap-2">
           <.icon name="hero-credit-card-solid" class="size-5 text-primary shrink-0" />
@@ -1114,7 +1114,7 @@
       </div>
 
       <%!-- FAQ 5 --%>
-      <div class="collapse collapse-plus glass-card">
+      <div class="collapse collapse-plus ft-card">
         <input type="radio" name="faq-accordion" />
         <div class="collapse-title text-lg font-semibold flex items-center gap-2">
           <.icon name="hero-arrow-path-solid" class="size-5 text-primary shrink-0" />
@@ -1128,7 +1128,7 @@
       </div>
 
       <%!-- FAQ 6 --%>
-      <div class="collapse collapse-plus glass-card">
+      <div class="collapse collapse-plus ft-card">
         <input type="radio" name="faq-accordion" />
         <div class="collapse-title text-lg font-semibold flex items-center gap-2">
           <.icon name="hero-device-phone-mobile-solid" class="size-5 text-primary shrink-0" />
@@ -1143,61 +1143,61 @@
     </div>
 
     <div class="text-center mt-12">
-      <p class="text-base-content/60 mb-4">Still have questions?</p>
-      <a href="/about" class="btn btn-outline btn-primary font-bold">Contact Support</a>
+      <p class="text-base-content/55 mb-4">Still have questions?</p>
+      <a href="/about" class="btn btn-outline btn-primary font-bold press-scale">Contact Support</a>
     </div>
   </div>
 </section>
 
 <%!-- CTA Section --%>
-<section class="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-primary/5 via-base-200/50 to-secondary/5 relative overflow-hidden">
+<section class="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-primary/5 via-base-200/30 to-secondary/5 relative overflow-hidden">
   <%!-- Floating decorative elements --%>
-  <div class="absolute top-12 left-12 opacity-[0.06] animate-float">
+  <div class="absolute top-12 left-12 opacity-25 animate-float drop-shadow-[0_0_12px_var(--color-primary)]">
     <.icon name="hero-bolt-solid" class="size-16 text-primary" />
   </div>
-  <div class="absolute bottom-12 right-12 opacity-[0.06] animate-float-delayed">
-    <.icon name="hero-fire-solid" class="size-14 text-secondary" />
+  <div class="absolute bottom-12 right-12 opacity-20 animate-float-delayed drop-shadow-[0_0_12px_var(--color-accent)]">
+    <.icon name="hero-fire-solid" class="size-14 text-accent" />
   </div>
-  <div class="absolute top-1/3 right-1/4 opacity-[0.04] animate-float-slow">
+  <div class="absolute top-1/3 right-1/4 opacity-15 animate-float-slow drop-shadow-[0_0_12px_var(--color-primary)]">
     <.icon name="hero-sparkles-solid" class="size-12 text-primary" />
   </div>
 
   <div class="max-w-4xl mx-auto text-center">
-    <div class="glass-card p-8 sm:p-12 relative overflow-hidden">
+    <div class="ft-card p-8 sm:p-12 relative overflow-hidden">
       <div class="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
       <div class="absolute bottom-0 left-0 w-32 h-32 bg-secondary/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
 
       <div class="relative z-10">
         <div class="flex justify-center mb-4">
-          <div class="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
+          <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center border border-primary/20">
             <.icon name="hero-rocket-launch-solid" class="size-8 text-primary" />
           </div>
         </div>
         <h2 class="font-brand text-3xl sm:text-4xl">
           READY TO <span class="text-primary">GET STARTED?</span>
         </h2>
-        <p class="mt-4 text-base-content/60 text-lg max-w-xl mx-auto">
+        <p class="mt-4 text-base-content/55 text-lg max-w-xl mx-auto">
           Join FitTrackerz today and take your fitness business to the next level. It's free, fast, and packed with features.
         </p>
         <div class="flex flex-wrap justify-center gap-4 mt-6 mb-8">
-          <div class="flex items-center gap-1.5 text-sm text-base-content/60">
+          <div class="flex items-center gap-1.5 text-sm text-base-content/55">
             <.icon name="hero-check-circle-solid" class="size-4 text-success" /> Free forever plan
           </div>
-          <div class="flex items-center gap-1.5 text-sm text-base-content/60">
+          <div class="flex items-center gap-1.5 text-sm text-base-content/55">
             <.icon name="hero-check-circle-solid" class="size-4 text-success" /> No credit card
           </div>
-          <div class="flex items-center gap-1.5 text-sm text-base-content/60">
+          <div class="flex items-center gap-1.5 text-sm text-base-content/55">
             <.icon name="hero-check-circle-solid" class="size-4 text-success" /> Setup in 2 min
           </div>
         </div>
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
           <a
             href="/register"
-            class="btn btn-primary btn-lg gap-2 shadow-lg shadow-primary/25 font-bold px-8 animate-glow-pulse"
+            class="btn btn-primary btn-lg gap-2 shadow-lg shadow-primary/25 font-bold px-8 animate-glow-pulse press-scale"
           >
             <.icon name="hero-rocket-launch-solid" class="size-5" /> Create Free Account
           </a>
-          <a href="/sign-in" class="btn btn-ghost btn-lg font-semibold border border-base-300">
+          <a href="/sign-in" class="btn btn-ghost btn-lg font-semibold border border-base-200/60 press-scale">
             Already have an account?
           </a>
         </div>
@@ -1216,17 +1216,17 @@
 </button>
 
 <%!-- Footer --%>
-<footer class="bg-base-200/80 backdrop-blur-sm border-t border-base-300 relative">
+<footer class="bg-base-200/80 backdrop-blur-sm border-t border-base-200/60 relative">
   <%!-- Decorative top gradient line --%>
   <div class="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
       <%!-- Brand Column --%>
       <div>
         <a href="/" class="flex items-center gap-2 mb-4">
           <.brand_logo class="h-10 w-auto" />
         </a>
-        <p class="text-base-content/60 text-sm mb-4">
+        <p class="text-base-content/55 text-sm mb-4">
           The all-in-one platform connecting gyms and members for a better fitness experience.
         </p>
         <div class="flex gap-3">
@@ -1249,12 +1249,12 @@
         </h3>
         <ul class="space-y-2 text-sm">
           <li>
-            <a href="/solutions/members" class="text-base-content/60 hover:text-primary hover:underline underline-offset-4 transition-colors">
+            <a href="/solutions/members" class="text-base-content/55 hover:text-primary hover:underline underline-offset-4 transition-colors">
               For Members
             </a>
           </li>
           <li>
-            <a href="/solutions/operators" class="text-base-content/60 hover:text-primary hover:underline underline-offset-4 transition-colors">
+            <a href="/solutions/operators" class="text-base-content/55 hover:text-primary hover:underline underline-offset-4 transition-colors">
               For Gym Operators
             </a>
           </li>
@@ -1268,25 +1268,25 @@
         </h3>
         <ul class="space-y-2 text-sm">
           <li>
-            <a href="/about" class="text-base-content/60 hover:text-primary hover:underline underline-offset-4 transition-colors">
+            <a href="/about" class="text-base-content/55 hover:text-primary hover:underline underline-offset-4 transition-colors">
               About Us
             </a>
           </li>
           <li>
-            <a href="/explore" class="text-base-content/60 hover:text-primary hover:underline underline-offset-4 transition-colors">
+            <a href="/explore" class="text-base-content/55 hover:text-primary hover:underline underline-offset-4 transition-colors">
               Explore Gyms
             </a>
           </li>
           <li>
-            <a href="/explore/contests" class="text-base-content/60 hover:text-primary hover:underline underline-offset-4 transition-colors">
+            <a href="/explore/contests" class="text-base-content/55 hover:text-primary hover:underline underline-offset-4 transition-colors">
               Contests
             </a>
           </li>
           <li>
-            <a href="#" class="text-base-content/60 hover:text-primary hover:underline underline-offset-4 transition-colors">Contact</a>
+            <a href="#" class="text-base-content/55 hover:text-primary hover:underline underline-offset-4 transition-colors">Contact</a>
           </li>
           <li>
-            <a href="#" class="text-base-content/60 hover:text-primary hover:underline underline-offset-4 transition-colors">Careers</a>
+            <a href="#" class="text-base-content/55 hover:text-primary hover:underline underline-offset-4 transition-colors">Careers</a>
           </li>
         </ul>
       </div>
@@ -1298,22 +1298,22 @@
         </h3>
         <ul class="space-y-2 text-sm">
           <li>
-            <a href="#" class="text-base-content/60 hover:text-primary hover:underline underline-offset-4 transition-colors">
+            <a href="#" class="text-base-content/55 hover:text-primary hover:underline underline-offset-4 transition-colors">
               Privacy Policy
             </a>
           </li>
           <li>
-            <a href="#" class="text-base-content/60 hover:text-primary hover:underline underline-offset-4 transition-colors">
+            <a href="#" class="text-base-content/55 hover:text-primary hover:underline underline-offset-4 transition-colors">
               Terms of Service
             </a>
           </li>
           <li>
-            <a href="#" class="text-base-content/60 hover:text-primary hover:underline underline-offset-4 transition-colors">
+            <a href="#" class="text-base-content/55 hover:text-primary hover:underline underline-offset-4 transition-colors">
               Cookie Policy
             </a>
           </li>
           <li>
-            <a href="#" class="text-base-content/60 hover:text-primary hover:underline underline-offset-4 transition-colors">
+            <a href="#" class="text-base-content/55 hover:text-primary hover:underline underline-offset-4 transition-colors">
               Refund Policy
             </a>
           </li>
@@ -1322,7 +1322,7 @@
     </div>
 
     <%!-- Bottom Bar --%>
-    <div class="pt-8 border-t border-base-300 flex items-center justify-center">
+    <div class="pt-8 border-t border-base-200/60 flex items-center justify-center">
       <p class="text-sm text-base-content/40">
         &copy; 2026 FitTrackerz. All rights reserved.
       </p>

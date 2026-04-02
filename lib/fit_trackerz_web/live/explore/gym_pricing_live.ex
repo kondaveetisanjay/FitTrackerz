@@ -88,18 +88,18 @@ defmodule FitTrackerzWeb.Explore.GymPricingLive do
           </p>
 
           <%!-- Plan Type Toggle --%>
-          <div class="inline-flex rounded-full bg-base-200 p-1 mt-6 mb-8 border border-base-300/50">
+          <div class="inline-flex rounded-full bg-base-200 p-1 mt-6 mb-8 border border-base-200/50">
             <button
               phx-click="switch_plan_type"
               phx-value-type="general"
-              class={["px-6 py-2 rounded-full text-sm font-semibold transition-all", if(@active_plan_type == :general, do: "bg-primary text-primary-content shadow-md", else: "text-base-content/60 hover:text-base-content")]}
+              class={["px-6 py-2 rounded-full text-sm font-semibold transition-all press-scale", if(@active_plan_type == :general, do: "bg-primary text-primary-content shadow-md", else: "text-base-content/60 hover:text-base-content")]}
             >
               General Membership
             </button>
             <button
               phx-click="switch_plan_type"
               phx-value-type="personal_training"
-              class={["px-6 py-2 rounded-full text-sm font-semibold transition-all", if(@active_plan_type == :personal_training, do: "bg-primary text-primary-content shadow-md", else: "text-base-content/60 hover:text-base-content")]}
+              class={["px-6 py-2 rounded-full text-sm font-semibold transition-all press-scale", if(@active_plan_type == :personal_training, do: "bg-primary text-primary-content shadow-md", else: "text-base-content/60 hover:text-base-content")]}
             >
               Personal Training
             </button>
@@ -118,7 +118,7 @@ defmodule FitTrackerzWeb.Explore.GymPricingLive do
                 <% is_recommended = savings >= 20 && savings <= 30 %>
 
                 <div class={[
-                  "glass-card overflow-hidden",
+                  "ft-card overflow-hidden",
                   if(is_recommended, do: "ring-2 ring-primary scale-105 shadow-xl", else: "")
                 ]}>
                   <%= if is_recommended do %>
@@ -157,7 +157,7 @@ defmodule FitTrackerzWeb.Explore.GymPricingLive do
                     </ul>
 
                     <a href="/register" class={[
-                      "btn mt-4 w-full",
+                      "btn mt-4 w-full press-scale",
                       if(is_recommended, do: "btn-primary", else: "btn-outline btn-primary")
                     ]}>
                       Select Plan
@@ -168,67 +168,69 @@ defmodule FitTrackerzWeb.Explore.GymPricingLive do
             </div>
 
             <%!-- Comparison Table --%>
-            <div class="glass-card overflow-x-auto mt-12 p-1">
+            <div class="ft-card mt-12 p-6">
               <h2 class="text-xl font-brand mb-4">Plan Comparison</h2>
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>Feature</th>
-                    <%= for plan <- type_plans do %>
-                      <th class="text-center">{PricingHelpers.duration_label(plan.duration)}</th>
-                    <% end %>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="hover:bg-base-200/30">
-                    <td>Gym Access</td>
-                    <%= for _plan <- type_plans do %>
-                      <td class="text-center"><.icon name="hero-check-circle-solid" class="size-5 text-success inline" /></td>
-                    <% end %>
-                  </tr>
-                  <tr class="hover:bg-base-200/30">
-                    <td>Group Classes</td>
-                    <%= for _plan <- type_plans do %>
-                      <td class="text-center"><.icon name="hero-check-circle-solid" class="size-5 text-success inline" /></td>
-                    <% end %>
-                  </tr>
-                  <tr class="hover:bg-base-200/30">
-                    <td>Locker Room</td>
-                    <%= for _plan <- type_plans do %>
-                      <td class="text-center"><.icon name="hero-check-circle-solid" class="size-5 text-success inline" /></td>
-                    <% end %>
-                  </tr>
-                  <tr class="hover:bg-base-200/30">
-                    <td class="font-semibold">Price</td>
-                    <%= for plan <- type_plans do %>
-                      <td class="text-center font-semibold">Rs{PricingHelpers.format_price(plan.price_in_paise)}</td>
-                    <% end %>
-                  </tr>
-                  <tr class="hover:bg-base-200/30">
-                    <td class="font-semibold">Per Month</td>
-                    <%= for plan <- type_plans do %>
-                      <% per_month = PricingHelpers.per_month_price(plan.price_in_paise, plan.duration) %>
-                      <td class="text-center">
-                        {if per_month, do: "Rs#{PricingHelpers.format_price(per_month)}", else: "-"}
-                      </td>
-                    <% end %>
-                  </tr>
-                  <tr class="hover:bg-base-200/30">
-                    <td class="font-semibold">Total Savings</td>
-                    <%= for plan <- type_plans do %>
-                      <% savings = if base_monthly do
-                        months = PricingHelpers.duration_months(plan.duration)
-                        if months && months > 1, do: base_monthly * months - plan.price_in_paise, else: 0
-                      else
-                        0
-                      end %>
-                      <td class="text-center text-success font-semibold">
-                        {if savings > 0, do: "Rs#{PricingHelpers.format_price(savings)}", else: "-"}
-                      </td>
-                    <% end %>
-                  </tr>
-                </tbody>
-              </table>
+              <div class="ft-table overflow-x-auto">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Feature</th>
+                      <%= for plan <- type_plans do %>
+                        <th class="text-center">{PricingHelpers.duration_label(plan.duration)}</th>
+                      <% end %>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr class="hover:bg-base-200/50">
+                      <td>Gym Access</td>
+                      <%= for _plan <- type_plans do %>
+                        <td class="text-center"><.icon name="hero-check-circle-solid" class="size-5 text-success inline" /></td>
+                      <% end %>
+                    </tr>
+                    <tr class="hover:bg-base-200/50">
+                      <td>Group Classes</td>
+                      <%= for _plan <- type_plans do %>
+                        <td class="text-center"><.icon name="hero-check-circle-solid" class="size-5 text-success inline" /></td>
+                      <% end %>
+                    </tr>
+                    <tr class="hover:bg-base-200/50">
+                      <td>Locker Room</td>
+                      <%= for _plan <- type_plans do %>
+                        <td class="text-center"><.icon name="hero-check-circle-solid" class="size-5 text-success inline" /></td>
+                      <% end %>
+                    </tr>
+                    <tr class="hover:bg-base-200/50">
+                      <td class="font-semibold">Price</td>
+                      <%= for plan <- type_plans do %>
+                        <td class="text-center font-semibold">Rs{PricingHelpers.format_price(plan.price_in_paise)}</td>
+                      <% end %>
+                    </tr>
+                    <tr class="hover:bg-base-200/50">
+                      <td class="font-semibold">Per Month</td>
+                      <%= for plan <- type_plans do %>
+                        <% per_month = PricingHelpers.per_month_price(plan.price_in_paise, plan.duration) %>
+                        <td class="text-center">
+                          {if per_month, do: "Rs#{PricingHelpers.format_price(per_month)}", else: "-"}
+                        </td>
+                      <% end %>
+                    </tr>
+                    <tr class="hover:bg-base-200/50">
+                      <td class="font-semibold">Total Savings</td>
+                      <%= for plan <- type_plans do %>
+                        <% savings = if base_monthly do
+                          months = PricingHelpers.duration_months(plan.duration)
+                          if months && months > 1, do: base_monthly * months - plan.price_in_paise, else: 0
+                        else
+                          0
+                        end %>
+                        <td class="text-center text-success font-semibold">
+                          {if savings > 0, do: "Rs#{PricingHelpers.format_price(savings)}", else: "-"}
+                        </td>
+                      <% end %>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           <% else %>
             <div class="text-center py-12 text-base-content/50">
@@ -243,7 +245,7 @@ defmodule FitTrackerzWeb.Explore.GymPricingLive do
             <div class="absolute bottom-0 left-0 w-20 h-20 bg-secondary/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
             <div class="relative z-10">
               <p class="text-base-content/70 mb-2">Not sure which plan? Start with Monthly and upgrade anytime.</p>
-              <a href="/register" class="btn btn-primary">Register Free to Join</a>
+              <a href="/register" class="btn btn-primary press-scale">Register Free to Join</a>
             </div>
           </div>
         </div>

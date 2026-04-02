@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -8,7 +8,7 @@
       name="description"
       content="FitTrackerz — Discover gyms, book classes, track workouts, and manage your fitness business. The all-in-one fitness platform."
     />
-    <meta name="theme-color" content="#4338ca" />
+    <meta name="theme-color" content="#1a1030" />
     <.live_title default="FitTrackerz" suffix=" · FitTrackerz">
       {assigns[:page_title]}
     </.live_title>
@@ -48,7 +48,7 @@
           }
         };
         if (!document.documentElement.hasAttribute("data-theme")) {
-          setTheme(localStorage.getItem("phx:theme") || "system");
+          setTheme(localStorage.getItem("phx:theme") || "dark");
         }
         window.addEventListener("storage", (e) => e.key === "phx:theme" && setTheme(e.newValue || "system"));
 

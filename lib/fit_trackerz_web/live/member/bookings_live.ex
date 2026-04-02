@@ -105,7 +105,7 @@ defmodule FitTrackerzWeb.Member.BookingsLive do
 
         <%= if @no_gym do %>
           <%!-- No Gym Membership --%>
-          <div class="card bg-base-200/50 border border-base-300/50" id="no-gym-card">
+          <div class="ft-card p-6" id="no-gym-card">
             <div class="card-body items-center text-center p-8">
               <div class="w-16 h-16 rounded-2xl bg-warning/10 flex items-center justify-center mb-4">
                 <.icon name="hero-building-office-2" class="size-8 text-warning" />
@@ -119,7 +119,7 @@ defmodule FitTrackerzWeb.Member.BookingsLive do
         <% else %>
           <%= if @bookings == [] do %>
             <%!-- Empty State --%>
-            <div class="card bg-base-200/50 border border-base-300/50" id="no-bookings">
+            <div class="ft-card p-6" id="no-bookings">
               <div class="card-body items-center text-center p-8">
                 <div class="w-16 h-16 rounded-2xl bg-info/10 flex items-center justify-center mb-4">
                   <.icon name="hero-ticket" class="size-8 text-info" />
@@ -135,57 +135,55 @@ defmodule FitTrackerzWeb.Member.BookingsLive do
             </div>
           <% else %>
             <%!-- Bookings Table --%>
-            <div class="card bg-base-200/50 border border-base-300/50" id="bookings-table">
-              <div class="card-body p-5">
-                <div class="overflow-x-auto">
-                  <table class="table table-sm">
-                    <thead>
-                      <tr class="text-base-content/40">
-                        <th>Class</th>
-                        <th>Location</th>
-                        <th>Date & Time</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr :for={booking <- @bookings} id={"booking-#{booking.id}"}>
-                        <td class="font-medium">
-                          {booking.scheduled_class.class_definition.name}
-                        </td>
-                        <td class="text-base-content/70">
-                          <%= if booking.scheduled_class.branch do %>
-                            {booking.scheduled_class.branch.city}
-                          <% else %>
-                            <span class="text-base-content/30">--</span>
-                          <% end %>
-                        </td>
-                        <td class="text-base-content/70">
-                          {format_datetime(booking.scheduled_class.scheduled_at)}
-                        </td>
-                        <td>
-                          <span class={"badge badge-sm #{status_badge_class(booking.status)}"}>
-                            {format_status(booking.status)}
-                          </span>
-                        </td>
-                        <td>
-                          <%= if cancellable?(booking.status) do %>
-                            <button
-                              class="btn btn-ghost btn-xs text-error"
-                              phx-click="cancel_booking"
-                              phx-value-booking-id={booking.id}
-                              data-confirm="Are you sure you want to cancel this booking?"
-                            >
-                              Cancel
-                            </button>
-                          <% else %>
-                            <span class="text-xs text-base-content/30">--</span>
-                          <% end %>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+            <div class="ft-card p-6" id="bookings-table">
+              <div class="ft-table overflow-x-auto">
+                <table class="table table-sm">
+                  <thead>
+                    <tr class="text-base-content/40">
+                      <th>Class</th>
+                      <th>Location</th>
+                      <th>Date & Time</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr :for={booking <- @bookings} id={"booking-#{booking.id}"}>
+                      <td class="font-medium">
+                        {booking.scheduled_class.class_definition.name}
+                      </td>
+                      <td class="text-base-content/70">
+                        <%= if booking.scheduled_class.branch do %>
+                          {booking.scheduled_class.branch.city}
+                        <% else %>
+                          <span class="text-base-content/30">--</span>
+                        <% end %>
+                      </td>
+                      <td class="text-base-content/70">
+                        {format_datetime(booking.scheduled_class.scheduled_at)}
+                      </td>
+                      <td>
+                        <span class={"badge badge-sm #{status_badge_class(booking.status)}"}>
+                          {format_status(booking.status)}
+                        </span>
+                      </td>
+                      <td>
+                        <%= if cancellable?(booking.status) do %>
+                          <button
+                            class="btn btn-ghost btn-xs text-error press-scale"
+                            phx-click="cancel_booking"
+                            phx-value-booking-id={booking.id}
+                            data-confirm="Are you sure you want to cancel this booking?"
+                          >
+                            Cancel
+                          </button>
+                        <% else %>
+                          <span class="text-xs text-base-content/30">--</span>
+                        <% end %>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           <% end %>

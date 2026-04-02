@@ -55,41 +55,39 @@ defmodule FitTrackerzWeb.Member.GymLive do
             <%= for gym <- @gyms do %>
               <.link
                 navigate={"/member/gym/#{gym.id}"}
-                class="card bg-base-200/50 border border-base-300/50 hover:shadow-lg hover:border-primary/30 transition-all"
+                class="ft-card ft-card-hover p-6 hover:shadow-lg hover:border-primary/30 transition-all"
                 id={"gym-#{gym.id}"}
               >
-                <div class="card-body p-5">
-                  <div class="flex items-start justify-between gap-3">
-                    <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                      <.icon name="hero-building-office-2-solid" class="size-6 text-primary" />
-                    </div>
-
-                    <%= if gym.status == :verified do %>
-                      <span class="badge badge-success badge-sm gap-1">
-                        <.icon name="hero-check-badge-mini" class="size-3" /> Verified
-                      </span>
-                    <% else %>
-                      <span class="badge badge-warning badge-sm gap-1">
-                        {Phoenix.Naming.humanize(gym.status)}
-                      </span>
-                    <% end %>
+                <div class="flex items-start justify-between gap-3">
+                  <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <.icon name="hero-building-office-2-solid" class="size-6 text-primary" />
                   </div>
 
-                  <h3 class="text-lg font-bold mt-3">{gym.name}</h3>
+                  <%= if gym.status == :verified do %>
+                    <span class="badge badge-success badge-sm gap-1">
+                      <.icon name="hero-check-badge-mini" class="size-3" /> Verified
+                    </span>
+                  <% else %>
+                    <span class="badge badge-warning badge-sm gap-1">
+                      {Phoenix.Naming.humanize(gym.status)}
+                    </span>
+                  <% end %>
+                </div>
 
-                  <div class="flex items-center gap-2 mt-1 text-sm text-base-content/50">
-                    <.icon name="hero-map-pin-mini" class="size-4" />
-                    <span>{primary_city(gym.branches)}</span>
-                  </div>
+                <h3 class="text-lg font-bold mt-3">{gym.name}</h3>
 
-                  <div class="flex items-center gap-2 mt-2 text-sm text-base-content/50">
-                    <.icon name="hero-building-office-mini" class="size-4" />
-                    <span>1 location</span>
-                  </div>
+                <div class="flex items-center gap-2 mt-1 text-sm text-base-content/50">
+                  <.icon name="hero-map-pin-mini" class="size-4" />
+                  <span>{primary_city(gym.branches)}</span>
+                </div>
 
-                  <div class="mt-3 text-xs text-primary font-semibold flex items-center gap-1">
-                    View Details <.icon name="hero-arrow-right-mini" class="size-3" />
-                  </div>
+                <div class="flex items-center gap-2 mt-2 text-sm text-base-content/50">
+                  <.icon name="hero-building-office-mini" class="size-4" />
+                  <span>1 location</span>
+                </div>
+
+                <div class="mt-3 text-xs text-primary font-semibold flex items-center gap-1">
+                  View Details <.icon name="hero-arrow-right-mini" class="size-3" />
                 </div>
               </.link>
             <% end %>

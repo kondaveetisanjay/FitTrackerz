@@ -62,8 +62,8 @@ defmodule FitTrackerzWeb.GymOperator.AttendanceLive do
         </div>
 
         <%= if @gym == nil do %>
-          <div class="card bg-base-200/50 border border-base-300/50" id="no-gym-card">
-            <div class="card-body p-6 text-center">
+          <div class="ft-card p-6" id="no-gym-card">
+            <div class="text-center">
               <.icon name="hero-building-office-solid" class="size-12 text-base-content/20 mx-auto" />
               <h2 class="text-lg font-bold mt-4">No Gym Found</h2>
               <p class="text-base-content/50 mt-1">
@@ -75,51 +75,49 @@ defmodule FitTrackerzWeb.GymOperator.AttendanceLive do
             </div>
           </div>
         <% else %>
-          <div class="card bg-base-200/50 border border-base-300/50" id="attendance-card">
-            <div class="card-body p-6">
-              <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                <.icon name="hero-clipboard-document-check-solid" class="size-5 text-success" />
-                Attendance Records
-                <span class="badge badge-neutral badge-sm">{length(@records)}</span>
-              </h2>
-              <%= if @records == [] do %>
-                <div
-                  class="flex flex-col items-center gap-3 p-8 rounded-lg bg-base-300/20"
-                  id="no-attendance-state"
-                >
-                  <.icon name="hero-clipboard-document-check" class="size-12 text-base-content/20" />
-                  <p class="text-base-content/50 font-medium">No attendance records yet</p>
-                  <p class="text-sm text-base-content/40">
-                    Attendance records will appear here once members start checking in.
-                  </p>
-                </div>
-              <% else %>
-                <div class="overflow-x-auto">
-                  <table class="table table-sm" id="attendance-table">
-                    <thead>
-                      <tr class="text-base-content/40">
-                        <th>Member</th>
-                        <th>Attended At</th>
-                        <th>Notes</th>
-                        <th>Marked By</th>
+          <div class="ft-card p-6" id="attendance-card">
+            <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
+              <.icon name="hero-clipboard-document-check-solid" class="size-5 text-success" />
+              Attendance Records
+              <span class="badge badge-neutral badge-sm">{length(@records)}</span>
+            </h2>
+            <%= if @records == [] do %>
+              <div
+                class="flex flex-col items-center gap-3 p-8 bg-base-200/30 rounded-xl"
+                id="no-attendance-state"
+              >
+                <.icon name="hero-clipboard-document-check" class="size-12 text-base-content/20" />
+                <p class="text-base-content/50 font-medium">No attendance records yet</p>
+                <p class="text-sm text-base-content/40">
+                  Attendance records will appear here once members start checking in.
+                </p>
+              </div>
+            <% else %>
+              <div class="ft-table overflow-x-auto">
+                <table class="table table-sm" id="attendance-table">
+                  <thead>
+                    <tr class="text-base-content/40">
+                      <th>Member</th>
+                      <th>Attended At</th>
+                      <th>Notes</th>
+                      <th>Marked By</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <%= for record <- @records do %>
+                      <tr id={"attendance-#{record.id}"}>
+                        <td class="font-medium">{get_member_name(record)}</td>
+                        <td class="text-base-content/60">{format_datetime(record.attended_at)}</td>
+                        <td class="text-base-content/60 text-sm max-w-xs truncate">
+                          {record.notes || "--"}
+                        </td>
+                        <td class="text-base-content/60">{get_marked_by_name(record)}</td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      <%= for record <- @records do %>
-                        <tr id={"attendance-#{record.id}"}>
-                          <td class="font-medium">{get_member_name(record)}</td>
-                          <td class="text-base-content/60">{format_datetime(record.attended_at)}</td>
-                          <td class="text-base-content/60 text-sm max-w-xs truncate">
-                            {record.notes || "--"}
-                          </td>
-                          <td class="text-base-content/60">{get_marked_by_name(record)}</td>
-                        </tr>
-                      <% end %>
-                    </tbody>
-                  </table>
-                </div>
-              <% end %>
-            </div>
+                    <% end %>
+                  </tbody>
+                </table>
+              </div>
+            <% end %>
           </div>
         <% end %>
       </div>

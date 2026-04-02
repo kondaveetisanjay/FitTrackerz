@@ -511,7 +511,7 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
           <%= if @view == :detail do %>
             <button
               phx-click="back_to_categories"
-              class="btn btn-ghost btn-sm btn-circle"
+              class="btn btn-ghost btn-sm btn-circle press-scale"
               id="back-to-cats"
             >
               <.icon name="hero-arrow-left" class="size-5" />
@@ -544,8 +544,8 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
         </div>
 
         <%= if @gym == nil do %>
-          <div class="card bg-base-200/50 border border-base-300/50" id="no-gym-card">
-            <div class="card-body p-6 text-center">
+          <div class="ft-card p-6" id="no-gym-card">
+            <div class="text-center">
               <.icon
                 name="hero-building-office-solid"
                 class="size-12 text-base-content/20 mx-auto"
@@ -588,7 +588,7 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
         <p class="text-base-content/40 mb-8 text-center max-w-md">
           Create subscription plans so members can sign up for your gym.
         </p>
-        <button phx-click="create_plans" class="btn btn-primary gap-2" id="create-plans-btn">
+        <button phx-click="create_plans" class="btn btn-primary gap-2 press-scale" id="create-plans-btn">
           <.icon name="hero-plus-mini" class="size-5" /> Create Plans
         </button>
       </div>
@@ -596,7 +596,7 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
       <div class="flex justify-end mb-2">
         <button
           phx-click="create_plans"
-          class="btn btn-primary btn-sm gap-2"
+          class="btn btn-primary btn-sm gap-2 press-scale"
           id="create-plans-btn"
         >
           <.icon name="hero-plus-mini" class="size-4" /> Create Plans
@@ -605,12 +605,12 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="category-grid">
         <div
           :for={{category, cat_plans} <- @grouped}
-          class="card bg-base-200/50 border border-base-300/50 hover:border-primary/30 hover:shadow-lg cursor-pointer transition-all"
+          class="ft-card hover:border-primary/30 hover:shadow-lg cursor-pointer transition-all"
           phx-click="view_category"
           phx-value-category={category}
           id={"cat-#{category}"}
         >
-          <div class="card-body p-5">
+          <div class="p-6">
             <div class="flex items-center gap-3">
               <div class={"size-10 rounded-lg flex items-center justify-center #{category_icon_bg(category)}"}>
                 <.icon name="hero-tag-solid" class="size-5" />
@@ -634,34 +634,32 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
 
   defp render_wizard(assigns) do
     ~H"""
-    <div class="card bg-base-200/50 border border-base-300/50" id="wizard-card">
-      <div class="card-body p-6">
-        <%!-- Progress Steps --%>
-        <ul class="steps steps-horizontal w-full mb-8">
-          <li class={"step #{if @wizard_step >= 1, do: "step-primary"}"}>Categories</li>
-          <li class={"step #{if @wizard_step >= 2, do: "step-primary"}"}>Plan Types</li>
-          <li class={"step #{if @wizard_step >= 3, do: "step-primary"}"}>Pricing</li>
-        </ul>
+    <div class="ft-card p-6" id="wizard-card">
+      <%!-- Progress Steps --%>
+      <ul class="steps steps-horizontal w-full mb-8">
+        <li class={"step #{if @wizard_step >= 1, do: "step-primary"}"}>Categories</li>
+        <li class={"step #{if @wizard_step >= 2, do: "step-primary"}"}>Plan Types</li>
+        <li class={"step #{if @wizard_step >= 3, do: "step-primary"}"}>Pricing</li>
+      </ul>
 
-        <%!-- Errors --%>
-        <%= if @wizard_errors != [] do %>
-          <div class="alert alert-error mb-6" id="wizard-errors">
-            <.icon name="hero-exclamation-circle" class="size-5 shrink-0" />
-            <div>
-              <p :for={err <- @wizard_errors} class="text-sm">{err}</p>
-            </div>
+      <%!-- Errors --%>
+      <%= if @wizard_errors != [] do %>
+        <div class="alert alert-error mb-6" id="wizard-errors">
+          <.icon name="hero-exclamation-circle" class="size-5 shrink-0" />
+          <div>
+            <p :for={err <- @wizard_errors} class="text-sm">{err}</p>
           </div>
-        <% end %>
+        </div>
+      <% end %>
 
-        <%= case @wizard_step do %>
-          <% 1 -> %>
-            {render_wizard_step1(assigns)}
-          <% 2 -> %>
-            {render_wizard_step2(assigns)}
-          <% 3 -> %>
-            {render_wizard_step3(assigns)}
-        <% end %>
-      </div>
+      <%= case @wizard_step do %>
+        <% 1 -> %>
+          {render_wizard_step1(assigns)}
+        <% 2 -> %>
+          {render_wizard_step2(assigns)}
+        <% 3 -> %>
+          {render_wizard_step3(assigns)}
+      <% end %>
     </div>
     """
   end
@@ -695,7 +693,7 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
             <button
               phx-click="remove_category_input"
               phx-value-index={index}
-              class="btn btn-ghost btn-sm btn-circle text-error"
+              class="btn btn-ghost btn-sm btn-circle text-error press-scale"
               id={"wiz-cat-remove-#{index}"}
             >
               <.icon name="hero-x-mark-mini" class="size-4" />
@@ -706,17 +704,17 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
 
       <button
         phx-click="add_category_input"
-        class="btn btn-ghost btn-sm gap-1 mt-3 text-primary"
+        class="btn btn-ghost btn-sm gap-1 mt-3 text-primary press-scale"
         id="wiz-add-category"
       >
         <.icon name="hero-plus-mini" class="size-4" /> Add another category
       </button>
 
       <div class="flex justify-between mt-8">
-        <button phx-click="wizard_back" class="btn btn-ghost btn-sm" id="wiz-back-1">
+        <button phx-click="wizard_back" class="btn btn-ghost btn-sm press-scale" id="wiz-back-1">
           Cancel
         </button>
-        <button phx-click="wizard_next" class="btn btn-primary btn-sm gap-1" id="wiz-next-1">
+        <button phx-click="wizard_next" class="btn btn-primary btn-sm gap-1 press-scale" id="wiz-next-1">
           Next <.icon name="hero-arrow-right-mini" class="size-4" />
         </button>
       </div>
@@ -735,7 +733,7 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
       <div class="space-y-4 max-w-md">
         <label
           :for={{value, label} <- @plan_type_options}
-          class={"flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all #{if MapSet.member?(@wizard_plan_types, value), do: "bg-primary/5 border-primary/30", else: "bg-base-300/10 border-base-300/30"}"}
+          class={"flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all #{if MapSet.member?(@wizard_plan_types, value), do: "bg-primary/5 border-primary/30", else: "bg-base-200/20 border-base-200/50"}"}
           id={"wiz-type-#{value}"}
         >
           <input
@@ -759,10 +757,10 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
       </div>
 
       <div class="flex justify-between mt-8">
-        <button phx-click="wizard_back" class="btn btn-ghost btn-sm gap-1" id="wiz-back-2">
+        <button phx-click="wizard_back" class="btn btn-ghost btn-sm gap-1 press-scale" id="wiz-back-2">
           <.icon name="hero-arrow-left-mini" class="size-4" /> Back
         </button>
-        <button phx-click="wizard_next" class="btn btn-primary btn-sm gap-1" id="wiz-next-2">
+        <button phx-click="wizard_next" class="btn btn-primary btn-sm gap-1 press-scale" id="wiz-next-2">
           Next <.icon name="hero-arrow-right-mini" class="size-4" />
         </button>
       </div>
@@ -804,7 +802,7 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
             <.icon name="hero-tag-solid" class="size-4 text-primary" />
             {cat}
           </h3>
-          <div class="overflow-x-auto">
+          <div class="ft-table overflow-x-auto">
             <table class="table table-sm">
               <thead>
                 <tr class="text-base-content/40 text-xs">
@@ -840,10 +838,10 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
       </div>
 
       <div class="flex justify-between mt-8">
-        <button phx-click="wizard_back" class="btn btn-ghost btn-sm gap-1" id="wiz-back-3">
+        <button phx-click="wizard_back" class="btn btn-ghost btn-sm gap-1 press-scale" id="wiz-back-3">
           <.icon name="hero-arrow-left-mini" class="size-4" /> Back
         </button>
-        <button phx-click="wizard_done" class="btn btn-primary btn-sm gap-2" id="wiz-done">
+        <button phx-click="wizard_done" class="btn btn-primary btn-sm gap-2 press-scale" id="wiz-done">
           <.icon name="hero-check-mini" class="size-4" /> Create {@wiz_total_plans} Plan(s)
         </button>
       </div>
@@ -871,68 +869,66 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
     ~H"""
     <%!-- Edit Form --%>
     <%= if @editing_plan_id do %>
-      <div class="card bg-base-200/50 border border-base-300/50 mb-6" id="edit-plan-card">
-        <div class="card-body p-6">
-          <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-            <.icon name="hero-pencil-square-solid" class="size-5 text-info" /> Edit Plan
-          </h2>
-          <.form
-            for={@edit_form}
-            id="edit-plan-form"
-            phx-change="validate"
-            phx-submit="update_plan"
-          >
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <.input field={@edit_form[:name]} label="Plan Name" required />
-              <.input field={@edit_form[:category]} label="Category" />
-              <.input
-                field={@edit_form[:plan_type]}
-                type="select"
-                label="Plan Type"
-                prompt="Select plan type"
-                options={[
-                  {"General", "general"},
-                  {"Personal Training", "personal_training"}
-                ]}
-                required
-              />
-              <.input
-                field={@edit_form[:duration]}
-                type="select"
-                label="Duration"
-                prompt="Select duration"
-                options={[
-                  {"1 Day Pass", "day_pass"},
-                  {"1 Month", "monthly"},
-                  {"3 Months", "quarterly"},
-                  {"6 Months", "half_yearly"},
-                  {"12 Months", "annual"},
-                  {"24 Months", "two_year"}
-                ]}
-                required
-              />
-              <.input
-                field={@edit_form[:price_in_rupees]}
-                type="number"
-                label="Price (in Rupees)"
-                required
-              />
-            </div>
-            <div class="flex gap-2 mt-4">
-              <button type="submit" class="btn btn-primary btn-sm gap-2" id="update-plan-btn">
-                <.icon name="hero-check-mini" class="size-4" /> Update
-              </button>
-              <button
-                type="button"
-                phx-click="cancel_edit"
-                class="btn btn-ghost btn-sm"
-                id="cancel-edit-btn"
-              >
-                Cancel
-              </button>
-            </div>
-          </.form>
-        </div>
+      <div class="ft-card p-6 mb-6" id="edit-plan-card">
+        <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
+          <.icon name="hero-pencil-square-solid" class="size-5 text-info" /> Edit Plan
+        </h2>
+        <.form
+          for={@edit_form}
+          id="edit-plan-form"
+          phx-change="validate"
+          phx-submit="update_plan"
+        >
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <.input field={@edit_form[:name]} label="Plan Name" required />
+            <.input field={@edit_form[:category]} label="Category" />
+            <.input
+              field={@edit_form[:plan_type]}
+              type="select"
+              label="Plan Type"
+              prompt="Select plan type"
+              options={[
+                {"General", "general"},
+                {"Personal Training", "personal_training"}
+              ]}
+              required
+            />
+            <.input
+              field={@edit_form[:duration]}
+              type="select"
+              label="Duration"
+              prompt="Select duration"
+              options={[
+                {"1 Day Pass", "day_pass"},
+                {"1 Month", "monthly"},
+                {"3 Months", "quarterly"},
+                {"6 Months", "half_yearly"},
+                {"12 Months", "annual"},
+                {"24 Months", "two_year"}
+              ]}
+              required
+            />
+            <.input
+              field={@edit_form[:price_in_rupees]}
+              type="number"
+              label="Price (in Rupees)"
+              required
+            />
+          </div>
+          <div class="flex gap-2 mt-4">
+            <button type="submit" class="btn btn-primary btn-sm gap-2" id="update-plan-btn">
+              <.icon name="hero-check-mini" class="size-4" /> Update
+            </button>
+            <button
+              type="button"
+              phx-click="cancel_edit"
+              class="btn btn-ghost btn-sm press-scale"
+              id="cancel-edit-btn"
+            >
+              Cancel
+            </button>
+          </div>
+        </.form>
       </div>
     <% end %>
 
@@ -943,41 +939,39 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
     >
       <%!-- General Plans --%>
       <%= if @has_general do %>
-        <div class="card bg-base-200/50 border border-base-300/50" id="general-plans">
-          <div class="card-body p-5">
-            <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-              <span class="badge badge-primary badge-sm">General</span>
-            </h2>
-            <div class="space-y-3">
-              <div
-                :for={plan <- @general_plans}
-                class="flex items-center justify-between p-3 rounded-lg bg-base-300/20"
-                id={"detail-plan-#{plan.id}"}
-              >
-                <p class="font-semibold text-sm">{format_duration(plan.duration)}</p>
-                <div class="flex items-center gap-2">
-                  <span class="font-black text-primary text-lg">
-                    &#8377;{format_price(plan.price_in_paise)}
-                  </span>
-                  <div class="flex gap-0.5">
-                    <button
-                      phx-click="edit_plan"
-                      phx-value-id={plan.id}
-                      class="btn btn-ghost btn-xs text-info"
-                      id={"edit-#{plan.id}"}
-                    >
-                      <.icon name="hero-pencil-square" class="size-3.5" />
-                    </button>
-                    <button
-                      phx-click="delete_plan"
-                      phx-value-id={plan.id}
-                      data-confirm="Delete this plan?"
-                      class="btn btn-ghost btn-xs text-error"
-                      id={"delete-#{plan.id}"}
-                    >
-                      <.icon name="hero-trash" class="size-3.5" />
-                    </button>
-                  </div>
+        <div class="ft-card p-6" id="general-plans">
+          <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
+            <span class="badge badge-primary badge-sm">General</span>
+          </h2>
+          <div class="space-y-3">
+            <div
+              :for={plan <- @general_plans}
+              class="flex items-center justify-between p-3 bg-base-200/30 rounded-xl"
+              id={"detail-plan-#{plan.id}"}
+            >
+              <p class="font-semibold text-sm">{format_duration(plan.duration)}</p>
+              <div class="flex items-center gap-2">
+                <span class="font-black text-primary text-lg">
+                  &#8377;{format_price(plan.price_in_paise)}
+                </span>
+                <div class="flex gap-0.5">
+                  <button
+                    phx-click="edit_plan"
+                    phx-value-id={plan.id}
+                    class="btn btn-ghost btn-xs text-info press-scale"
+                    id={"edit-#{plan.id}"}
+                  >
+                    <.icon name="hero-pencil-square" class="size-3.5" />
+                  </button>
+                  <button
+                    phx-click="delete_plan"
+                    phx-value-id={plan.id}
+                    data-confirm="Delete this plan?"
+                    class="btn btn-ghost btn-xs text-error press-scale"
+                    id={"delete-#{plan.id}"}
+                  >
+                    <.icon name="hero-trash" class="size-3.5" />
+                  </button>
                 </div>
               </div>
             </div>
@@ -987,41 +981,39 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
 
       <%!-- Personal Training Plans --%>
       <%= if @has_pt do %>
-        <div class="card bg-base-200/50 border border-base-300/50" id="pt-plans">
-          <div class="card-body p-5">
-            <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-              <span class="badge badge-secondary badge-sm">Personal Training</span>
-            </h2>
-            <div class="space-y-3">
-              <div
-                :for={plan <- @pt_plans}
-                class="flex items-center justify-between p-3 rounded-lg bg-base-300/20"
-                id={"detail-plan-#{plan.id}"}
-              >
-                <p class="font-semibold text-sm">{format_duration(plan.duration)}</p>
-                <div class="flex items-center gap-2">
-                  <span class="font-black text-primary text-lg">
-                    &#8377;{format_price(plan.price_in_paise)}
-                  </span>
-                  <div class="flex gap-0.5">
-                    <button
-                      phx-click="edit_plan"
-                      phx-value-id={plan.id}
-                      class="btn btn-ghost btn-xs text-info"
-                      id={"edit-#{plan.id}"}
-                    >
-                      <.icon name="hero-pencil-square" class="size-3.5" />
-                    </button>
-                    <button
-                      phx-click="delete_plan"
-                      phx-value-id={plan.id}
-                      data-confirm="Delete this plan?"
-                      class="btn btn-ghost btn-xs text-error"
-                      id={"delete-#{plan.id}"}
-                    >
-                      <.icon name="hero-trash" class="size-3.5" />
-                    </button>
-                  </div>
+        <div class="ft-card p-6" id="pt-plans">
+          <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
+            <span class="badge badge-secondary badge-sm">Personal Training</span>
+          </h2>
+          <div class="space-y-3">
+            <div
+              :for={plan <- @pt_plans}
+              class="flex items-center justify-between p-3 bg-base-200/30 rounded-xl"
+              id={"detail-plan-#{plan.id}"}
+            >
+              <p class="font-semibold text-sm">{format_duration(plan.duration)}</p>
+              <div class="flex items-center gap-2">
+                <span class="font-black text-primary text-lg">
+                  &#8377;{format_price(plan.price_in_paise)}
+                </span>
+                <div class="flex gap-0.5">
+                  <button
+                    phx-click="edit_plan"
+                    phx-value-id={plan.id}
+                    class="btn btn-ghost btn-xs text-info press-scale"
+                    id={"edit-#{plan.id}"}
+                  >
+                    <.icon name="hero-pencil-square" class="size-3.5" />
+                  </button>
+                  <button
+                    phx-click="delete_plan"
+                    phx-value-id={plan.id}
+                    data-confirm="Delete this plan?"
+                    class="btn btn-ghost btn-xs text-error press-scale"
+                    id={"delete-#{plan.id}"}
+                  >
+                    <.icon name="hero-trash" class="size-3.5" />
+                  </button>
                 </div>
               </div>
             </div>

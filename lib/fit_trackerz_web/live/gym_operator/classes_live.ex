@@ -228,8 +228,8 @@ defmodule FitTrackerzWeb.GymOperator.ClassesLive do
         </div>
 
         <%= if @gym == nil do %>
-          <div class="card bg-base-200/50 border border-base-300/50" id="no-gym-card">
-            <div class="card-body p-6 text-center">
+          <div class="ft-card p-6" id="no-gym-card">
+            <div class="text-center">
               <.icon name="hero-building-office-solid" class="size-12 text-base-content/20 mx-auto" />
               <h2 class="text-lg font-bold mt-4">No Gym Found</h2>
               <p class="text-base-content/50 mt-1">
@@ -242,19 +242,21 @@ defmodule FitTrackerzWeb.GymOperator.ClassesLive do
           </div>
         <% else %>
           <%!-- Tabs --%>
-          <div class="tabs tabs-bordered" id="classes-tabs">
+          <div role="tablist" class="tabs tabs-bordered" id="classes-tabs">
             <button
+              role="tab"
               phx-click="switch_tab"
               phx-value-tab="definitions"
-              class={"tab #{if @active_tab == "definitions", do: "tab-active"}"}
+              class={["tab press-scale", @active_tab == "definitions" && "tab-active"]}
               id="tab-definitions"
             >
               <.icon name="hero-rectangle-stack" class="size-4 mr-2" /> Class Types
             </button>
             <button
+              role="tab"
               phx-click="switch_tab"
               phx-value-tab="scheduled"
-              class={"tab #{if @active_tab == "scheduled", do: "tab-active"}"}
+              class={["tab press-scale", @active_tab == "scheduled" && "tab-active"]}
               id="tab-scheduled"
             >
               <.icon name="hero-calendar-days" class="size-4 mr-2" /> Scheduled Classes
@@ -267,7 +269,7 @@ defmodule FitTrackerzWeb.GymOperator.ClassesLive do
               <div class="flex justify-end">
                 <button
                   phx-click="toggle_def_form"
-                  class="btn btn-primary btn-sm gap-2"
+                  class="btn btn-primary btn-sm gap-2 press-scale"
                   id="toggle-def-form-btn"
                 >
                   <.icon name="hero-plus-mini" class="size-4" /> Add Class Type
@@ -275,99 +277,95 @@ defmodule FitTrackerzWeb.GymOperator.ClassesLive do
               </div>
 
               <%= if @show_def_form do %>
-                <div class="card bg-base-200/50 border border-base-300/50" id="add-def-card">
-                  <div class="card-body p-6">
-                    <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                      <.icon name="hero-plus-circle-solid" class="size-5 text-info" /> New Class Type
-                    </h2>
-                    <.form
-                      for={@def_form}
-                      id="add-def-form"
-                      phx-change="validate_def"
-                      phx-submit="save_definition"
-                    >
-                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <.input
-                          field={@def_form[:name]}
-                          label="Class Name"
-                          placeholder="e.g. Yoga Basics"
-                          required
-                        />
-                        <.input
-                          field={@def_form[:class_type]}
-                          label="Class Type"
-                          placeholder="e.g. yoga, cardio, strength"
-                          required
-                        />
-                        <.input
-                          field={@def_form[:default_duration_minutes]}
-                          type="number"
-                          label="Default Duration (minutes)"
-                          required
-                        />
-                        <.input
-                          field={@def_form[:max_participants]}
-                          type="number"
-                          label="Max Participants"
-                          placeholder="Leave empty for unlimited"
-                        />
-                      </div>
-                      <div class="flex gap-2 mt-4">
-                        <button type="submit" class="btn btn-primary btn-sm gap-2" id="save-def-btn">
-                          <.icon name="hero-check-mini" class="size-4" /> Save Class Type
-                        </button>
-                        <button
-                          type="button"
-                          phx-click="toggle_def_form"
-                          class="btn btn-ghost btn-sm"
-                          id="cancel-def-btn"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </.form>
-                  </div>
+                <div class="ft-card p-6" id="add-def-card">
+                  <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
+                    <.icon name="hero-plus-circle-solid" class="size-5 text-info" /> New Class Type
+                  </h2>
+                  <.form
+                    for={@def_form}
+                    id="add-def-form"
+                    phx-change="validate_def"
+                    phx-submit="save_definition"
+                  >
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <.input
+                        field={@def_form[:name]}
+                        label="Class Name"
+                        placeholder="e.g. Yoga Basics"
+                        required
+                      />
+                      <.input
+                        field={@def_form[:class_type]}
+                        label="Class Type"
+                        placeholder="e.g. yoga, cardio, strength"
+                        required
+                      />
+                      <.input
+                        field={@def_form[:default_duration_minutes]}
+                        type="number"
+                        label="Default Duration (minutes)"
+                        required
+                      />
+                      <.input
+                        field={@def_form[:max_participants]}
+                        type="number"
+                        label="Max Participants"
+                        placeholder="Leave empty for unlimited"
+                      />
+                    </div>
+                    <div class="flex gap-2 mt-4">
+                      <button type="submit" class="btn btn-primary btn-sm gap-2" id="save-def-btn">
+                        <.icon name="hero-check-mini" class="size-4" /> Save Class Type
+                      </button>
+                      <button
+                        type="button"
+                        phx-click="toggle_def_form"
+                        class="btn btn-ghost btn-sm press-scale"
+                        id="cancel-def-btn"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </.form>
                 </div>
               <% end %>
 
-              <div class="card bg-base-200/50 border border-base-300/50" id="definitions-table-card">
-                <div class="card-body p-6">
-                  <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                    <.icon name="hero-rectangle-stack-solid" class="size-5 text-info" /> Class Types
-                    <span class="badge badge-neutral badge-sm">{length(@class_definitions)}</span>
-                  </h2>
-                  <%= if @class_definitions == [] do %>
-                    <div class="flex items-center gap-3 p-4 rounded-lg bg-base-300/20">
-                      <div class="w-2 h-2 rounded-full bg-base-content/20 shrink-0"></div>
-                      <p class="text-sm text-base-content/50">
-                        No class types defined yet. Create one to get started.
-                      </p>
-                    </div>
-                  <% else %>
-                    <div class="overflow-x-auto">
-                      <table class="table table-sm" id="definitions-table">
-                        <thead>
-                          <tr class="text-base-content/40">
-                            <th>Name</th>
-                            <th>Type</th>
-                            <th>Duration</th>
-                            <th>Max Participants</th>
+              <div class="ft-card p-6" id="definitions-table-card">
+                <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
+                  <.icon name="hero-rectangle-stack-solid" class="size-5 text-info" /> Class Types
+                  <span class="badge badge-neutral badge-sm">{length(@class_definitions)}</span>
+                </h2>
+                <%= if @class_definitions == [] do %>
+                  <div class="flex items-center gap-3 p-4 bg-base-200/30 rounded-xl">
+                    <div class="w-2 h-2 rounded-full bg-base-content/20 shrink-0"></div>
+                    <p class="text-sm text-base-content/50">
+                      No class types defined yet. Create one to get started.
+                    </p>
+                  </div>
+                <% else %>
+                  <div class="ft-table overflow-x-auto">
+                    <table class="table table-sm" id="definitions-table">
+                      <thead>
+                        <tr class="text-base-content/40">
+                          <th>Name</th>
+                          <th>Type</th>
+                          <th>Duration</th>
+                          <th>Max Participants</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <%= for cd <- @class_definitions do %>
+                          <tr id={"class-def-#{cd.id}"}>
+                            <td class="font-medium">{cd.name}</td>
+                            <td><span class="badge badge-info badge-sm">{cd.class_type}</span></td>
+                            <td>{cd.default_duration_minutes} min</td>
+                            <td>{cd.max_participants || "Unlimited"}</td>
                           </tr>
-                        </thead>
-                        <tbody>
-                          <%= for cd <- @class_definitions do %>
-                            <tr id={"class-def-#{cd.id}"}>
-                              <td class="font-medium">{cd.name}</td>
-                              <td><span class="badge badge-info badge-sm">{cd.class_type}</span></td>
-                              <td>{cd.default_duration_minutes} min</td>
-                              <td>{cd.max_participants || "Unlimited"}</td>
-                            </tr>
-                          <% end %>
-                        </tbody>
-                      </table>
-                    </div>
-                  <% end %>
-                </div>
+                        <% end %>
+                      </tbody>
+                    </table>
+                  </div>
+                <% end %>
               </div>
             </div>
           <% end %>
@@ -378,7 +376,7 @@ defmodule FitTrackerzWeb.GymOperator.ClassesLive do
               <div class="flex justify-end">
                 <button
                   phx-click="toggle_schedule_form"
-                  class="btn btn-primary btn-sm gap-2"
+                  class="btn btn-primary btn-sm gap-2 press-scale"
                   id="toggle-schedule-form-btn"
                 >
                   <.icon name="hero-plus-mini" class="size-4" /> Schedule Class
@@ -386,103 +384,99 @@ defmodule FitTrackerzWeb.GymOperator.ClassesLive do
               </div>
 
               <%= if @show_schedule_form do %>
-                <div class="card bg-base-200/50 border border-base-300/50" id="add-schedule-card">
-                  <div class="card-body p-6">
-                    <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                      <.icon name="hero-calendar-days-solid" class="size-5 text-info" />
-                      Schedule New Class
-                    </h2>
-                    <.form
-                      for={@schedule_form}
-                      id="add-schedule-form"
-                      phx-change="validate_schedule"
-                      phx-submit="save_schedule"
-                    >
-                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <.input
-                          field={@schedule_form[:class_definition_id]}
-                          type="select"
-                          label="Class Type"
-                          prompt="Select a class type"
-                          options={Enum.map(@class_definitions, &{&1.name, &1.id})}
-                          required
-                        />
-                        <.input
-                          field={@schedule_form[:scheduled_at]}
-                          type="datetime-local"
-                          label="Scheduled At"
-                          required
-                        />
-                        <.input
-                          field={@schedule_form[:duration_minutes]}
-                          type="number"
-                          label="Duration (minutes)"
-                          required
-                        />
-                      </div>
-                      <div class="flex gap-2 mt-4">
-                        <button
-                          type="submit"
-                          class="btn btn-primary btn-sm gap-2"
-                          id="save-schedule-btn"
-                        >
-                          <.icon name="hero-check-mini" class="size-4" /> Schedule Class
-                        </button>
-                        <button
-                          type="button"
-                          phx-click="toggle_schedule_form"
-                          class="btn btn-ghost btn-sm"
-                          id="cancel-schedule-btn"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </.form>
-                  </div>
+                <div class="ft-card p-6" id="add-schedule-card">
+                  <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
+                    <.icon name="hero-calendar-days-solid" class="size-5 text-info" />
+                    Schedule New Class
+                  </h2>
+                  <.form
+                    for={@schedule_form}
+                    id="add-schedule-form"
+                    phx-change="validate_schedule"
+                    phx-submit="save_schedule"
+                  >
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <.input
+                        field={@schedule_form[:class_definition_id]}
+                        type="select"
+                        label="Class Type"
+                        prompt="Select a class type"
+                        options={Enum.map(@class_definitions, &{&1.name, &1.id})}
+                        required
+                      />
+                      <.input
+                        field={@schedule_form[:scheduled_at]}
+                        type="datetime-local"
+                        label="Scheduled At"
+                        required
+                      />
+                      <.input
+                        field={@schedule_form[:duration_minutes]}
+                        type="number"
+                        label="Duration (minutes)"
+                        required
+                      />
+                    </div>
+                    <div class="flex gap-2 mt-4">
+                      <button
+                        type="submit"
+                        class="btn btn-primary btn-sm gap-2"
+                        id="save-schedule-btn"
+                      >
+                        <.icon name="hero-check-mini" class="size-4" /> Schedule Class
+                      </button>
+                      <button
+                        type="button"
+                        phx-click="toggle_schedule_form"
+                        class="btn btn-ghost btn-sm press-scale"
+                        id="cancel-schedule-btn"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </.form>
                 </div>
               <% end %>
 
-              <div class="card bg-base-200/50 border border-base-300/50" id="scheduled-table-card">
-                <div class="card-body p-6">
-                  <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                    <.icon name="hero-calendar-days-solid" class="size-5 text-info" />
-                    Scheduled Classes
-                    <span class="badge badge-neutral badge-sm">{length(@scheduled_classes)}</span>
-                  </h2>
-                  <%= if @scheduled_classes == [] do %>
-                    <div class="flex items-center gap-3 p-4 rounded-lg bg-base-300/20">
-                      <div class="w-2 h-2 rounded-full bg-base-content/20 shrink-0"></div>
-                      <p class="text-sm text-base-content/50">No classes scheduled yet.</p>
-                    </div>
-                  <% else %>
-                    <div class="overflow-x-auto">
-                      <table class="table table-sm" id="scheduled-table">
-                        <thead>
-                          <tr class="text-base-content/40">
-                            <th>Class</th>
-                            <th>Scheduled At</th>
-                            <th>Duration</th>
-                            <th>Status</th>
+              <div class="ft-card p-6" id="scheduled-table-card">
+                <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
+                  <.icon name="hero-calendar-days-solid" class="size-5 text-info" />
+                  Scheduled Classes
+                  <span class="badge badge-neutral badge-sm">{length(@scheduled_classes)}</span>
+                </h2>
+                <%= if @scheduled_classes == [] do %>
+                  <div class="flex items-center gap-3 p-4 bg-base-200/30 rounded-xl">
+                    <div class="w-2 h-2 rounded-full bg-base-content/20 shrink-0"></div>
+                    <p class="text-sm text-base-content/50">No classes scheduled yet.</p>
+                  </div>
+                <% else %>
+                  <div class="ft-table overflow-x-auto">
+                    <table class="table table-sm" id="scheduled-table">
+                      <thead>
+                        <tr class="text-base-content/40">
+                          <th>Class</th>
+                          <th>Scheduled At</th>
+                          <th>Duration</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <%= for sc <- @scheduled_classes do %>
+                          <tr id={"scheduled-#{sc.id}"}>
+                            <td class="font-medium">{sc.class_definition.name}</td>
+                            <td>{Calendar.strftime(sc.scheduled_at, "%b %d, %Y %I:%M %p")}</td>
+                            <td>{sc.duration_minutes} min</td>
+                            <td>
+                              <span class={"badge badge-sm #{schedule_status_class(sc.status)}"}>
+                                {Phoenix.Naming.humanize(sc.status)}
+                              </span>
+                            </td>
                           </tr>
-                        </thead>
-                        <tbody>
-                          <%= for sc <- @scheduled_classes do %>
-                            <tr id={"scheduled-#{sc.id}"}>
-                              <td class="font-medium">{sc.class_definition.name}</td>
-                              <td>{Calendar.strftime(sc.scheduled_at, "%b %d, %Y %I:%M %p")}</td>
-                              <td>{sc.duration_minutes} min</td>
-                              <td>
-                                <span class={"badge badge-sm #{schedule_status_class(sc.status)}"}>
-                                  {Phoenix.Naming.humanize(sc.status)}
-                                </span>
-                              </td>
-                            </tr>
-                          <% end %>
-                        </tbody>
-                      </table>
-                    </div>
-                  <% end %>
-                </div>
+                        <% end %>
+                      </tbody>
+                    </table>
+                  </div>
+                <% end %>
               </div>
             </div>
           <% end %>

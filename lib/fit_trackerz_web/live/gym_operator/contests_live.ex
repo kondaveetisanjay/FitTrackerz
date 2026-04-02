@@ -277,8 +277,8 @@ defmodule FitTrackerzWeb.GymOperator.ContestsLive do
         </div>
 
         <%= if @gym == nil do %>
-          <div class="card bg-base-200/50 border border-base-300/50" id="no-gym-card">
-            <div class="card-body p-6 text-center">
+          <div class="ft-card p-6" id="no-gym-card">
+            <div class="text-center">
               <.icon
                 name="hero-building-office-solid"
                 class="size-12 text-base-content/20 mx-auto"
@@ -297,7 +297,7 @@ defmodule FitTrackerzWeb.GymOperator.ContestsLive do
           <div class="flex justify-end">
             <button
               phx-click="toggle_form"
-              class="btn btn-primary btn-sm gap-2"
+              class="btn btn-primary btn-sm gap-2 press-scale"
               id="toggle-contest-form"
             >
               <.icon name="hero-plus-mini" class="size-4" /> New Contest
@@ -306,69 +306,65 @@ defmodule FitTrackerzWeb.GymOperator.ContestsLive do
 
           <%!-- Create Form --%>
           <%= if @show_form do %>
-            <div class="card bg-base-200/50 border border-base-300/50" id="create-contest-card">
-              <div class="card-body p-6">
-                <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                  <.icon name="hero-trophy-solid" class="size-5 text-primary" /> New Contest
-                </h2>
-                <.form
-                  for={@form}
-                  id="create-contest-form"
-                  phx-change="validate"
-                  phx-submit="save_contest"
-                >
-                  {render_contest_fields(assigns)}
-                  <div class="flex gap-2 mt-4">
-                    <button type="submit" class="btn btn-primary btn-sm gap-2" id="save-contest-btn">
-                      <.icon name="hero-check-mini" class="size-4" /> Create Contest
-                    </button>
-                    <button
-                      type="button"
-                      phx-click="toggle_form"
-                      class="btn btn-ghost btn-sm"
-                      id="cancel-create-btn"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </.form>
-              </div>
+            <div class="ft-card p-6" id="create-contest-card">
+              <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
+                <.icon name="hero-trophy-solid" class="size-5 text-primary" /> New Contest
+              </h2>
+              <.form
+                for={@form}
+                id="create-contest-form"
+                phx-change="validate"
+                phx-submit="save_contest"
+              >
+                {render_contest_fields(assigns)}
+                <div class="flex gap-2 mt-4">
+                  <button type="submit" class="btn btn-primary btn-sm gap-2" id="save-contest-btn">
+                    <.icon name="hero-check-mini" class="size-4" /> Create Contest
+                  </button>
+                  <button
+                    type="button"
+                    phx-click="toggle_form"
+                    class="btn btn-ghost btn-sm press-scale"
+                    id="cancel-create-btn"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </.form>
             </div>
           <% end %>
 
           <%!-- Edit Form --%>
           <%= if @editing_contest_id do %>
-            <div class="card bg-base-200/50 border border-base-300/50" id="edit-contest-card">
-              <div class="card-body p-6">
-                <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                  <.icon name="hero-pencil-square-solid" class="size-5 text-info" /> Edit Contest
-                </h2>
-                <.form
-                  for={@form}
-                  id="edit-contest-form"
-                  phx-change="validate"
-                  phx-submit="update_contest"
-                >
-                  {render_contest_fields(assigns)}
-                  <div class="flex gap-2 mt-4">
-                    <button
-                      type="submit"
-                      class="btn btn-primary btn-sm gap-2"
-                      id="update-contest-btn"
-                    >
-                      <.icon name="hero-check-mini" class="size-4" /> Update
-                    </button>
-                    <button
-                      type="button"
-                      phx-click="cancel_edit"
-                      class="btn btn-ghost btn-sm"
-                      id="cancel-edit-btn"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </.form>
-              </div>
+            <div class="ft-card p-6" id="edit-contest-card">
+              <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
+                <.icon name="hero-pencil-square-solid" class="size-5 text-info" /> Edit Contest
+              </h2>
+              <.form
+                for={@form}
+                id="edit-contest-form"
+                phx-change="validate"
+                phx-submit="update_contest"
+              >
+                {render_contest_fields(assigns)}
+                <div class="flex gap-2 mt-4">
+                  <button
+                    type="submit"
+                    class="btn btn-primary btn-sm gap-2"
+                    id="update-contest-btn"
+                  >
+                    <.icon name="hero-check-mini" class="size-4" /> Update
+                  </button>
+                  <button
+                    type="button"
+                    phx-click="cancel_edit"
+                    class="btn btn-ghost btn-sm press-scale"
+                    id="cancel-edit-btn"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </.form>
             </div>
           <% end %>
 
@@ -385,10 +381,10 @@ defmodule FitTrackerzWeb.GymOperator.ContestsLive do
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="contests-grid">
               <%= for contest <- @contests do %>
                 <div
-                  class="card bg-base-200/50 border border-base-300/50 overflow-hidden"
+                  class="ft-card overflow-hidden"
                   id={"contest-#{contest.id}"}
                 >
-                  <div class="card-body p-4 gap-3">
+                  <div class="p-4 space-y-3">
                     <%!-- Badges --%>
                     <div class="flex flex-wrap gap-1.5">
                       <span class={"badge badge-sm #{type_badge_class(contest.contest_type)}"}>
@@ -434,11 +430,11 @@ defmodule FitTrackerzWeb.GymOperator.ContestsLive do
                     <% end %>
 
                     <%!-- Actions --%>
-                    <div class="card-actions mt-auto pt-2 border-t border-base-300/30">
+                    <div class="flex gap-2 mt-auto pt-2 border-t border-base-200/50">
                       <button
                         phx-click="edit_contest"
                         phx-value-id={contest.id}
-                        class="btn btn-ghost btn-xs text-info gap-1"
+                        class="btn btn-ghost btn-xs text-info gap-1 press-scale"
                         id={"edit-#{contest.id}"}
                       >
                         <.icon name="hero-pencil-square" class="size-3.5" /> Edit
@@ -447,7 +443,7 @@ defmodule FitTrackerzWeb.GymOperator.ContestsLive do
                         phx-click="delete_contest"
                         phx-value-id={contest.id}
                         data-confirm="Are you sure you want to delete this contest?"
-                        class="btn btn-ghost btn-xs text-error gap-1"
+                        class="btn btn-ghost btn-xs text-error gap-1 press-scale"
                         id={"delete-#{contest.id}"}
                       >
                         <.icon name="hero-trash" class="size-3.5" /> Delete

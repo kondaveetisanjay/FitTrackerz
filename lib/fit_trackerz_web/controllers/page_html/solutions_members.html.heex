@@ -1,21 +1,17 @@
 <%!-- Navigation Bar --%>
-<nav class="navbar bg-base-100/90 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 border-b border-base-300/50 px-4 sm:px-6 lg:px-8">
+<nav class="navbar bg-base-100/90 backdrop-blur-xl fixed top-0 left-0 right-0 z-50 border-b border-base-200/40 px-4 sm:px-6 lg:px-8">
   <div class="flex-1">
     <a href="/">
       <.brand_logo class="h-10 w-auto" />
     </a>
   </div>
-  <div class="flex-none flex items-center gap-3">
-    <%!-- Solutions Dropdown --%>
+  <div class="flex-none flex items-center gap-2">
     <div class="dropdown dropdown-hover">
       <label tabindex="0" class="btn btn-ghost btn-sm font-semibold">
         Solutions
         <.icon name="hero-chevron-down" class="size-4 ml-1" />
       </label>
-      <ul
-        tabindex="0"
-        class="dropdown-content menu p-2 shadow-lg bg-base-200 rounded-box w-56 mt-1 border border-base-300/50"
-      >
+      <ul tabindex="0" class="dropdown-content menu p-2 shadow-xl bg-base-100 rounded-xl w-56 mt-1 border border-base-200/60">
         <li>
           <a href="/solutions/members" class="flex items-center gap-3 py-3">
             <.icon name="hero-user-solid" class="size-5 text-accent" />
@@ -37,38 +33,35 @@
       </ul>
     </div>
 
-    <a href="/about" class="btn btn-ghost btn-sm font-semibold">About Us</a>
-    <a href="/explore" class="btn btn-ghost btn-sm font-semibold">Explore Gyms</a>
-    <a href="/sign-in" class="btn btn-ghost btn-sm font-semibold">Sign In</a>
-    <a href="/register" class="btn btn-primary btn-sm font-semibold">Get Started</a>
+    <a href="/about" class="btn btn-ghost btn-sm font-semibold hidden sm:inline-flex">About Us</a>
+    <a href="/explore" class="btn btn-ghost btn-sm font-semibold hidden sm:inline-flex">Explore Gyms</a>
+    <a href="/sign-in" class="btn btn-ghost btn-sm font-semibold hidden sm:inline-flex">Sign In</a>
+    <a href="/register" class="btn btn-primary btn-sm font-semibold shadow-md shadow-primary/20 press-scale">Get Started</a>
   </div>
 </nav>
 
 <%!-- Hero Section --%>
 <section class="relative min-h-[70vh] flex items-center justify-center overflow-hidden pt-16">
-  <div class="absolute inset-0 bg-gradient-to-br from-accent/5 via-base-100 to-accent/10"></div>
-  <div class="absolute top-1/4 -left-32 w-96 h-96 bg-accent/10 rounded-full blur-3xl"></div>
-  <div class="absolute bottom-1/4 -right-32 w-96 h-96 bg-accent/15 rounded-full blur-3xl"></div>
+  <div class="absolute inset-0 bg-gradient-to-br from-accent/5 via-base-100 to-accent/8"></div>
+  <div class="absolute top-1/4 -left-32 w-72 h-72 bg-accent/8 rounded-full blur-2xl"></div>
+  <div class="absolute bottom-1/4 -right-32 w-72 h-72 bg-accent/10 rounded-full blur-2xl"></div>
 
   <div class="relative z-10 text-center max-w-4xl mx-auto px-4 sm:px-6 py-20">
-    <div class="inline-flex items-center gap-2 bg-accent/10 text-accent px-4 py-1.5 rounded-full text-sm font-semibold mb-8">
+    <div class="inline-flex items-center gap-2 bg-accent/10 text-accent px-4 py-1.5 rounded-full text-sm font-semibold mb-8 animate-fade-up">
       <.icon name="hero-user-solid" class="size-4" />
       <span>For Members</span>
     </div>
 
-    <h1 class="text-5xl sm:text-6xl lg:text-7xl font-brand leading-tight">
+    <h1 class="text-5xl sm:text-6xl lg:text-7xl font-brand leading-tight animate-fade-up stagger-1">
       Your Fitness Journey <span class="text-accent">Starts Here</span>
     </h1>
 
-    <p class="mt-6 text-lg sm:text-xl text-base-content/60 max-w-2xl mx-auto leading-relaxed">
+    <p class="mt-6 text-lg sm:text-xl text-base-content/55 max-w-2xl mx-auto leading-relaxed animate-fade-up stagger-2">
       Discover top-rated gyms, book classes instantly, track your progress, and achieve your fitness goals with personalized workout and diet plans.
     </p>
 
-    <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-      <a
-        href="/register"
-        class="btn btn-accent btn-lg gap-2 shadow-lg shadow-accent/25 font-bold px-8"
-      >
+    <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up stagger-3">
+      <a href="/register" class="btn btn-accent btn-lg gap-2 shadow-lg shadow-accent/25 font-bold px-8 press-scale">
         <.icon name="hero-rocket-launch-solid" class="size-5" /> Join as Member
       </a>
       <a href="/explore" class="btn btn-ghost btn-lg gap-2 font-semibold">
@@ -79,80 +72,74 @@
 </section>
 
 <%!-- Key Features Section --%>
-<section class="py-24 px-4 sm:px-6 lg:px-8 bg-base-200/50">
+<section class="py-24 px-4 sm:px-6 lg:px-8 bg-base-200/30">
   <div class="max-w-6xl mx-auto">
     <div class="text-center mb-16">
       <h2 class="text-3xl sm:text-4xl font-brand">
         Everything You Need to <span class="text-accent">Succeed</span>
       </h2>
-      <p class="mt-4 text-base-content/60 text-lg max-w-2xl mx-auto">
+      <p class="mt-4 text-base-content/55 text-lg max-w-2xl mx-auto">
         Powerful features designed to help you reach your fitness goals faster.
       </p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <%!-- Feature 1 --%>
-      <div class="card bg-base-200 shadow-sm hover:shadow-lg border border-base-300/50 p-6">
-        <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-4">
+      <div class="ft-card ft-card-hover p-6">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center mb-4">
           <.icon name="hero-map-pin-solid" class="size-6 text-accent" />
         </div>
-        <h3 class="text-xl font-bold mb-3">Discover Gyms</h3>
-        <p class="text-base-content/60 leading-relaxed">
+        <h3 class="text-lg font-bold mb-2">Discover Gyms</h3>
+        <p class="text-base-content/55 leading-relaxed text-sm">
           Find gyms near you with detailed information on facilities, pricing, reviews, and proximity to your location.
         </p>
       </div>
 
-      <%!-- Feature 2 --%>
-      <div class="card bg-base-200 shadow-sm hover:shadow-lg border border-base-300/50 p-6">
-        <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-4">
-          <.icon name="hero-calendar-days-solid" class="size-6 text-accent" />
+      <div class="ft-card ft-card-hover p-6">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-info/15 to-info/5 flex items-center justify-center mb-4">
+          <.icon name="hero-calendar-days-solid" class="size-6 text-info" />
         </div>
-        <h3 class="text-xl font-bold mb-3">Book Classes</h3>
-        <p class="text-base-content/60 leading-relaxed">
+        <h3 class="text-lg font-bold mb-2">Book Classes</h3>
+        <p class="text-base-content/55 leading-relaxed text-sm">
           Browse and book fitness classes with real-time availability. Get instant confirmations and reminders.
         </p>
       </div>
 
-      <%!-- Feature 3 --%>
-      <div class="card bg-base-200 shadow-sm hover:shadow-lg border border-base-300/50 p-6">
-        <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-4">
-          <.icon name="hero-fire-solid" class="size-6 text-accent" />
+      <div class="ft-card ft-card-hover p-6">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-secondary/15 to-secondary/5 flex items-center justify-center mb-4">
+          <.icon name="hero-fire-solid" class="size-6 text-secondary" />
         </div>
-        <h3 class="text-xl font-bold mb-3">Workout Plans</h3>
-        <p class="text-base-content/60 leading-relaxed">
+        <h3 class="text-lg font-bold mb-2">Workout Plans</h3>
+        <p class="text-base-content/55 leading-relaxed text-sm">
           Access personalized workout plans with exercises, sets, reps, and progress tracking.
         </p>
       </div>
 
-      <%!-- Feature 4 --%>
-      <div class="card bg-base-200 shadow-sm hover:shadow-lg border border-base-300/50 p-6">
-        <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-4">
-          <.icon name="hero-heart-solid" class="size-6 text-accent" />
+      <div class="ft-card ft-card-hover p-6">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-success/15 to-success/5 flex items-center justify-center mb-4">
+          <.icon name="hero-heart-solid" class="size-6 text-success" />
         </div>
-        <h3 class="text-xl font-bold mb-3">Diet Plans</h3>
-        <p class="text-base-content/60 leading-relaxed">
+        <h3 class="text-lg font-bold mb-2">Diet Plans</h3>
+        <p class="text-base-content/55 leading-relaxed text-sm">
           Follow customized meal plans with calorie tracking, macro breakdowns, and dietary preference options.
         </p>
       </div>
 
-      <%!-- Feature 5 --%>
-      <div class="card bg-base-200 shadow-sm hover:shadow-lg border border-base-300/50 p-6">
-        <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-4">
-          <.icon name="hero-chart-bar-solid" class="size-6 text-accent" />
+      <div class="ft-card ft-card-hover p-6">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center mb-4">
+          <.icon name="hero-chart-bar-solid" class="size-6 text-primary" />
         </div>
-        <h3 class="text-xl font-bold mb-3">Track Progress</h3>
-        <p class="text-base-content/60 leading-relaxed">
+        <h3 class="text-lg font-bold mb-2">Track Progress</h3>
+        <p class="text-base-content/55 leading-relaxed text-sm">
           Monitor attendance, workout completion, and fitness goals with detailed analytics and insights.
         </p>
       </div>
 
-      <%!-- Feature 6 --%>
-      <div class="card bg-base-200 shadow-sm hover:shadow-lg border border-base-300/50 p-6">
-        <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-4">
-          <.icon name="hero-credit-card-solid" class="size-6 text-accent" />
+      <div class="ft-card ft-card-hover p-6">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-warning/15 to-warning/5 flex items-center justify-center mb-4">
+          <.icon name="hero-credit-card-solid" class="size-6 text-warning" />
         </div>
-        <h3 class="text-xl font-bold mb-3">Flexible Plans</h3>
-        <p class="text-base-content/60 leading-relaxed">
+        <h3 class="text-lg font-bold mb-2">Flexible Plans</h3>
+        <p class="text-base-content/55 leading-relaxed text-sm">
           Choose from day passes, monthly, or annual memberships. Manage subscriptions and payments easily.
         </p>
       </div>
@@ -167,61 +154,49 @@
       <h2 class="text-3xl sm:text-4xl font-brand">
         How It <span class="text-accent">Works</span>
       </h2>
-      <p class="mt-4 text-base-content/60 text-lg">
+      <p class="mt-4 text-base-content/55 text-lg">
         Get started in just a few simple steps
       </p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-      <%!-- Step 1 --%>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
       <div class="text-center">
-        <div class="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center mx-auto mb-4 ring-4 ring-accent/5">
           <span class="text-2xl font-black text-accent">1</span>
         </div>
         <h3 class="text-lg font-bold mb-2">Sign Up</h3>
-        <p class="text-base-content/60 text-sm">
-          Create your free account in seconds
-        </p>
+        <p class="text-base-content/55 text-sm">Create your free account in seconds</p>
       </div>
 
-      <%!-- Step 2 --%>
       <div class="text-center">
-        <div class="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center mx-auto mb-4 ring-4 ring-accent/5">
           <span class="text-2xl font-black text-accent">2</span>
         </div>
         <h3 class="text-lg font-bold mb-2">Find a Gym</h3>
-        <p class="text-base-content/60 text-sm">
-          Explore gyms near you and compare options
-        </p>
+        <p class="text-base-content/55 text-sm">Explore gyms near you and compare options</p>
       </div>
 
-      <%!-- Step 3 --%>
       <div class="text-center">
-        <div class="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center mx-auto mb-4 ring-4 ring-accent/5">
           <span class="text-2xl font-black text-accent">3</span>
         </div>
         <h3 class="text-lg font-bold mb-2">Subscribe</h3>
-        <p class="text-base-content/60 text-sm">
-          Choose a plan that fits your needs
-        </p>
+        <p class="text-base-content/55 text-sm">Choose a plan that fits your needs</p>
       </div>
 
-      <%!-- Step 4 --%>
       <div class="text-center">
-        <div class="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center mx-auto mb-4 ring-4 ring-accent/5">
           <span class="text-2xl font-black text-accent">4</span>
         </div>
         <h3 class="text-lg font-bold mb-2">Start Training</h3>
-        <p class="text-base-content/60 text-sm">
-          Begin your fitness journey today
-        </p>
+        <p class="text-base-content/55 text-sm">Begin your fitness journey today</p>
       </div>
     </div>
   </div>
 </section>
 
 <%!-- Benefits Section --%>
-<section class="py-24 px-4 sm:px-6 lg:px-8 bg-base-200/50">
+<section class="py-24 px-4 sm:px-6 lg:px-8 bg-base-200/30">
   <div class="max-w-6xl mx-auto">
     <div class="text-center mb-16">
       <h2 class="text-3xl sm:text-4xl font-brand">
@@ -229,50 +204,50 @@
       </h2>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-      <div class="flex gap-4">
-        <div class="shrink-0">
-          <.icon name="hero-check-circle-solid" class="size-8 text-accent" />
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="ft-card p-6 flex gap-4">
+        <div class="shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center">
+          <.icon name="hero-check-circle-solid" class="size-6 text-accent" />
         </div>
         <div>
-          <h3 class="text-xl font-bold mb-2">Budget-Friendly Options</h3>
-          <p class="text-base-content/60">
+          <h3 class="text-lg font-bold mb-1">Budget-Friendly Options</h3>
+          <p class="text-base-content/55 text-sm">
             Compare prices and find gyms that fit your budget with transparent pricing and flexible plans.
           </p>
         </div>
       </div>
 
-      <div class="flex gap-4">
-        <div class="shrink-0">
-          <.icon name="hero-check-circle-solid" class="size-8 text-accent" />
+      <div class="ft-card p-6 flex gap-4">
+        <div class="shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center">
+          <.icon name="hero-check-circle-solid" class="size-6 text-accent" />
         </div>
         <div>
-          <h3 class="text-xl font-bold mb-2">Verified Reviews</h3>
-          <p class="text-base-content/60">
+          <h3 class="text-lg font-bold mb-1">Verified Reviews</h3>
+          <p class="text-base-content/55 text-sm">
             Read authentic reviews from real members to make informed decisions about your gym choice.
           </p>
         </div>
       </div>
 
-      <div class="flex gap-4">
-        <div class="shrink-0">
-          <.icon name="hero-check-circle-solid" class="size-8 text-accent" />
+      <div class="ft-card p-6 flex gap-4">
+        <div class="shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center">
+          <.icon name="hero-check-circle-solid" class="size-6 text-accent" />
         </div>
         <div>
-          <h3 class="text-xl font-bold mb-2">Personalized Plans</h3>
-          <p class="text-base-content/60">
+          <h3 class="text-lg font-bold mb-1">Personalized Plans</h3>
+          <p class="text-base-content/55 text-sm">
             Get personalized workout and nutrition plans tailored to your fitness goals.
           </p>
         </div>
       </div>
 
-      <div class="flex gap-4">
-        <div class="shrink-0">
-          <.icon name="hero-check-circle-solid" class="size-8 text-accent" />
+      <div class="ft-card p-6 flex gap-4">
+        <div class="shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center">
+          <.icon name="hero-check-circle-solid" class="size-6 text-accent" />
         </div>
         <div>
-          <h3 class="text-xl font-bold mb-2">Easy Booking</h3>
-          <p class="text-base-content/60">
+          <h3 class="text-lg font-bold mb-1">Easy Booking</h3>
+          <p class="text-base-content/55 text-sm">
             Book classes, track attendance, and manage your schedule all in one convenient platform.
           </p>
         </div>
@@ -284,18 +259,15 @@
 <%!-- CTA Section --%>
 <section class="py-24 px-4 sm:px-6 lg:px-8">
   <div class="max-w-3xl mx-auto text-center">
-    <div class="card bg-gradient-to-r from-accent/10 via-base-100 to-accent/10 border border-base-300 shadow-xl p-8 sm:p-12">
+    <div class="ft-card bg-gradient-to-r from-accent/5 via-base-100 to-accent/5 p-8 sm:p-12">
       <h2 class="text-3xl sm:text-4xl font-brand mb-4">
         Ready to Start Your <span class="text-accent">Fitness Journey?</span>
       </h2>
-      <p class="text-base-content/60 text-lg mb-8">
+      <p class="text-base-content/55 text-lg mb-8">
         Join thousands of members who've transformed their lives with FitTrackerz.
       </p>
       <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-        <a
-          href="/register"
-          class="btn btn-accent btn-lg gap-2 shadow-lg shadow-accent/25 font-bold px-8"
-        >
+        <a href="/register" class="btn btn-accent btn-lg gap-2 shadow-lg shadow-accent/25 font-bold px-8 press-scale">
           <.icon name="hero-rocket-launch-solid" class="size-5" /> Create Free Account
         </a>
         <a href="/explore" class="btn btn-ghost btn-lg font-semibold">Explore Gyms</a>
@@ -305,13 +277,13 @@
 </section>
 
 <%!-- Footer --%>
-<footer class="py-12 px-4 sm:px-6 lg:px-8 border-t border-base-300">
+<footer class="py-12 px-4 sm:px-6 lg:px-8 border-t border-base-200/60">
   <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
     <div>
       <.brand_logo class="h-10 w-auto" />
     </div>
     <p class="text-sm text-base-content/40">
-      © 2026 FitTrackerz. All rights reserved.
+      &copy; 2026 FitTrackerz. All rights reserved.
     </p>
   </div>
 </footer>

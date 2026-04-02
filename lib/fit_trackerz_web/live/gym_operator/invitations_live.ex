@@ -55,8 +55,8 @@ defmodule FitTrackerzWeb.GymOperator.InvitationsLive do
         </div>
 
         <%= if @gym == nil do %>
-          <div class="card bg-base-200/50 border border-base-300/50" id="no-gym-card">
-            <div class="card-body p-6 text-center">
+          <div class="ft-card p-6" id="no-gym-card">
+            <div class="text-center">
               <.icon name="hero-building-office-solid" class="size-12 text-base-content/20 mx-auto" />
               <h2 class="text-lg font-bold mt-4">No Gym Found</h2>
               <p class="text-base-content/50 mt-1">
@@ -69,52 +69,50 @@ defmodule FitTrackerzWeb.GymOperator.InvitationsLive do
           </div>
         <% else %>
           <%!-- Member Invitations --%>
-          <div class="card bg-base-200/50 border border-base-300/50" id="member-invitations-card">
-            <div class="card-body p-6">
-              <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-bold flex items-center gap-2">
-                  <.icon name="hero-user-group-solid" class="size-5 text-primary" />
-                  Member Invitations
-                  <span class="badge badge-neutral badge-sm">{length(@member_invitations)}</span>
-                </h2>
-                <a href="/gym/members" class="btn btn-ghost btn-xs gap-1">
-                  <.icon name="hero-plus-mini" class="size-3" /> Invite
-                </a>
-              </div>
-              <%= if @member_invitations == [] do %>
-                <div class="flex items-center gap-3 p-4 rounded-lg bg-base-300/20">
-                  <div class="w-2 h-2 rounded-full bg-base-content/20 shrink-0"></div>
-                  <p class="text-sm text-base-content/50">No member invitations sent yet.</p>
-                </div>
-              <% else %>
-                <div class="overflow-x-auto">
-                  <table class="table table-sm" id="member-invitations-table">
-                    <thead>
-                      <tr class="text-base-content/40">
-                        <th>Email</th>
-                        <th>Status</th>
-                        <th>Invited By</th>
-                        <th>Date</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <%= for inv <- @member_invitations do %>
-                        <tr id={"member-inv-#{inv.id}"}>
-                          <td class="font-medium">{inv.invited_email}</td>
-                          <td>
-                            <span class={"badge badge-sm #{status_badge_class(inv.status)}"}>
-                              {Phoenix.Naming.humanize(inv.status)}
-                            </span>
-                          </td>
-                          <td class="text-base-content/60">{inv.invited_by.name}</td>
-                          <td class="text-base-content/60 text-sm">{format_date(inv.inserted_at)}</td>
-                        </tr>
-                      <% end %>
-                    </tbody>
-                  </table>
-                </div>
-              <% end %>
+          <div class="ft-card p-6" id="member-invitations-card">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-lg font-bold flex items-center gap-2">
+                <.icon name="hero-user-group-solid" class="size-5 text-primary" />
+                Member Invitations
+                <span class="badge badge-neutral badge-sm">{length(@member_invitations)}</span>
+              </h2>
+              <a href="/gym/members" class="btn btn-ghost btn-xs gap-1">
+                <.icon name="hero-plus-mini" class="size-3" /> Invite
+              </a>
             </div>
+            <%= if @member_invitations == [] do %>
+              <div class="flex items-center gap-3 p-4 bg-base-200/30 rounded-xl">
+                <div class="w-2 h-2 rounded-full bg-base-content/20 shrink-0"></div>
+                <p class="text-sm text-base-content/50">No member invitations sent yet.</p>
+              </div>
+            <% else %>
+              <div class="ft-table overflow-x-auto">
+                <table class="table table-sm" id="member-invitations-table">
+                  <thead>
+                    <tr class="text-base-content/40">
+                      <th>Email</th>
+                      <th>Status</th>
+                      <th>Invited By</th>
+                      <th>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <%= for inv <- @member_invitations do %>
+                      <tr id={"member-inv-#{inv.id}"}>
+                        <td class="font-medium">{inv.invited_email}</td>
+                        <td>
+                          <span class={"badge badge-sm #{status_badge_class(inv.status)}"}>
+                            {Phoenix.Naming.humanize(inv.status)}
+                          </span>
+                        </td>
+                        <td class="text-base-content/60">{inv.invited_by.name}</td>
+                        <td class="text-base-content/60 text-sm">{format_date(inv.inserted_at)}</td>
+                      </tr>
+                    <% end %>
+                  </tbody>
+                </table>
+              </div>
+            <% end %>
           </div>
 
         <% end %>

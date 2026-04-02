@@ -300,7 +300,7 @@ defmodule FitTrackerzWeb.Member.DietLive do
           </div>
           <%= if @plan_type == :general and not @no_gym do %>
             <.button
-              class="btn-primary btn-sm gap-2 font-semibold"
+              class="btn-primary btn-sm gap-2 font-semibold press-scale"
               phx-click="toggle_form"
               id="toggle-diet-form-btn"
             >
@@ -310,7 +310,7 @@ defmodule FitTrackerzWeb.Member.DietLive do
         </div>
 
         <%= if @no_gym do %>
-          <div class="card bg-base-200/50 border border-base-300/50" id="no-gym-card">
+          <div class="ft-card p-6" id="no-gym-card">
             <div class="card-body items-center text-center p-8">
               <div class="w-16 h-16 rounded-2xl bg-warning/10 flex items-center justify-center mb-4">
                 <.icon name="hero-building-office-2" class="size-8 text-warning" />
@@ -324,197 +324,195 @@ defmodule FitTrackerzWeb.Member.DietLive do
         <% else %>
           <%!-- Create Form (General only) --%>
           <%= if @plan_type == :general and @show_form do %>
-            <div class="card bg-base-200/50 border border-base-300/50" id="diet-form-card">
-              <div class="card-body p-5">
-                <h2 class="text-lg font-bold flex items-center gap-2">
-                  <.icon name="hero-heart-solid" class="size-5 text-success" /> New Diet Plan
-                </h2>
-                <.form
-                  for={@form}
-                  id="diet-form"
-                  phx-change="validate"
-                  phx-submit="save_diet"
-                  class="mt-4 space-y-4"
-                >
-                  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <.input
-                      field={@form[:name]}
-                      label="Plan Name"
-                      placeholder="e.g., High Protein Plan"
-                      required
-                    />
-                    <.input
-                      field={@form[:calorie_target]}
-                      label="Calorie Target"
-                      type="number"
-                      placeholder="2000"
-                    />
-                    <div>
-                      <label class="label"><span class="label-text font-medium">Dietary Type</span></label>
-                      <select name="diet[dietary_type]" class="select select-bordered w-full" id="diet-type-select">
-                        <option value="">Select type...</option>
-                        <option value="vegetarian">Vegetarian</option>
-                        <option value="non_vegetarian">Non-Vegetarian</option>
-                        <option value="vegan">Vegan</option>
-                        <option value="eggetarian">Eggetarian</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label class="label"><span class="label-text font-medium">Gym</span></label>
-                      <select name="diet[gym_id]" class="select select-bordered w-full" id="diet-gym-select" required>
-                        <option value="">Select a gym...</option>
-                        <option :for={m <- @memberships} value={m.gym_id}>
-                          {m.gym.name}
-                        </option>
-                      </select>
-                    </div>
+            <div class="ft-card p-6" id="diet-form-card">
+              <h2 class="text-lg font-bold flex items-center gap-2">
+                <.icon name="hero-heart-solid" class="size-5 text-success" /> New Diet Plan
+              </h2>
+              <.form
+                for={@form}
+                id="diet-form"
+                phx-change="validate"
+                phx-submit="save_diet"
+                class="mt-4 space-y-4"
+              >
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <.input
+                    field={@form[:name]}
+                    label="Plan Name"
+                    placeholder="e.g., High Protein Plan"
+                    required
+                  />
+                  <.input
+                    field={@form[:calorie_target]}
+                    label="Calorie Target"
+                    type="number"
+                    placeholder="2000"
+                  />
+                  <div>
+                    <label class="label"><span class="label-text font-medium">Dietary Type</span></label>
+                    <select name="diet[dietary_type]" class="select select-bordered w-full" id="diet-type-select">
+                      <option value="">Select type...</option>
+                      <option value="vegetarian">Vegetarian</option>
+                      <option value="non_vegetarian">Non-Vegetarian</option>
+                      <option value="vegan">Vegan</option>
+                      <option value="eggetarian">Eggetarian</option>
+                    </select>
                   </div>
+                  <div>
+                    <label class="label"><span class="label-text font-medium">Gym</span></label>
+                    <select name="diet[gym_id]" class="select select-bordered w-full" id="diet-gym-select" required>
+                      <option value="">Select a gym...</option>
+                      <option :for={m <- @memberships} value={m.gym_id}>
+                        {m.gym.name}
+                      </option>
+                    </select>
+                  </div>
+                </div>
 
-                  <%!-- Meals --%>
-                  <div class="space-y-3">
+                <%!-- Meals --%>
+                <div class="space-y-3">
+                  <div class="flex items-center justify-between">
+                    <h3 class="font-semibold text-sm">Meals</h3>
+                    <.button type="button" class="btn-ghost btn-xs gap-1 press-scale" phx-click="add_meal" id="add-meal-btn">
+                      <.icon name="hero-plus-mini" class="size-3" /> Add Meal
+                    </.button>
+                  </div>
+                  <div
+                    :for={{meal, idx} <- Enum.with_index(@meals)}
+                    class="p-4 rounded-xl bg-base-200/30 space-y-3"
+                    id={"meal-row-#{idx}"}
+                  >
                     <div class="flex items-center justify-between">
-                      <h3 class="font-semibold text-sm">Meals</h3>
-                      <.button type="button" class="btn-ghost btn-xs gap-1" phx-click="add_meal" id="add-meal-btn">
-                        <.icon name="hero-plus-mini" class="size-3" /> Add Meal
-                      </.button>
+                      <span class="text-xs font-semibold text-base-content/40 uppercase">
+                        Meal #{idx + 1}
+                      </span>
+                      <%= if length(@meals) > 1 do %>
+                        <.button
+                          type="button"
+                          class="btn-ghost btn-xs text-error press-scale"
+                          phx-click="remove_meal"
+                          phx-value-index={idx}
+                          id={"remove-meal-#{idx}"}
+                        >
+                          <.icon name="hero-trash-mini" class="size-3" />
+                        </.button>
+                      <% end %>
                     </div>
-                    <div
-                      :for={{meal, idx} <- Enum.with_index(@meals)}
-                      class="p-4 rounded-lg bg-base-300/20 space-y-3"
-                      id={"meal-row-#{idx}"}
-                    >
-                      <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold text-base-content/40 uppercase">
-                          Meal #{idx + 1}
-                        </span>
-                        <%= if length(@meals) > 1 do %>
-                          <.button
-                            type="button"
-                            class="btn-ghost btn-xs text-error"
-                            phx-click="remove_meal"
-                            phx-value-index={idx}
-                            id={"remove-meal-#{idx}"}
-                          >
-                            <.icon name="hero-trash-mini" class="size-3" />
-                          </.button>
-                        <% end %>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div>
+                        <label class="label"><span class="label-text text-xs">Name</span></label>
+                        <input
+                          type="text"
+                          value={meal["name"]}
+                          placeholder="e.g., Breakfast"
+                          class="input input-bordered input-sm w-full"
+                          phx-blur="update_meal"
+                          phx-value-index={idx}
+                          phx-value-field="name"
+                          id={"meal-name-#{idx}"}
+                        />
                       </div>
-                      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <div>
-                          <label class="label"><span class="label-text text-xs">Name</span></label>
-                          <input
-                            type="text"
-                            value={meal["name"]}
-                            placeholder="e.g., Breakfast"
-                            class="input input-bordered input-sm w-full"
-                            phx-blur="update_meal"
-                            phx-value-index={idx}
-                            phx-value-field="name"
-                            id={"meal-name-#{idx}"}
-                          />
-                        </div>
-                        <div>
-                          <label class="label"><span class="label-text text-xs">Time</span></label>
-                          <input
-                            type="text"
-                            value={meal["time_of_day"]}
-                            placeholder="e.g., 8:00 AM"
-                            class="input input-bordered input-sm w-full"
-                            phx-blur="update_meal"
-                            phx-value-index={idx}
-                            phx-value-field="time_of_day"
-                            id={"meal-time-#{idx}"}
-                          />
-                        </div>
-                        <div class="col-span-2">
-                          <label class="label"><span class="label-text text-xs">Items (comma-separated)</span></label>
-                          <input
-                            type="text"
-                            value={meal["items"]}
-                            placeholder="e.g., Oats, Banana, Milk"
-                            class="input input-bordered input-sm w-full"
-                            phx-blur="update_meal"
-                            phx-value-index={idx}
-                            phx-value-field="items"
-                            id={"meal-items-#{idx}"}
-                          />
-                        </div>
+                      <div>
+                        <label class="label"><span class="label-text text-xs">Time</span></label>
+                        <input
+                          type="text"
+                          value={meal["time_of_day"]}
+                          placeholder="e.g., 8:00 AM"
+                          class="input input-bordered input-sm w-full"
+                          phx-blur="update_meal"
+                          phx-value-index={idx}
+                          phx-value-field="time_of_day"
+                          id={"meal-time-#{idx}"}
+                        />
                       </div>
-                      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <div>
-                          <label class="label"><span class="label-text text-xs">Calories</span></label>
-                          <input
-                            type="number"
-                            value={meal["calories"]}
-                            placeholder="500"
-                            class="input input-bordered input-sm w-full"
-                            phx-blur="update_meal"
-                            phx-value-index={idx}
-                            phx-value-field="calories"
-                            id={"meal-calories-#{idx}"}
-                          />
-                        </div>
-                        <div>
-                          <label class="label"><span class="label-text text-xs">Protein (g)</span></label>
-                          <input
-                            type="number"
-                            step="0.1"
-                            value={meal["protein"]}
-                            placeholder="30"
-                            class="input input-bordered input-sm w-full"
-                            phx-blur="update_meal"
-                            phx-value-index={idx}
-                            phx-value-field="protein"
-                            id={"meal-protein-#{idx}"}
-                          />
-                        </div>
-                        <div>
-                          <label class="label"><span class="label-text text-xs">Carbs (g)</span></label>
-                          <input
-                            type="number"
-                            step="0.1"
-                            value={meal["carbs"]}
-                            placeholder="50"
-                            class="input input-bordered input-sm w-full"
-                            phx-blur="update_meal"
-                            phx-value-index={idx}
-                            phx-value-field="carbs"
-                            id={"meal-carbs-#{idx}"}
-                          />
-                        </div>
-                        <div>
-                          <label class="label"><span class="label-text text-xs">Fat (g)</span></label>
-                          <input
-                            type="number"
-                            step="0.1"
-                            value={meal["fat"]}
-                            placeholder="15"
-                            class="input input-bordered input-sm w-full"
-                            phx-blur="update_meal"
-                            phx-value-index={idx}
-                            phx-value-field="fat"
-                            id={"meal-fat-#{idx}"}
-                          />
-                        </div>
+                      <div class="col-span-2">
+                        <label class="label"><span class="label-text text-xs">Items (comma-separated)</span></label>
+                        <input
+                          type="text"
+                          value={meal["items"]}
+                          placeholder="e.g., Oats, Banana, Milk"
+                          class="input input-bordered input-sm w-full"
+                          phx-blur="update_meal"
+                          phx-value-index={idx}
+                          phx-value-field="items"
+                          id={"meal-items-#{idx}"}
+                        />
+                      </div>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div>
+                        <label class="label"><span class="label-text text-xs">Calories</span></label>
+                        <input
+                          type="number"
+                          value={meal["calories"]}
+                          placeholder="500"
+                          class="input input-bordered input-sm w-full"
+                          phx-blur="update_meal"
+                          phx-value-index={idx}
+                          phx-value-field="calories"
+                          id={"meal-calories-#{idx}"}
+                        />
+                      </div>
+                      <div>
+                        <label class="label"><span class="label-text text-xs">Protein (g)</span></label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={meal["protein"]}
+                          placeholder="30"
+                          class="input input-bordered input-sm w-full"
+                          phx-blur="update_meal"
+                          phx-value-index={idx}
+                          phx-value-field="protein"
+                          id={"meal-protein-#{idx}"}
+                        />
+                      </div>
+                      <div>
+                        <label class="label"><span class="label-text text-xs">Carbs (g)</span></label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={meal["carbs"]}
+                          placeholder="50"
+                          class="input input-bordered input-sm w-full"
+                          phx-blur="update_meal"
+                          phx-value-index={idx}
+                          phx-value-field="carbs"
+                          id={"meal-carbs-#{idx}"}
+                        />
+                      </div>
+                      <div>
+                        <label class="label"><span class="label-text text-xs">Fat (g)</span></label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={meal["fat"]}
+                          placeholder="15"
+                          class="input input-bordered input-sm w-full"
+                          phx-blur="update_meal"
+                          phx-value-index={idx}
+                          phx-value-field="fat"
+                          id={"meal-fat-#{idx}"}
+                        />
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  <div class="flex justify-end gap-2 pt-2">
-                    <.button type="button" class="btn-ghost btn-sm" phx-click="toggle_form" id="cancel-diet-btn">
-                      Cancel
-                    </.button>
-                    <.button type="submit" class="btn-primary btn-sm gap-2" id="submit-diet-btn">
-                      <.icon name="hero-check-mini" class="size-4" /> Create Plan
-                    </.button>
-                  </div>
-                </.form>
-              </div>
+                <div class="flex justify-end gap-2 pt-2">
+                  <.button type="button" class="btn-ghost btn-sm press-scale" phx-click="toggle_form" id="cancel-diet-btn">
+                    Cancel
+                  </.button>
+                  <.button type="submit" class="btn-primary btn-sm gap-2" id="submit-diet-btn">
+                    <.icon name="hero-check-mini" class="size-4" /> Create Plan
+                  </.button>
+                </div>
+              </.form>
             </div>
           <% end %>
 
           <%= if @diet_plans == [] do %>
-            <div class="card bg-base-200/50 border border-base-300/50" id="no-diet-plans">
+            <div class="ft-card p-6" id="no-diet-plans">
               <div class="card-body items-center text-center p-8">
                 <div class="w-16 h-16 rounded-2xl bg-success/10 flex items-center justify-center mb-4">
                   <.icon name="hero-heart" class="size-8 text-success" />
@@ -534,92 +532,90 @@ defmodule FitTrackerzWeb.Member.DietLive do
             <div class="space-y-6">
               <div
                 :for={plan <- @diet_plans}
-                class="card bg-base-200/50 border border-base-300/50"
+                class="ft-card p-6"
                 id={"diet-plan-#{plan.id}"}
               >
-                <div class="card-body p-5">
-                  <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                    <div>
-                      <h2 class="text-lg font-bold flex items-center gap-2">
-                        <.icon name="hero-heart-solid" class="size-5 text-success" />
-                        {plan.name}
-                      </h2>
-                      <div class="flex flex-wrap items-center gap-3 mt-2 text-xs text-base-content/50">
-                        <%= if plan.gym do %>
-                          <span class="flex items-center gap-1">
-                            <.icon name="hero-building-office-2-mini" class="size-3" />
-                            {plan.gym.name}
-                          </span>
-                        <% end %>
-                        <span class="badge badge-ghost badge-xs">Self-created</span>
-                      </div>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-2">
-                      <span class={"badge badge-sm #{dietary_badge_class(plan.dietary_type)}"}>
-                        {format_dietary_type(plan.dietary_type)}
-                      </span>
-                      <%= if plan.calorie_target do %>
-                        <span class="badge badge-warning badge-outline badge-sm">
-                          {plan.calorie_target} kcal/day
+                <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                  <div>
+                    <h2 class="text-lg font-bold flex items-center gap-2">
+                      <.icon name="hero-heart-solid" class="size-5 text-success" />
+                      {plan.name}
+                    </h2>
+                    <div class="flex flex-wrap items-center gap-3 mt-2 text-xs text-base-content/50">
+                      <%= if plan.gym do %>
+                        <span class="flex items-center gap-1">
+                          <.icon name="hero-building-office-2-mini" class="size-3" />
+                          {plan.gym.name}
                         </span>
                       <% end %>
-                      <%= if @plan_type == :general do %>
-                        <.button
-                          class="btn-ghost btn-xs text-error"
-                          phx-click="delete_diet"
-                          phx-value-id={plan.id}
-                          data-confirm="Are you sure you want to delete this diet plan?"
-                          id={"delete-diet-#{plan.id}"}
-                        >
-                          <.icon name="hero-trash-mini" class="size-4" />
-                        </.button>
-                      <% end %>
+                      <span class="badge badge-ghost badge-xs">Self-created</span>
                     </div>
                   </div>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class={"badge badge-sm #{dietary_badge_class(plan.dietary_type)}"}>
+                      {format_dietary_type(plan.dietary_type)}
+                    </span>
+                    <%= if plan.calorie_target do %>
+                      <span class="badge badge-warning badge-outline badge-sm">
+                        {plan.calorie_target} kcal/day
+                      </span>
+                    <% end %>
+                    <%= if @plan_type == :general do %>
+                      <.button
+                        class="btn-ghost btn-xs text-error press-scale"
+                        phx-click="delete_diet"
+                        phx-value-id={plan.id}
+                        data-confirm="Are you sure you want to delete this diet plan?"
+                        id={"delete-diet-#{plan.id}"}
+                      >
+                        <.icon name="hero-trash-mini" class="size-4" />
+                      </.button>
+                    <% end %>
+                  </div>
+                </div>
 
-                  <%!-- Meals --%>
-                  <div class="mt-5 space-y-3">
-                    <div
-                      :for={meal <- Enum.sort_by(plan.meals || [], & &1.order)}
-                      class="p-4 rounded-xl bg-base-300/20"
-                      id={"meal-#{plan.id}-#{meal.order}"}
-                    >
-                      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                        <div class="flex items-center gap-3">
-                          <div class="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center shrink-0">
-                            <span class="text-xs font-bold text-success">{meal.order}</span>
-                          </div>
-                          <div>
-                            <p class="text-sm font-semibold">{meal.name}</p>
-                            <p class="text-xs text-base-content/40">{meal.time_of_day}</p>
-                          </div>
+                <%!-- Meals --%>
+                <div class="mt-5 space-y-3">
+                  <div
+                    :for={meal <- Enum.sort_by(plan.meals || [], & &1.order)}
+                    class="p-4 rounded-xl bg-base-200/30"
+                    id={"meal-#{plan.id}-#{meal.order}"}
+                  >
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center shrink-0">
+                          <span class="text-xs font-bold text-success">{meal.order}</span>
                         </div>
-                        <div class="flex flex-wrap items-center gap-3 text-xs">
-                          <%= if meal.calories do %>
-                            <span class="flex items-center gap-1 text-warning font-medium">
-                              <.icon name="hero-fire-mini" class="size-3" />
-                              {meal.calories} cal
-                            </span>
-                          <% end %>
-                          <%= if meal.protein do %>
-                            <span class="text-info font-medium">P: {Float.round(meal.protein, 1)}g</span>
-                          <% end %>
-                          <%= if meal.carbs do %>
-                            <span class="text-accent font-medium">C: {Float.round(meal.carbs, 1)}g</span>
-                          <% end %>
-                          <%= if meal.fat do %>
-                            <span class="text-error font-medium">F: {Float.round(meal.fat, 1)}g</span>
-                          <% end %>
+                        <div>
+                          <p class="text-sm font-semibold">{meal.name}</p>
+                          <p class="text-xs text-base-content/40">{meal.time_of_day}</p>
                         </div>
                       </div>
-                      <%= if meal.items != [] do %>
-                        <div class="mt-3 flex flex-wrap gap-1.5">
-                          <span :for={item <- meal.items} class="badge badge-ghost badge-sm">
-                            {item}
+                      <div class="flex flex-wrap items-center gap-3 text-xs">
+                        <%= if meal.calories do %>
+                          <span class="flex items-center gap-1 text-warning font-medium">
+                            <.icon name="hero-fire-mini" class="size-3" />
+                            {meal.calories} cal
                           </span>
-                        </div>
-                      <% end %>
+                        <% end %>
+                        <%= if meal.protein do %>
+                          <span class="text-info font-medium">P: {Float.round(meal.protein, 1)}g</span>
+                        <% end %>
+                        <%= if meal.carbs do %>
+                          <span class="text-accent font-medium">C: {Float.round(meal.carbs, 1)}g</span>
+                        <% end %>
+                        <%= if meal.fat do %>
+                          <span class="text-error font-medium">F: {Float.round(meal.fat, 1)}g</span>
+                        <% end %>
+                      </div>
                     </div>
+                    <%= if meal.items != [] do %>
+                      <div class="mt-3 flex flex-wrap gap-1.5">
+                        <span :for={item <- meal.items} class="badge badge-ghost badge-sm">
+                          {item}
+                        </span>
+                      </div>
+                    <% end %>
                   </div>
                 </div>
               </div>

@@ -121,122 +121,120 @@ defmodule FitTrackerzWeb.Admin.UsersLive do
         </div>
 
         <%!-- Users Table --%>
-        <div class="card bg-base-200/50 border border-base-300/50" id="users-table-card">
-          <div class="card-body p-0">
-            <%= if Enum.empty?(@users) do %>
-              <div class="flex flex-col items-center justify-center py-16 px-4" id="users-empty-state">
-                <div class="w-16 h-16 rounded-2xl bg-base-300/50 flex items-center justify-center mb-4">
-                  <.icon name="hero-user-group" class="size-8 text-base-content/30" />
-                </div>
-                <p class="text-lg font-semibold text-base-content/50">No users found</p>
-                <p class="text-sm text-base-content/30 mt-1">
-                  Users will appear here once they register.
-                </p>
+        <div class="ft-card p-6" id="users-table-card">
+          <%= if Enum.empty?(@users) do %>
+            <div class="flex flex-col items-center justify-center py-16 px-4" id="users-empty-state">
+              <div class="w-16 h-16 rounded-2xl bg-base-200/30 rounded-xl flex items-center justify-center mb-4">
+                <.icon name="hero-user-group" class="size-8 text-base-content/30" />
               </div>
-            <% else %>
-              <div class="overflow-x-auto">
-                <table class="table" id="users-table">
-                  <thead>
-                    <tr class="border-b border-base-300/50">
-                      <th class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
-                        Name
-                      </th>
-                      <th class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
-                        Email
-                      </th>
-                      <th class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
-                        Role
-                      </th>
-                      <th class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
-                        Created
-                      </th>
-                      <th class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr
-                      :for={user <- @users}
-                      class="border-b border-base-300/30 hover:bg-base-300/20"
-                      id={"user-row-#{user.id}"}
-                    >
-                      <td class="font-semibold">{user.name}</td>
-                      <td class="text-sm text-base-content/60">{user.email}</td>
-                      <td>
-                        <div class="flex items-center gap-2">
-                          <form phx-change="change_role" id={"role-form-#{user.id}"}>
-                            <input type="hidden" name="user_id" value={user.id} />
-                            <select
-                              name="role"
-                              class="select select-bordered select-xs bg-base-300/30 font-medium"
-                              id={"role-select-#{user.id}"}
-                            >
-                              <option value="platform_admin" selected={user.role == :platform_admin}>
-                                Platform Admin
-                              </option>
-                              <option value="gym_operator" selected={user.role == :gym_operator}>
-                                Gym Operator
-                              </option>
-                              <option value="member" selected={user.role == :member}>
-                                Member
-                              </option>
-                            </select>
-                          </form>
-                          <span class={"badge badge-xs #{role_badge_class(user.role)}"}>
-                            {format_role(user.role)}
-                          </span>
-                        </div>
-                      </td>
-                      <td>
-                        <%= if user.is_active do %>
-                          <span
-                            class="badge badge-sm badge-success gap-1"
-                            id={"status-badge-#{user.id}"}
+              <p class="text-lg font-semibold text-base-content/50">No users found</p>
+              <p class="text-sm text-base-content/30 mt-1">
+                Users will appear here once they register.
+              </p>
+            </div>
+          <% else %>
+            <div class="ft-table overflow-x-auto">
+              <table class="table" id="users-table">
+                <thead>
+                  <tr class="border-b border-base-200/50">
+                    <th class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
+                      Name
+                    </th>
+                    <th class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
+                      Email
+                    </th>
+                    <th class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
+                      Role
+                    </th>
+                    <th class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
+                      Created
+                    </th>
+                    <th class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    :for={user <- @users}
+                    class="border-b border-base-200/30 hover:bg-base-200/50"
+                    id={"user-row-#{user.id}"}
+                  >
+                    <td class="font-semibold">{user.name}</td>
+                    <td class="text-sm text-base-content/60">{user.email}</td>
+                    <td>
+                      <div class="flex items-center gap-2">
+                        <form phx-change="change_role" id={"role-form-#{user.id}"}>
+                          <input type="hidden" name="user_id" value={user.id} />
+                          <select
+                            name="role"
+                            class="select select-bordered select-xs bg-base-200/30 rounded-xl font-medium"
+                            id={"role-select-#{user.id}"}
                           >
-                            <.icon name="hero-check-circle-mini" class="size-3" /> Active
-                          </span>
-                        <% else %>
-                          <span
-                            class="badge badge-sm badge-error gap-1"
-                            id={"status-badge-#{user.id}"}
-                          >
-                            <.icon name="hero-x-circle-mini" class="size-3" /> Inactive
-                          </span>
-                        <% end %>
-                      </td>
-                      <td class="text-sm text-base-content/50">
-                        {format_datetime(user.inserted_at)}
-                      </td>
-                      <td>
-                        <button
-                          phx-click="toggle_active"
-                          phx-value-id={user.id}
-                          class={[
-                            "btn btn-xs gap-1 font-medium",
-                            if(user.is_active,
-                              do: "btn-ghost text-error",
-                              else: "btn-ghost text-success"
-                            )
-                          ]}
-                          id={"toggle-active-#{user.id}"}
+                            <option value="platform_admin" selected={user.role == :platform_admin}>
+                              Platform Admin
+                            </option>
+                            <option value="gym_operator" selected={user.role == :gym_operator}>
+                              Gym Operator
+                            </option>
+                            <option value="member" selected={user.role == :member}>
+                              Member
+                            </option>
+                          </select>
+                        </form>
+                        <span class={"badge badge-xs #{role_badge_class(user.role)}"}>
+                          {format_role(user.role)}
+                        </span>
+                      </div>
+                    </td>
+                    <td>
+                      <%= if user.is_active do %>
+                        <span
+                          class="badge badge-sm badge-success gap-1"
+                          id={"status-badge-#{user.id}"}
                         >
-                          <%= if user.is_active do %>
-                            <.icon name="hero-no-symbol-mini" class="size-3" /> Deactivate
-                          <% else %>
-                            <.icon name="hero-check-mini" class="size-3" /> Activate
-                          <% end %>
-                        </button>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            <% end %>
-          </div>
+                          <.icon name="hero-check-circle-mini" class="size-3" /> Active
+                        </span>
+                      <% else %>
+                        <span
+                          class="badge badge-sm badge-error gap-1"
+                          id={"status-badge-#{user.id}"}
+                        >
+                          <.icon name="hero-x-circle-mini" class="size-3" /> Inactive
+                        </span>
+                      <% end %>
+                    </td>
+                    <td class="text-sm text-base-content/50">
+                      {format_datetime(user.inserted_at)}
+                    </td>
+                    <td>
+                      <button
+                        phx-click="toggle_active"
+                        phx-value-id={user.id}
+                        class={[
+                          "btn btn-xs gap-1 font-medium press-scale",
+                          if(user.is_active,
+                            do: "btn-ghost text-error",
+                            else: "btn-ghost text-success"
+                          )
+                        ]}
+                        id={"toggle-active-#{user.id}"}
+                      >
+                        <%= if user.is_active do %>
+                          <.icon name="hero-no-symbol-mini" class="size-3" /> Deactivate
+                        <% else %>
+                          <.icon name="hero-check-mini" class="size-3" /> Activate
+                        <% end %>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          <% end %>
         </div>
       </div>
     </Layouts.app>

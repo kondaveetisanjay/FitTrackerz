@@ -100,7 +100,7 @@ defmodule FitTrackerzWeb.Member.SubscriptionLive do
 
         <%= if @no_gym do %>
           <%!-- No Gym Membership --%>
-          <div class="card bg-base-200/50 border border-base-300/50" id="no-gym-card">
+          <div class="ft-card p-6" id="no-gym-card">
             <div class="card-body items-center text-center p-8">
               <div class="w-16 h-16 rounded-2xl bg-warning/10 flex items-center justify-center mb-4">
                 <.icon name="hero-building-office-2" class="size-8 text-warning" />
@@ -114,7 +114,7 @@ defmodule FitTrackerzWeb.Member.SubscriptionLive do
         <% else %>
           <%= if @subscriptions == [] do %>
             <%!-- Empty State --%>
-            <div class="card bg-base-200/50 border border-base-300/50" id="no-subscriptions">
+            <div class="ft-card p-6" id="no-subscriptions">
               <div class="card-body items-center text-center p-8">
                 <div class="w-16 h-16 rounded-2xl bg-warning/10 flex items-center justify-center mb-4">
                   <.icon name="hero-credit-card" class="size-8 text-warning" />
@@ -130,75 +130,73 @@ defmodule FitTrackerzWeb.Member.SubscriptionLive do
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div
                 :for={sub <- @subscriptions}
-                class="card bg-base-200/50 border border-base-300/50"
+                class="ft-card p-6"
                 id={"subscription-#{sub.id}"}
               >
-                <div class="card-body p-5">
-                  <%!-- Header --%>
-                  <div class="flex items-start justify-between gap-3">
-                    <div>
-                      <h2 class="text-lg font-bold flex items-center gap-2">
-                        <.icon name="hero-credit-card-solid" class="size-5 text-warning" />
-                        {sub.subscription_plan.name}
-                      </h2>
-                      <%= if sub.gym do %>
-                        <p class="text-xs text-base-content/50 mt-1 flex items-center gap-1">
-                          <.icon name="hero-building-office-2-mini" class="size-3" />
-                          {sub.gym.name}
-                        </p>
-                      <% end %>
-                    </div>
-                    <span class={"badge badge-sm #{subscription_status_class(sub.status)}"}>
-                      {format_status(sub.status)}
+                <%!-- Header --%>
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <h2 class="text-lg font-bold flex items-center gap-2">
+                      <.icon name="hero-credit-card-solid" class="size-5 text-warning" />
+                      {sub.subscription_plan.name}
+                    </h2>
+                    <%= if sub.gym do %>
+                      <p class="text-xs text-base-content/50 mt-1 flex items-center gap-1">
+                        <.icon name="hero-building-office-2-mini" class="size-3" />
+                        {sub.gym.name}
+                      </p>
+                    <% end %>
+                  </div>
+                  <span class={"badge badge-sm #{subscription_status_class(sub.status)}"}>
+                    {format_status(sub.status)}
+                  </span>
+                </div>
+
+                <%!-- Plan Details --%>
+                <div class="mt-4 grid grid-cols-2 gap-3">
+                  <div class="p-3 bg-base-200/30 rounded-xl">
+                    <p class="text-xs text-base-content/40 font-medium uppercase tracking-wider">
+                      Plan Type
+                    </p>
+                    <p class="text-sm font-semibold mt-1">
+                      {format_plan_type(sub.subscription_plan.plan_type)}
+                    </p>
+                  </div>
+                  <div class="p-3 bg-base-200/30 rounded-xl">
+                    <p class="text-xs text-base-content/40 font-medium uppercase tracking-wider">
+                      Duration
+                    </p>
+                    <p class="text-sm font-semibold mt-1">
+                      {format_duration(sub.subscription_plan.duration)}
+                    </p>
+                  </div>
+                  <div class="p-3 bg-base-200/30 rounded-xl">
+                    <p class="text-xs text-base-content/40 font-medium uppercase tracking-wider">
+                      Price
+                    </p>
+                    <p class="text-sm font-semibold mt-1">
+                      {format_price(sub.subscription_plan.price_in_paise)}
+                    </p>
+                  </div>
+                  <div class="p-3 bg-base-200/30 rounded-xl">
+                    <p class="text-xs text-base-content/40 font-medium uppercase tracking-wider">
+                      Payment
+                    </p>
+                    <span class={"badge badge-sm mt-1 #{payment_status_class(sub.payment_status)}"}>
+                      {format_status(sub.payment_status)}
                     </span>
                   </div>
+                </div>
 
-                  <%!-- Plan Details --%>
-                  <div class="mt-4 grid grid-cols-2 gap-3">
-                    <div class="p-3 rounded-lg bg-base-300/20">
-                      <p class="text-xs text-base-content/40 font-medium uppercase tracking-wider">
-                        Plan Type
-                      </p>
-                      <p class="text-sm font-semibold mt-1">
-                        {format_plan_type(sub.subscription_plan.plan_type)}
-                      </p>
-                    </div>
-                    <div class="p-3 rounded-lg bg-base-300/20">
-                      <p class="text-xs text-base-content/40 font-medium uppercase tracking-wider">
-                        Duration
-                      </p>
-                      <p class="text-sm font-semibold mt-1">
-                        {format_duration(sub.subscription_plan.duration)}
-                      </p>
-                    </div>
-                    <div class="p-3 rounded-lg bg-base-300/20">
-                      <p class="text-xs text-base-content/40 font-medium uppercase tracking-wider">
-                        Price
-                      </p>
-                      <p class="text-sm font-semibold mt-1">
-                        {format_price(sub.subscription_plan.price_in_paise)}
-                      </p>
-                    </div>
-                    <div class="p-3 rounded-lg bg-base-300/20">
-                      <p class="text-xs text-base-content/40 font-medium uppercase tracking-wider">
-                        Payment
-                      </p>
-                      <span class={"badge badge-sm mt-1 #{payment_status_class(sub.payment_status)}"}>
-                        {format_status(sub.payment_status)}
-                      </span>
-                    </div>
+                <%!-- Dates --%>
+                <div class="mt-4 flex items-center gap-4 text-sm text-base-content/60">
+                  <div class="flex items-center gap-1.5">
+                    <.icon name="hero-calendar-mini" class="size-4 text-base-content/40" />
+                    <span>Starts: {format_datetime(sub.starts_at)}</span>
                   </div>
-
-                  <%!-- Dates --%>
-                  <div class="mt-4 flex items-center gap-4 text-sm text-base-content/60">
-                    <div class="flex items-center gap-1.5">
-                      <.icon name="hero-calendar-mini" class="size-4 text-base-content/40" />
-                      <span>Starts: {format_datetime(sub.starts_at)}</span>
-                    </div>
-                    <div class="flex items-center gap-1.5">
-                      <.icon name="hero-calendar-days-mini" class="size-4 text-base-content/40" />
-                      <span>Ends: {format_datetime(sub.ends_at)}</span>
-                    </div>
+                  <div class="flex items-center gap-1.5">
+                    <.icon name="hero-calendar-days-mini" class="size-4 text-base-content/40" />
+                    <span>Ends: {format_datetime(sub.ends_at)}</span>
                   </div>
                 </div>
               </div>
