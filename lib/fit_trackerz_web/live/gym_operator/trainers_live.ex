@@ -121,7 +121,7 @@ defmodule FitTrackerzWeb.GymOperator.TrainersLive do
     {:noreply, assign(socket, expanded_trainer_id: new_id)}
   end
 
-  # ── Helpers ──
+  # -- Helpers --
 
   defp load_trainers(gym_id, actor) do
     case FitTrackerz.Gym.list_trainers_by_gym(gym_id, actor: actor, load: [:user]) do
@@ -171,248 +171,198 @@ defmodule FitTrackerzWeb.GymOperator.TrainersLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
-      <div class="space-y-8">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div class="flex items-center gap-3">
-            <Layouts.back_button />
-            <div>
-              <h1 class="text-2xl sm:text-3xl font-black tracking-tight">Trainers</h1>
-              <p class="text-base-content/50 mt-1">Manage your gym trainers and invite new ones.</p>
-            </div>
-          </div>
-          <%= if @gym do %>
-            <button
-              phx-click="toggle_invite"
-              class="btn btn-primary btn-sm gap-2 font-semibold"
-              id="toggle-trainer-invite-btn"
-            >
-              <.icon name="hero-academic-cap-mini" class="size-4" /> Invite Trainer
-            </button>
-          <% end %>
-        </div>
+      <div class="space-y-6">
+        <.page_header title="Trainers" subtitle="Manage your gym trainers and invite new ones." back_path="/gym">
+          <:actions>
+            <%= if @gym do %>
+              <.button variant="primary" size="sm" icon="hero-academic-cap-mini" phx-click="toggle_invite" id="toggle-trainer-invite-btn">Invite Trainer</.button>
+            <% end %>
+          </:actions>
+        </.page_header>
 
         <%= if @gym == nil do %>
-          <div class="card bg-base-200/50 border border-base-300/50" id="no-gym-card">
-            <div class="card-body p-6 text-center">
-              <.icon name="hero-building-office-solid" class="size-12 text-base-content/20 mx-auto" />
-              <h2 class="text-lg font-bold mt-4">No Gym Found</h2>
-              <p class="text-base-content/50 mt-1">
-                You need to create a gym first before managing trainers.
-              </p>
-              <a href="/gym/setup" class="btn btn-primary btn-sm mt-4 gap-2">
-                <.icon name="hero-plus-mini" class="size-4" /> Setup Gym
-              </a>
-            </div>
-          </div>
+          <.empty_state icon="hero-building-office-solid" title="No Gym Found" subtitle="You need to create a gym first before managing trainers.">
+            <:action>
+              <.button variant="primary" size="sm" icon="hero-plus-mini" navigate="/gym/setup">Setup Gym</.button>
+            </:action>
+          </.empty_state>
         <% else %>
           <%!-- Invite Form --%>
           <%= if @show_invite do %>
-            <div class="card bg-base-200/50 border border-base-300/50" id="invite-trainer-card">
-              <div class="card-body p-6">
-                <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                  <.icon name="hero-envelope-solid" class="size-5 text-secondary" />
-                  Invite New Trainer
-                </h2>
-                <.form
-                  for={@invite_form}
-                  id="invite-trainer-form"
-                  phx-change="validate_invite"
-                  phx-submit="invite"
-                >
-                  <div class="flex gap-4 items-end">
-                    <div class="flex-1">
-                      <.input
-                        field={@invite_form[:email]}
-                        type="email"
-                        label="Email Address"
-                        placeholder="trainer@example.com"
-                        required
-                      />
-                    </div>
-                    <div class="mb-2">
-                      <button
-                        type="submit"
-                        class="btn btn-primary btn-sm gap-2"
-                        id="send-trainer-invite-btn"
-                      >
-                        <.icon name="hero-paper-airplane" class="size-4" /> Send Invite
-                      </button>
-                    </div>
+            <.card title="Invite New Trainer" id="invite-trainer-card">
+              <.form
+                for={@invite_form}
+                id="invite-trainer-form"
+                phx-change="validate_invite"
+                phx-submit="invite"
+              >
+                <div class="flex gap-4 items-end">
+                  <div class="flex-1">
+                    <.input
+                      field={@invite_form[:email]}
+                      type="email"
+                      label="Email Address"
+                      placeholder="trainer@example.com"
+                      required
+                    />
                   </div>
-                </.form>
-              </div>
-            </div>
+                  <div class="mb-2">
+                    <.button variant="primary" size="sm" icon="hero-paper-airplane" type="submit" id="send-trainer-invite-btn">Send Invite</.button>
+                  </div>
+                </div>
+              </.form>
+            </.card>
           <% end %>
 
           <%!-- Search & Filter --%>
-          <div class="flex flex-col sm:flex-row gap-3" id="trainers-search-filter">
-            <div class="flex-1">
-              <div class="relative">
-                <.icon name="hero-magnifying-glass-mini" class="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40" />
-                <input
-                  type="text"
-                  placeholder="Search by name, email, or specialization..."
-                  value={@search}
-                  phx-keyup="search"
-                  phx-key="Enter"
-                  phx-debounce="300"
-                  name="search"
-                  class="input input-bordered input-sm w-full pl-9"
-                  id="trainer-search-input"
-                />
+          <.filter_bar search_placeholder="Search by name, email, or specialization..." search_value={@search} on_search="search">
+            <:filter>
+              <div class="flex gap-2">
+                <.button
+                  variant={if(@filter_status == "all", do: "primary", else: "ghost")}
+                  size="sm"
+                  phx-click="filter_status"
+                  phx-value-status="all"
+                >
+                  All <.badge variant="neutral" size="sm">{length(@all_trainers)}</.badge>
+                </.button>
+                <.button
+                  variant={if(@filter_status == "active", do: "primary", else: "ghost")}
+                  size="sm"
+                  phx-click="filter_status"
+                  phx-value-status="active"
+                >
+                  Active
+                </.button>
+                <.button
+                  variant={if(@filter_status == "inactive", do: "primary", else: "ghost")}
+                  size="sm"
+                  phx-click="filter_status"
+                  phx-value-status="inactive"
+                >
+                  Inactive
+                </.button>
               </div>
-            </div>
-            <div class="flex gap-2">
-              <button
-                phx-click="filter_status"
-                phx-value-status="all"
-                class={"btn btn-sm #{if @filter_status == "all", do: "btn-primary", else: "btn-ghost"}"}
-              >
-                All <span class="badge badge-sm ml-1">{length(@all_trainers)}</span>
-              </button>
-              <button
-                phx-click="filter_status"
-                phx-value-status="active"
-                class={"btn btn-sm #{if @filter_status == "active", do: "btn-success", else: "btn-ghost"}"}
-              >
-                Active
-              </button>
-              <button
-                phx-click="filter_status"
-                phx-value-status="inactive"
-                class={"btn btn-sm #{if @filter_status == "inactive", do: "btn-error", else: "btn-ghost"}"}
-              >
-                Inactive
-              </button>
-            </div>
-          </div>
+            </:filter>
+          </.filter_bar>
 
           <%!-- Trainers Table --%>
-          <div class="card bg-base-200/50 border border-base-300/50" id="trainers-table-card">
-            <div class="card-body p-6">
-              <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                <.icon name="hero-academic-cap-solid" class="size-5 text-secondary" /> All Trainers
-                <span class="badge badge-neutral badge-sm">{length(@trainers)}</span>
-              </h2>
-              <%= if @trainers == [] do %>
-                <div class="flex items-center gap-3 p-4 rounded-lg bg-base-300/20">
-                  <div class="w-2 h-2 rounded-full bg-base-content/20 shrink-0"></div>
-                  <p class="text-sm text-base-content/50">
-                    <%= if @search != "" or @filter_status != "all" do %>
-                      No trainers match your filters.
-                    <% else %>
-                      No trainers yet. Invite trainers to build your team!
-                    <% end %>
-                  </p>
-                </div>
-              <% else %>
-                <div class="overflow-x-auto">
-                  <table class="table table-sm" id="trainers-table">
-                    <thead>
-                      <tr class="text-base-content/40">
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Specializations</th>
-                        <th>Clients</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+          <.card title="All Trainers" subtitle={"#{length(@trainers)} trainers"}>
+            <%= if @trainers == [] do %>
+              <.empty_state
+                icon="hero-academic-cap"
+                title={if @search != "" or @filter_status != "all", do: "No trainers match your filters", else: "No trainers yet"}
+                subtitle={if @search != "" or @filter_status != "all", do: "Try adjusting your search or filters.", else: "Invite trainers to build your team!"}
+              />
+            <% else %>
+              <div class="overflow-x-auto">
+                <table class="table table-sm" id="trainers-table">
+                  <thead>
+                    <tr class="text-base-content/40">
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Specializations</th>
+                      <th>Clients</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <%= for trainer <- @trainers do %>
+                      <% assigned_members = Map.get(@trainer_member_map, trainer.id, []) %>
+                      <% client_count = length(assigned_members) %>
+                      <tr id={"trainer-#{trainer.id}"} class={if @expanded_trainer_id == trainer.id, do: "bg-base-300/20", else: ""}>
+                        <td>
+                          <div class="flex items-center gap-2">
+                            <.avatar name={trainer.user.name || "T"} size="sm" />
+                            <span class="font-medium">{trainer.user.name}</span>
+                          </div>
+                        </td>
+                        <td class="text-base-content/60">{trainer.user.email}</td>
+                        <td>
+                          <%= if trainer.specializations != [] do %>
+                            <div class="flex flex-wrap gap-1">
+                              <%= for spec <- trainer.specializations do %>
+                                <.badge variant="info" size="sm">{spec}</.badge>
+                              <% end %>
+                            </div>
+                          <% else %>
+                            <span class="text-base-content/40 text-sm">None listed</span>
+                          <% end %>
+                        </td>
+                        <td>
+                          <%= if client_count > 0 do %>
+                            <button
+                              phx-click="toggle_expand"
+                              phx-value-id={trainer.id}
+                              class="btn btn-ghost btn-xs gap-1"
+                              id={"expand-clients-#{trainer.id}"}
+                            >
+                              <.badge variant="primary" size="sm">{client_count}</.badge>
+                              <.icon
+                                name={if @expanded_trainer_id == trainer.id, do: "hero-chevron-up-mini", else: "hero-chevron-down-mini"}
+                                class="size-3"
+                              />
+                            </button>
+                          <% else %>
+                            <span class="text-base-content/30 text-sm">0</span>
+                          <% end %>
+                        </td>
+                        <td>
+                          <%= if trainer.is_active do %>
+                            <.badge variant="success" size="sm">Active</.badge>
+                          <% else %>
+                            <.badge variant="error" size="sm">Inactive</.badge>
+                          <% end %>
+                        </td>
+                        <td>
+                          <.button
+                            variant="ghost"
+                            size="sm"
+                            phx-click="toggle_active"
+                            phx-value-id={trainer.id}
+                            id={"toggle-trainer-#{trainer.id}"}
+                          >
+                            <%= if trainer.is_active do %>
+                              <.icon name="hero-pause" class="size-4 text-warning" />
+                            <% else %>
+                              <.icon name="hero-play" class="size-4 text-success" />
+                            <% end %>
+                          </.button>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      <%= for trainer <- @trainers do %>
-                        <% assigned_members = Map.get(@trainer_member_map, trainer.id, []) %>
-                        <% client_count = length(assigned_members) %>
-                        <tr id={"trainer-#{trainer.id}"} class={if @expanded_trainer_id == trainer.id, do: "bg-base-300/20", else: ""}>
-                          <td class="font-medium">{trainer.user.name}</td>
-                          <td class="text-base-content/60">{trainer.user.email}</td>
-                          <td>
-                            <%= if trainer.specializations != [] do %>
-                              <div class="flex flex-wrap gap-1">
-                                <%= for spec <- trainer.specializations do %>
-                                  <span class="badge badge-info badge-sm">{spec}</span>
+                      <%!-- Expanded client list --%>
+                      <%= if @expanded_trainer_id == trainer.id and client_count > 0 do %>
+                        <tr id={"trainer-clients-#{trainer.id}"}>
+                          <td colspan="6" class="p-0">
+                            <div class="bg-base-300/10 border-t border-base-300/30 px-6 py-3">
+                              <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
+                                Assigned Members ({client_count})
+                              </p>
+                              <div class="flex flex-wrap gap-2">
+                                <%= for member <- assigned_members do %>
+                                  <div
+                                    class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-base-100 border border-base-300/50"
+                                    id={"trainer-client-#{member.id}"}
+                                  >
+                                    <.avatar name={member.user.name || "M"} size="sm" />
+                                    <div>
+                                      <span class="text-sm font-medium">{member.user.name}</span>
+                                      <span class="text-xs text-base-content/40 ml-1">{member.user.email}</span>
+                                    </div>
+                                  </div>
                                 <% end %>
                               </div>
-                            <% else %>
-                              <span class="text-base-content/40 text-sm">None listed</span>
-                            <% end %>
-                          </td>
-                          <td>
-                            <%= if client_count > 0 do %>
-                              <button
-                                phx-click="toggle_expand"
-                                phx-value-id={trainer.id}
-                                class="btn btn-ghost btn-xs gap-1"
-                                id={"expand-clients-#{trainer.id}"}
-                              >
-                                <span class="badge badge-primary badge-sm">{client_count}</span>
-                                <.icon
-                                  name={if @expanded_trainer_id == trainer.id, do: "hero-chevron-up-mini", else: "hero-chevron-down-mini"}
-                                  class="size-3"
-                                />
-                              </button>
-                            <% else %>
-                              <span class="text-base-content/30 text-sm">0</span>
-                            <% end %>
-                          </td>
-                          <td>
-                            <%= if trainer.is_active do %>
-                              <span class="badge badge-success badge-sm">Active</span>
-                            <% else %>
-                              <span class="badge badge-error badge-sm">Inactive</span>
-                            <% end %>
-                          </td>
-                          <td>
-                            <button
-                              phx-click="toggle_active"
-                              phx-value-id={trainer.id}
-                              class="btn btn-ghost btn-xs"
-                              id={"toggle-trainer-#{trainer.id}"}
-                            >
-                              <%= if trainer.is_active do %>
-                                <.icon name="hero-pause" class="size-4 text-warning" />
-                              <% else %>
-                                <.icon name="hero-play" class="size-4 text-success" />
-                              <% end %>
-                            </button>
+                            </div>
                           </td>
                         </tr>
-                        <%!-- Expanded client list --%>
-                        <%= if @expanded_trainer_id == trainer.id and client_count > 0 do %>
-                          <tr id={"trainer-clients-#{trainer.id}"}>
-                            <td colspan="6" class="p-0">
-                              <div class="bg-base-300/10 border-t border-base-300/30 px-6 py-3">
-                                <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
-                                  Assigned Members ({client_count})
-                                </p>
-                                <div class="flex flex-wrap gap-2">
-                                  <%= for member <- assigned_members do %>
-                                    <div
-                                      class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-base-100 border border-base-300/50"
-                                      id={"trainer-client-#{member.id}"}
-                                    >
-                                      <div class="w-6 h-6 rounded-full bg-primary/15 flex items-center justify-center">
-                                        <span class="text-xs font-bold text-primary">
-                                          {String.first(member.user.name || "M")}
-                                        </span>
-                                      </div>
-                                      <div>
-                                        <span class="text-sm font-medium">{member.user.name}</span>
-                                        <span class="text-xs text-base-content/40 ml-1">{member.user.email}</span>
-                                      </div>
-                                    </div>
-                                  <% end %>
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                        <% end %>
                       <% end %>
-                    </tbody>
-                  </table>
-                </div>
-              <% end %>
-            </div>
-          </div>
+                    <% end %>
+                  </tbody>
+                </table>
+              </div>
+            <% end %>
+          </.card>
         <% end %>
       </div>
     </Layouts.app>

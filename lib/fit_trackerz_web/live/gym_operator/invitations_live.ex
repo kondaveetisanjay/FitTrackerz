@@ -29,11 +29,11 @@ defmodule FitTrackerzWeb.GymOperator.InvitationsLive do
     end
   end
 
-  defp status_badge_class(:pending), do: "badge-warning"
-  defp status_badge_class(:accepted), do: "badge-success"
-  defp status_badge_class(:rejected), do: "badge-error"
-  defp status_badge_class(:expired), do: "badge-neutral"
-  defp status_badge_class(_), do: "badge-neutral"
+  defp status_variant(:pending), do: "warning"
+  defp status_variant(:accepted), do: "success"
+  defp status_variant(:rejected), do: "error"
+  defp status_variant(:expired), do: "neutral"
+  defp status_variant(_), do: "neutral"
 
   defp format_date(%DateTime{} = dt) do
     Calendar.strftime(dt, "%b %d, %Y %I:%M %p")
@@ -45,78 +45,39 @@ defmodule FitTrackerzWeb.GymOperator.InvitationsLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
-      <div class="space-y-8">
-        <div class="flex items-center gap-3">
-          <Layouts.back_button />
-          <div>
-            <h1 class="text-2xl sm:text-3xl font-brand">Invitations</h1>
-            <p class="text-base-content/50 mt-1">Track all member invitations.</p>
-          </div>
-        </div>
+      <div class="space-y-6">
+        <.page_header title="Invitations" subtitle="Track all member invitations." back_path="/gym" />
 
         <%= if @gym == nil do %>
-          <div class="card bg-base-200/50 border border-base-300/50" id="no-gym-card">
-            <div class="card-body p-6 text-center">
-              <.icon name="hero-building-office-solid" class="size-12 text-base-content/20 mx-auto" />
-              <h2 class="text-lg font-bold mt-4">No Gym Found</h2>
-              <p class="text-base-content/50 mt-1">
-                You need to create a gym first before viewing invitations.
-              </p>
-              <a href="/gym/setup" class="btn btn-primary btn-sm mt-4 gap-2">
-                <.icon name="hero-plus-mini" class="size-4" /> Setup Gym
-              </a>
-            </div>
-          </div>
+          <.empty_state icon="hero-building-office-solid" title="No Gym Found" subtitle="You need to create a gym first before viewing invitations.">
+            <:action>
+              <.button variant="primary" size="sm" icon="hero-plus-mini" navigate="/gym/setup">Setup Gym</.button>
+            </:action>
+          </.empty_state>
         <% else %>
-          <%!-- Member Invitations --%>
-          <div class="card bg-base-200/50 border border-base-300/50" id="member-invitations-card">
-            <div class="card-body p-6">
-              <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-bold flex items-center gap-2">
-                  <.icon name="hero-user-group-solid" class="size-5 text-primary" />
-                  Member Invitations
-                  <span class="badge badge-neutral badge-sm">{length(@member_invitations)}</span>
-                </h2>
-                <a href="/gym/members" class="btn btn-ghost btn-xs gap-1">
-                  <.icon name="hero-plus-mini" class="size-3" /> Invite
-                </a>
-              </div>
-              <%= if @member_invitations == [] do %>
-                <div class="flex items-center gap-3 p-4 rounded-lg bg-base-300/20">
-                  <div class="w-2 h-2 rounded-full bg-base-content/20 shrink-0"></div>
-                  <p class="text-sm text-base-content/50">No member invitations sent yet.</p>
-                </div>
-              <% else %>
-                <div class="overflow-x-auto">
-                  <table class="table table-sm" id="member-invitations-table">
-                    <thead>
-                      <tr class="text-base-content/40">
-                        <th>Email</th>
-                        <th>Status</th>
-                        <th>Invited By</th>
-                        <th>Date</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <%= for inv <- @member_invitations do %>
-                        <tr id={"member-inv-#{inv.id}"}>
-                          <td class="font-medium">{inv.invited_email}</td>
-                          <td>
-                            <span class={"badge badge-sm #{status_badge_class(inv.status)}"}>
-                              {Phoenix.Naming.humanize(inv.status)}
-                            </span>
-                          </td>
-                          <td class="text-base-content/60">{inv.invited_by.name}</td>
-                          <td class="text-base-content/60 text-sm">{format_date(inv.inserted_at)}</td>
-                        </tr>
-                      <% end %>
-                    </tbody>
-                  </table>
-                </div>
-              <% end %>
-            </div>
-          </div>
-
+          <.card title="Member Invitations" subtitle={"#{length(@member_invitations)} invitations"}>
+            <:header_actions>
+              <.button variant="ghost" size="sm" icon="hero-plus-mini" navigate="/gym/members">Invite</.button>
+            </:header_actions>
+            <%= if @member_invitations == [] do %>
+              <.empty_state icon="hero-envelope" title="No Invitations" subtitle="No member invitations sent yet." />
+            <% else %>
+              <.data_table id="member-invitations-table" rows={@member_invitations} row_id={fn inv -> "member-inv-#{inv.id}" end}>
+                <:col :let={inv} label="Email">
+                  <span class="font-medium">{inv.invited_email}</span>
+                </:col>
+                <:col :let={inv} label="Status">
+                  <.badge variant={status_variant(inv.status)}>{Phoenix.Naming.humanize(inv.status)}</.badge>
+                </:col>
+                <:col :let={inv} label="Invited By">
+                  {inv.invited_by.name}
+                </:col>
+                <:col :let={inv} label="Date">
+                  <span class="text-sm text-base-content/60">{format_date(inv.inserted_at)}</span>
+                </:col>
+              </.data_table>
+            <% end %>
+          </.card>
         <% end %>
       </div>
     </Layouts.app>

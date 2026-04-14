@@ -163,17 +163,6 @@ defmodule FitTrackerzWeb.Admin.ReportDetailLive do
   defp showing_from(page, per_page), do: (page - 1) * per_page + 1
   defp showing_to(page, per_page, total), do: min(page * per_page, total)
 
-  defp status_badge("Active"), do: "badge badge-sm badge-success"
-  defp status_badge("Inactive"), do: "badge badge-sm badge-error"
-  defp status_badge("Expired"), do: "badge badge-sm badge-error"
-  defp status_badge("Cancelled"), do: "badge badge-sm badge-warning"
-  defp status_badge("Paid"), do: "badge badge-sm badge-success"
-  defp status_badge("Pending"), do: "badge badge-sm badge-warning"
-  defp status_badge("Failed"), do: "badge badge-sm badge-error"
-  defp status_badge("Refunded"), do: "badge badge-sm badge-ghost"
-  defp status_badge("Confirmed"), do: "badge badge-sm badge-success"
-  defp status_badge(_), do: nil
-
   defp format_cell_value(value) when is_binary(value), do: value
   defp format_cell_value(nil), do: "-"
   defp format_cell_value(%Date{} = date), do: Calendar.strftime(date, "%Y-%m-%d")
@@ -186,31 +175,33 @@ defmodule FitTrackerzWeb.Admin.ReportDetailLive do
   # Render
   # ---------------------------------------------------------------------------
 
+  defp status_badge_variant("Active"), do: "success"
+  defp status_badge_variant("Inactive"), do: "error"
+  defp status_badge_variant("Expired"), do: "error"
+  defp status_badge_variant("Cancelled"), do: "warning"
+  defp status_badge_variant("Paid"), do: "success"
+  defp status_badge_variant("Pending"), do: "warning"
+  defp status_badge_variant("Failed"), do: "error"
+  defp status_badge_variant("Refunded"), do: "neutral"
+  defp status_badge_variant("Confirmed"), do: "success"
+  defp status_badge_variant(_), do: nil
+
   @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
-      <div class="space-y-6">
-        <%!-- Header --%>
-        <div class="flex items-center justify-between">
-          <div>
-            <div class="flex items-center gap-3 mb-1">
-              <.link navigate="/admin/reports" class="btn btn-ghost btn-sm btn-circle">
-                <.icon name="hero-arrow-left-mini" class="size-4" />
-              </.link>
-              <h1 class="text-2xl sm:text-3xl font-brand">{@report_name}</h1>
-            </div>
-            <p class="text-base-content/50 ml-12">Platform-wide report</p>
-          </div>
-          <button phx-click="export_csv" class="btn btn-primary btn-sm gap-2">
-            <.icon name="hero-arrow-down-tray-mini" class="size-4" />
+      <.page_header title={@report_name} subtitle="Platform-wide report" back_path="/admin/reports">
+        <:actions>
+          <.button variant="primary" size="sm" icon="hero-arrow-down-tray" phx-click="export_csv">
             Export CSV
-          </button>
-        </div>
+          </.button>
+        </:actions>
+      </.page_header>
 
-        <%!-- Date Range Controls --%>
-        <div class="card bg-base-200/50 border border-base-300/50">
-          <div class="card-body p-4">
+      <%!-- Date Range Controls --%>
+      <.section>
+        <.card padded={false}>
+          <div class="p-4">
             <div class="flex flex-wrap items-center gap-3">
               <div class="flex gap-1">
                 <%= for preset <- ["7d", "30d", "90d", "year"] do %>
@@ -241,110 +232,99 @@ defmodule FitTrackerzWeb.Admin.ReportDetailLive do
                   value={@custom_end}
                   class="input input-sm input-bordered w-36"
                 />
-                <button type="submit" class="btn btn-sm btn-primary">
-                  Apply
-                </button>
+                <.button type="submit" variant="primary" size="sm">Apply</.button>
               </form>
             </div>
           </div>
-        </div>
+        </.card>
+      </.section>
 
-        <%!-- Summary Table --%>
-        <div class="card bg-base-200/50 border border-base-300/50">
-          <div class="card-body p-4">
-            <h2 class="text-sm font-semibold text-base-content/60 mb-3">Summary</h2>
+      <%!-- Summary --%>
+      <.section title="Summary">
+        <.card padded={false}>
+          <div class="overflow-x-auto">
             <table class="table table-sm">
               <thead>
-                <tr>
-                  <th>Metric</th>
-                  <th>Value</th>
+                <tr class="border-b border-base-300/50">
+                  <th class="text-xs font-semibold text-base-content/50 uppercase tracking-wider">Metric</th>
+                  <th class="text-xs font-semibold text-base-content/50 uppercase tracking-wider">Value</th>
                 </tr>
               </thead>
               <tbody>
-                <tr :for={item <- @report_data.summary}>
+                <tr :for={item <- @report_data.summary} class="border-b border-base-300/30">
                   <td class="font-medium">{item.label}</td>
                   <td class="font-bold">{item.value}</td>
                 </tr>
               </tbody>
             </table>
           </div>
-        </div>
+        </.card>
+      </.section>
 
-        <%!-- Detail Table --%>
-        <div class="card bg-base-200/50 border border-base-300/50">
-          <div class="card-body p-4">
-            <div class="flex flex-wrap items-center justify-between mb-3">
-              <p class="text-sm text-base-content/60">
-                Showing {showing_from(@page, @per_page)} to {showing_to(@page, @per_page, @report_data.total_count)} of {@report_data.total_count} records
-              </p>
-              <form phx-change="change_per_page" class="inline">
-                <select name="per_page" class="select select-xs select-bordered">
-                  <option :for={size <- [10, 25, 50, 100]} value={size} selected={size == @per_page}>
-                    {size} per page
-                  </option>
-                </select>
-              </form>
-            </div>
+      <%!-- Detail Table --%>
+      <.section title="Details">
+        <:actions>
+          <div class="flex items-center gap-3">
+            <p class="text-sm text-base-content/60">
+              Showing {showing_from(@page, @per_page)}-{showing_to(@page, @per_page, @report_data.total_count)} of {@report_data.total_count}
+            </p>
+            <form phx-change="change_per_page" class="inline">
+              <select name="per_page" class="select select-xs select-bordered">
+                <option :for={size <- [10, 25, 50, 100]} value={size} selected={size == @per_page}>
+                  {size} per page
+                </option>
+              </select>
+            </form>
+          </div>
+        </:actions>
 
+        <.card padded={false}>
+          <%= if Enum.empty?(@report_data.rows) do %>
+            <.empty_state
+              icon="hero-document-magnifying-glass"
+              title="No records found"
+              subtitle="No records found for the selected period."
+            />
+          <% else %>
             <div class="overflow-x-auto">
-              <table class="table table-sm table-zebra">
+              <table class="table table-sm">
                 <thead>
-                  <tr>
-                    <th>S.No</th>
-                    <th :for={col <- @report_data.columns}>{col.label}</th>
+                  <tr class="border-b border-base-300/50">
+                    <th class="text-xs font-semibold text-base-content/50 uppercase tracking-wider">S.No</th>
+                    <th
+                      :for={col <- @report_data.columns}
+                      class="text-xs font-semibold text-base-content/50 uppercase tracking-wider"
+                    >
+                      {col.label}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr :for={{row, idx} <- Enum.with_index(@report_data.rows)}>
-                    <td>{showing_from(@page, @per_page) + idx}</td>
+                  <tr :for={{row, idx} <- Enum.with_index(@report_data.rows)} class="border-b border-base-300/30 hover:bg-base-200/50">
+                    <td class="text-base-content/50">{showing_from(@page, @per_page) + idx}</td>
                     <td :for={col <- @report_data.columns}>
                       <% value = format_cell_value(Map.get(row, col.key)) %>
-                      <%= if badge_class = status_badge(value) do %>
-                        <span class={badge_class}>{value}</span>
+                      <%= if variant = status_badge_variant(value) do %>
+                        <.badge variant={variant} size="sm">{value}</.badge>
                       <% else %>
                         {value}
                       <% end %>
                     </td>
                   </tr>
-                  <%= if Enum.empty?(@report_data.rows) do %>
-                    <tr>
-                      <td colspan={length(@report_data.columns) + 1} class="text-center text-base-content/50 py-8">
-                        No records found for the selected period.
-                      </td>
-                    </tr>
-                  <% end %>
                 </tbody>
               </table>
             </div>
+          <% end %>
 
-            <%!-- Pagination --%>
-            <div class="flex items-center justify-center gap-2 mt-4">
-              <button
-                phx-click="change_page"
-                phx-value-page={@page - 1}
-                class="btn btn-sm btn-ghost"
-                disabled={@page <= 1}
-              >
-                Previous
-              </button>
-              <span class="text-sm text-base-content/60">
-                Page {@page} of {@total_pages}
-              </span>
-              <button
-                phx-click="change_page"
-                phx-value-page={@page + 1}
-                class="btn btn-sm btn-ghost"
-                disabled={@page >= @total_pages}
-              >
-                Next
-              </button>
-            </div>
+          <%!-- Pagination --%>
+          <div class="px-4 pb-4">
+            <.pagination current_page={@page} total_pages={@total_pages} on_page_change="change_page" />
           </div>
-        </div>
+        </.card>
+      </.section>
 
-        <%!-- CSV Download Hook --%>
-        <div id="csv-download" phx-hook="CsvDownload"></div>
-      </div>
+      <%!-- CSV Download Hook --%>
+      <div id="csv-download" phx-hook="CsvDownload"></div>
     </Layouts.app>
     """
   end

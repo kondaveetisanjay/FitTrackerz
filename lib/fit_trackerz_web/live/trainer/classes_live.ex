@@ -110,172 +110,104 @@ defmodule FitTrackerzWeb.Trainer.ClassesLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
-      <div class="space-y-8">
-        <%!-- Page Header --%>
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div class="flex items-center gap-3">
-            <Layouts.back_button />
-            <div>
-              <h1 class="text-2xl sm:text-3xl font-black tracking-tight">My Classes</h1>
-              <p class="text-base-content/50 mt-1">View and manage your scheduled classes.</p>
-            </div>
-          </div>
+      <.page_header title="My Classes" subtitle="View and manage your scheduled classes." back_path="/trainer" />
+
+      <%= if @no_gym do %>
+        <.empty_state
+          icon="hero-exclamation-triangle"
+          title="No Gym Association"
+          subtitle="You haven't been added to any gym yet. Ask a gym operator to invite you."
+        />
+      <% else %>
+        <%!-- Stats Row --%>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+          <.stat_card label="Total Classes" value={length(@classes)} icon="hero-calendar-days-solid" color="info" />
+          <.stat_card label="Scheduled" value={Enum.count(@classes, &(&1.status == :scheduled))} icon="hero-clock-solid" color="primary" />
+          <.stat_card label="Completed" value={Enum.count(@classes, &(&1.status == :completed))} icon="hero-check-circle-solid" color="success" />
         </div>
 
-        <%= if @no_gym do %>
-          <div class="card bg-base-200/50 border border-base-300/50" id="no-gym-notice">
-            <div class="card-body p-8 items-center text-center">
-              <div class="w-16 h-16 rounded-full bg-warning/10 flex items-center justify-center mb-4">
-                <.icon name="hero-exclamation-triangle-solid" class="size-8 text-warning" />
-              </div>
-              <h2 class="text-lg font-bold">No Gym Association</h2>
-              <p class="text-base-content/50 mt-2 max-w-md">
-                You haven't been added to any gym yet. Ask a gym operator to invite you.
-              </p>
-            </div>
-          </div>
-        <% else %>
-          <%!-- Stats Row --%>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="card bg-base-200/50 border border-base-300/50" id="stat-total-classes">
-              <div class="card-body p-5">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
-                      Total Classes
-                    </p>
-                    <p class="text-3xl font-black mt-1">{length(@classes)}</p>
+        <%!-- Classes Table --%>
+        <.card title="Scheduled Classes">
+          <%= if @classes == [] do %>
+            <.empty_state
+              icon="hero-calendar-days"
+              title="No classes scheduled yet"
+              subtitle="Classes will appear here once scheduled by the gym operator."
+            />
+          <% else %>
+            <.data_table id="classes-table" rows={@classes} row_id={fn c -> "class-#{c.id}" end}>
+              <:col :let={class} label="Class Name">
+                <span class="font-medium">
+                  {if class.class_definition, do: class.class_definition.name, else: "N/A"}
+                </span>
+              </:col>
+              <:col :let={class} label="Location">
+                {if class.branch, do: "#{class.branch.city}, #{class.branch.address}", else: "N/A"}
+              </:col>
+              <:col :let={class} label="Scheduled At">
+                {format_datetime(class.scheduled_at)}
+              </:col>
+              <:col :let={class} label="Duration">
+                {class.duration_minutes} min
+              </:col>
+              <:col :let={class} label="Status">
+                <span class={"badge badge-sm #{status_badge_class(class.status)}"}>
+                  {format_status(class.status)}
+                </span>
+              </:col>
+              <:col :let={class} label="Bookings">
+                <span class="flex items-center gap-1">
+                  <.icon name="hero-user-group-mini" class="size-4" />
+                  {length(class.bookings || [])}
+                </span>
+              </:col>
+              <:actions :let={class}>
+                <%= if class.status == :scheduled do %>
+                  <div class="flex gap-1">
+                    <.button
+                      variant="primary"
+                      size="sm"
+                      icon="hero-check"
+                      phx-click="complete_class"
+                      phx-value-id={class.id}
+                      data-confirm="Mark this class as completed?"
+                      id={"complete-class-#{class.id}"}
+                    >
+                      Complete
+                    </.button>
+                    <.button
+                      variant="danger"
+                      size="sm"
+                      icon="hero-x-mark"
+                      phx-click="cancel_class"
+                      phx-value-id={class.id}
+                      data-confirm="Are you sure you want to cancel this class?"
+                      id={"cancel-class-#{class.id}"}
+                    >
+                      Cancel
+                    </.button>
                   </div>
-                  <div class="w-12 h-12 rounded-xl bg-info/10 flex items-center justify-center">
-                    <.icon name="hero-calendar-days-solid" class="size-6 text-info" />
+                <% end %>
+              </:actions>
+              <:mobile_card :let={class}>
+                <div>
+                  <p class="font-semibold">
+                    {if class.class_definition, do: class.class_definition.name, else: "N/A"}
+                  </p>
+                  <p class="text-xs text-base-content/50 mt-1">
+                    {format_datetime(class.scheduled_at)} &middot; {class.duration_minutes} min
+                  </p>
+                  <div class="mt-1">
+                    <span class={"badge badge-sm #{status_badge_class(class.status)}"}>
+                      {format_status(class.status)}
+                    </span>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            <div class="card bg-base-200/50 border border-base-300/50" id="stat-scheduled-classes">
-              <div class="card-body p-5">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
-                      Scheduled
-                    </p>
-                    <p class="text-3xl font-black mt-1">
-                      {Enum.count(@classes, &(&1.status == :scheduled))}
-                    </p>
-                  </div>
-                  <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <.icon name="hero-clock-solid" class="size-6 text-primary" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="card bg-base-200/50 border border-base-300/50" id="stat-completed-classes">
-              <div class="card-body p-5">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
-                      Completed
-                    </p>
-                    <p class="text-3xl font-black mt-1">
-                      {Enum.count(@classes, &(&1.status == :completed))}
-                    </p>
-                  </div>
-                  <div class="w-12 h-12 rounded-xl bg-success/10 flex items-center justify-center">
-                    <.icon name="hero-check-circle-solid" class="size-6 text-success" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <%!-- Classes Table --%>
-          <div class="card bg-base-200/50 border border-base-300/50" id="classes-table-card">
-            <div class="card-body p-5">
-              <h2 class="text-lg font-bold flex items-center gap-2">
-                <.icon name="hero-calendar-days-solid" class="size-5 text-info" /> Scheduled Classes
-              </h2>
-              <div class="mt-4 overflow-x-auto">
-                <table class="table table-sm" id="classes-table">
-                  <thead>
-                    <tr class="text-base-content/40">
-                      <th>Class Name</th>
-                      <th>Location</th>
-                      <th>Scheduled At</th>
-                      <th>Duration</th>
-                      <th>Status</th>
-                      <th>Bookings</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <%= if @classes == [] do %>
-                      <tr id="classes-empty-row">
-                        <td colspan="7" class="text-center text-base-content/40 py-8">
-                          No classes scheduled yet. Classes will appear here once scheduled by the gym operator.
-                        </td>
-                      </tr>
-                    <% else %>
-                      <tr :for={class <- @classes} id={"class-row-#{class.id}"}>
-                        <td class="font-medium">
-                          {if class.class_definition, do: class.class_definition.name, else: "N/A"}
-                        </td>
-                        <td class="text-base-content/60">
-                          {if class.branch,
-                            do: "#{class.branch.city}, #{class.branch.address}",
-                            else: "N/A"}
-                        </td>
-                        <td class="text-base-content/60">
-                          {format_datetime(class.scheduled_at)}
-                        </td>
-                        <td class="text-base-content/60">
-                          {class.duration_minutes} min
-                        </td>
-                        <td>
-                          <span class={"badge badge-sm #{status_badge_class(class.status)}"}>
-                            {format_status(class.status)}
-                          </span>
-                        </td>
-                        <td class="text-base-content/60">
-                          <span class="flex items-center gap-1">
-                            <.icon name="hero-user-group-mini" class="size-4" />
-                            {length(class.bookings || [])}
-                          </span>
-                        </td>
-                        <td>
-                          <%= if class.status == :scheduled do %>
-                            <div class="flex gap-1">
-                              <button
-                                class="btn btn-success btn-xs gap-1"
-                                phx-click="complete_class"
-                                phx-value-id={class.id}
-                                data-confirm="Mark this class as completed?"
-                                id={"complete-class-#{class.id}"}
-                              >
-                                <.icon name="hero-check-mini" class="size-3" /> Complete
-                              </button>
-                              <button
-                                class="btn btn-error btn-xs gap-1"
-                                phx-click="cancel_class"
-                                phx-value-id={class.id}
-                                data-confirm="Are you sure you want to cancel this class?"
-                                id={"cancel-class-#{class.id}"}
-                              >
-                                <.icon name="hero-x-mark-mini" class="size-3" /> Cancel
-                              </button>
-                            </div>
-                          <% end %>
-                        </td>
-                      </tr>
-                    <% end %>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        <% end %>
-      </div>
+              </:mobile_card>
+            </.data_table>
+          <% end %>
+        </.card>
+      <% end %>
     </Layouts.app>
     """
   end

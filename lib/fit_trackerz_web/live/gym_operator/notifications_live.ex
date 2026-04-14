@@ -137,33 +137,24 @@ defmodule FitTrackerzWeb.GymOperator.NotificationsLive do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
       <div class="space-y-6">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div class="flex items-center gap-3">
-            <Layouts.back_button />
-            <div>
-              <h1 class="text-2xl sm:text-3xl font-brand">Notifications</h1>
-              <p class="text-base-content/50 mt-1">Subscription alerts and gym updates.</p>
-            </div>
-          </div>
-          <%= if Enum.any?(@notifications, &(!&1.is_read)) do %>
-            <button
-              phx-click="mark_all_read"
-              class="btn btn-ghost btn-sm gap-2"
-              id="mark-all-read-btn"
-            >
-              <.icon name="hero-check-mini" class="size-4" /> Mark all as read
-            </button>
-          <% end %>
-        </div>
+        <.page_header title="Notifications" subtitle="Subscription alerts and gym updates." back_path="/gym">
+          <:actions>
+            <%= if Enum.any?(@notifications, &(!&1.is_read)) do %>
+              <.button variant="ghost" size="sm" icon="hero-check" phx-click="mark_all_read" id="mark-all-read-btn">
+                Mark all as read
+              </.button>
+            <% end %>
+          </:actions>
+        </.page_header>
 
         <%!-- Expiring Members Alert --%>
         <%= if @expiring_members != [] do %>
-          <div class="card bg-warning/10 border border-warning/30" id="expiring-members-card">
-            <div class="card-body p-5">
+          <.alert variant="warning" id="expiring-members-card">
+            <div>
               <h2 class="text-lg font-bold flex items-center gap-2 text-warning">
                 <.icon name="hero-exclamation-triangle-solid" class="size-5" />
                 Members Expiring Soon
-                <span class="badge badge-warning badge-sm">{length(@expiring_members)}</span>
+                <.badge variant="warning" size="sm">{length(@expiring_members)}</.badge>
               </h2>
               <div class="overflow-x-auto mt-3">
                 <table class="table table-sm">
@@ -180,23 +171,26 @@ defmodule FitTrackerzWeb.GymOperator.NotificationsLive do
                     <%= for member <- @expiring_members do %>
                       <tr>
                         <td>
-                          <div>
-                            <span class="font-medium">{member.member_name}</span>
-                            <p class="text-xs text-base-content/50">{member.member_email}</p>
+                          <div class="flex items-center gap-2">
+                            <.avatar name={member.member_name} size="sm" />
+                            <div>
+                              <span class="font-medium">{member.member_name}</span>
+                              <p class="text-xs text-base-content/50">{member.member_email}</p>
+                            </div>
                           </div>
                         </td>
                         <td>{member.plan_name}</td>
                         <td>{format_date(member.ends_at)}</td>
                         <td>
                           <% days = days_until(member.ends_at) %>
-                          <span class={"badge badge-sm #{if days <= 1, do: "badge-error", else: if(days <= 3, do: "badge-warning", else: "badge-info")}"}>
+                          <.badge variant={if days <= 1, do: "error", else: if(days <= 3, do: "warning", else: "info")} size="sm">
                             {days} day{if days != 1, do: "s"}
-                          </span>
+                          </.badge>
                         </td>
                         <td>
-                          <span class={"badge badge-sm #{if member.payment_status == :paid, do: "badge-success", else: "badge-warning"}"}>
+                          <.badge variant={if member.payment_status == :paid, do: "success", else: "warning"} size="sm">
                             {member.payment_status |> to_string() |> String.capitalize()}
-                          </span>
+                          </.badge>
                         </td>
                       </tr>
                     <% end %>
@@ -204,27 +198,21 @@ defmodule FitTrackerzWeb.GymOperator.NotificationsLive do
                 </table>
               </div>
               <div class="mt-3">
-                <a href="/gym/members" class="btn btn-warning btn-sm gap-2">
-                  <.icon name="hero-user-group-mini" class="size-4" /> Manage Members
-                </a>
+                <.button variant="outline" size="sm" icon="hero-user-group" navigate="/gym/members">
+                  Manage Members
+                </.button>
               </div>
             </div>
-          </div>
+          </.alert>
         <% end %>
 
         <%!-- All Notifications --%>
         <%= if @notifications == [] do %>
-          <div class="card bg-base-200/50 border border-base-300/50" id="no-notifications">
-            <div class="card-body items-center text-center p-8">
-              <div class="w-16 h-16 rounded-2xl bg-base-300/30 flex items-center justify-center mb-4">
-                <.icon name="hero-bell-slash" class="size-8 text-base-content/20" />
-              </div>
-              <h2 class="text-lg font-bold">No Notifications</h2>
-              <p class="text-sm text-base-content/50 max-w-md mt-2">
-                You're all caught up! We'll notify you about member subscription updates.
-              </p>
-            </div>
-          </div>
+          <.empty_state
+            icon="hero-bell-slash"
+            title="No Notifications"
+            subtitle="You're all caught up! We'll notify you about member subscription updates."
+          />
         <% else %>
           <div class="space-y-3" id="notifications-list">
             <div
@@ -249,14 +237,9 @@ defmodule FitTrackerzWeb.GymOperator.NotificationsLive do
                       <p class="text-xs text-base-content/40 mt-1">{format_time(notification.inserted_at)}</p>
                     </div>
                     <%= unless notification.is_read do %>
-                      <button
-                        phx-click="mark_read"
-                        phx-value-id={notification.id}
-                        class="btn btn-ghost btn-xs shrink-0"
-                        title="Mark as read"
-                      >
-                        <.icon name="hero-check-mini" class="size-4" />
-                      </button>
+                      <.button variant="ghost" size="sm" phx-click="mark_read" phx-value-id={notification.id} icon="hero-check">
+                        <span class="sr-only">Mark as read</span>
+                      </.button>
                     <% end %>
                   </div>
                 </div>

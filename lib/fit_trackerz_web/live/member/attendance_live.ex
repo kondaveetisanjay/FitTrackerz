@@ -18,7 +18,8 @@ defmodule FitTrackerzWeb.Member.AttendanceLive do
            memberships: [],
            attendance_records: [],
            total_count: 0,
-           no_gym: true
+           no_gym: true,
+           gym_tier: :free
          )}
 
       memberships ->
@@ -29,13 +30,20 @@ defmodule FitTrackerzWeb.Member.AttendanceLive do
           _ -> []
         end
 
+        gym_tier =
+          case memberships do
+            [m | _] -> if m.gym, do: m.gym.tier, else: :free
+            _ -> :free
+          end
+
         {:ok,
          assign(socket,
            page_title: "Attendance",
            memberships: memberships,
            attendance_records: attendance_records,
            total_count: length(attendance_records),
-           no_gym: false
+           no_gym: false,
+           gym_tier: gym_tier
          )}
     end
   end
@@ -60,163 +68,97 @@ defmodule FitTrackerzWeb.Member.AttendanceLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
-      <div class="space-y-8">
-        <%!-- Page Header --%>
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div class="flex items-center gap-3">
-            <Layouts.back_button />
-            <div>
-              <h1 class="text-2xl sm:text-3xl font-brand">Attendance History</h1>
-              <p class="text-base-content/50 mt-1">Track your gym check-in history.</p>
-            </div>
-          </div>
+      <.page_header title="Attendance History" subtitle="Track your gym check-in history." back_path="/member">
+        <:actions>
+          <%= if @gym_tier == :premium do %>
+            <.button variant="primary" size="sm" icon="hero-qr-code" navigate="/member/qr-code">
+              My QR Code
+            </.button>
+          <% end %>
+        </:actions>
+      </.page_header>
+
+      <%= if @no_gym do %>
+        <.empty_state
+          icon="hero-building-office-2"
+          title="No Gym Membership"
+          subtitle="You haven't joined any gym yet. Ask a gym operator to invite you."
+        />
+      <% else %>
+        <%!-- Stats --%>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8">
+          <.stat_card
+            label="Total Attendance"
+            value={@total_count}
+            icon="hero-clipboard-document-check"
+            color="primary"
+          />
+          <.stat_card
+            label="Active Gyms"
+            value={length(@memberships)}
+            icon="hero-building-office-2"
+            color="success"
+          />
+          <.stat_card
+            label="This Month"
+            value={this_month_count(@attendance_records)}
+            icon="hero-calendar-days"
+            color="info"
+          />
         </div>
 
-        <%= if @no_gym do %>
-          <%!-- No Gym Membership --%>
-          <div class="card bg-base-200/50 border border-base-300/50" id="no-gym-card">
-            <div class="card-body items-center text-center p-8">
-              <div class="w-16 h-16 rounded-2xl bg-warning/10 flex items-center justify-center mb-4">
-                <.icon name="hero-building-office-2" class="size-8 text-warning" />
-              </div>
-              <h2 class="text-lg font-bold">No Gym Membership</h2>
-              <p class="text-sm text-base-content/50 max-w-md mt-2">
-                You haven't joined any gym yet. Ask a gym operator to invite you.
-              </p>
-            </div>
-          </div>
+        <%= if @attendance_records == [] do %>
+          <.empty_state
+            icon="hero-clipboard-document-check"
+            title="No Attendance Records"
+            subtitle="No check-ins recorded yet. Visit your gym and check in to start tracking your attendance!"
+          />
         <% else %>
-          <%!-- Stats Card --%>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="card bg-base-200/50 border border-base-300/50" id="stat-total-attendance">
-              <div class="card-body p-4 sm:p-5">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
-                      Total Attendance
-                    </p>
-                    <p class="text-2xl sm:text-3xl font-black mt-1">{@total_count}</p>
+          <.card title="Check-in History" id="attendance-table">
+            <.data_table id="attendance" rows={@attendance_records}>
+              <:col :let={record} label="Date">
+                <span class="font-medium">{format_date(record.attended_at)}</span>
+              </:col>
+              <:col :let={record} label="Time">
+                <span class="text-base-content/70">{format_time(record.attended_at)}</span>
+              </:col>
+              <:col :let={record} label="Gym">
+                <%= if record.gym do %>
+                  <span class="flex items-center gap-1">
+                    <.icon name="hero-building-office-2-mini" class="size-3 text-base-content/40" />
+                    {record.gym.name}
+                  </span>
+                <% else %>
+                  <span class="text-base-content/30">--</span>
+                <% end %>
+              </:col>
+              <:col :let={record} label="Marked By">
+                <%= if record.marked_by do %>
+                  {record.marked_by.name}
+                <% else %>
+                  <span class="text-base-content/30">--</span>
+                <% end %>
+              </:col>
+              <:col :let={record} label="Notes">
+                <span class="text-base-content/50 max-w-xs truncate block">
+                  {record.notes || "--"}
+                </span>
+              </:col>
+              <:mobile_card :let={record}>
+                <div class="space-y-1">
+                  <div class="flex items-center justify-between">
+                    <span class="font-semibold">{format_date(record.attended_at)}</span>
+                    <span class="text-sm text-base-content/60">{format_time(record.attended_at)}</span>
                   </div>
-                  <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <.icon
-                      name="hero-clipboard-document-check-solid"
-                      class="size-5 sm:size-6 text-primary"
-                    />
-                  </div>
+                  <%= if record.gym do %>
+                    <p class="text-xs text-base-content/50">{record.gym.name}</p>
+                  <% end %>
                 </div>
-                <p class="text-xs text-base-content/40 mt-2">All time check-ins</p>
-              </div>
-            </div>
-
-            <div class="card bg-base-200/50 border border-base-300/50" id="stat-gyms-count">
-              <div class="card-body p-4 sm:p-5">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
-                      Active Gyms
-                    </p>
-                    <p class="text-2xl sm:text-3xl font-black mt-1">{length(@memberships)}</p>
-                  </div>
-                  <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-success/10 flex items-center justify-center">
-                    <.icon name="hero-building-office-2-solid" class="size-5 sm:size-6 text-success" />
-                  </div>
-                </div>
-                <p class="text-xs text-base-content/40 mt-2">Gym memberships</p>
-              </div>
-            </div>
-
-            <div class="card bg-base-200/50 border border-base-300/50" id="stat-this-month">
-              <div class="card-body p-4 sm:p-5">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
-                      This Month
-                    </p>
-                    <p class="text-2xl sm:text-3xl font-black mt-1">
-                      {this_month_count(@attendance_records)}
-                    </p>
-                  </div>
-                  <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-info/10 flex items-center justify-center">
-                    <.icon name="hero-calendar-days-solid" class="size-5 sm:size-6 text-info" />
-                  </div>
-                </div>
-                <p class="text-xs text-base-content/40 mt-2">Check-ins this month</p>
-              </div>
-            </div>
-          </div>
-
-          <%= if @attendance_records == [] do %>
-            <%!-- Empty State --%>
-            <div class="card bg-base-200/50 border border-base-300/50" id="no-attendance">
-              <div class="card-body items-center text-center p-8">
-                <div class="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-                  <.icon name="hero-clipboard-document-check" class="size-8 text-primary" />
-                </div>
-                <h2 class="text-lg font-bold">No Attendance Records</h2>
-                <p class="text-sm text-base-content/50 max-w-md mt-2">
-                  No check-ins recorded yet. Visit your gym and check in to start tracking your attendance!
-                </p>
-              </div>
-            </div>
-          <% else %>
-            <%!-- Attendance Table --%>
-            <div class="card bg-base-200/50 border border-base-300/50" id="attendance-table">
-              <div class="card-body p-5">
-                <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                  <.icon name="hero-clipboard-document-check-solid" class="size-5 text-primary" />
-                  Check-in History
-                </h2>
-                <div class="overflow-x-auto">
-                  <table class="table table-sm">
-                    <thead>
-                      <tr class="text-base-content/40">
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Gym</th>
-                        <th>Marked By</th>
-                        <th>Notes</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr :for={record <- @attendance_records} id={"attendance-#{record.id}"}>
-                        <td class="font-medium">
-                          {format_date(record.attended_at)}
-                        </td>
-                        <td class="text-base-content/70">
-                          {format_time(record.attended_at)}
-                        </td>
-                        <td class="text-base-content/70">
-                          <%= if record.gym do %>
-                            <span class="flex items-center gap-1">
-                              <.icon
-                                name="hero-building-office-2-mini"
-                                class="size-3 text-base-content/40"
-                              />
-                              {record.gym.name}
-                            </span>
-                          <% else %>
-                            <span class="text-base-content/30">--</span>
-                          <% end %>
-                        </td>
-                        <td class="text-base-content/70">
-                          <%= if record.marked_by do %>
-                            {record.marked_by.name}
-                          <% else %>
-                            <span class="text-base-content/30">--</span>
-                          <% end %>
-                        </td>
-                        <td class="text-base-content/50 max-w-xs truncate">
-                          {record.notes || "--"}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          <% end %>
+              </:mobile_card>
+            </.data_table>
+          </.card>
         <% end %>
-      </div>
+      <% end %>
     </Layouts.app>
     """
   end

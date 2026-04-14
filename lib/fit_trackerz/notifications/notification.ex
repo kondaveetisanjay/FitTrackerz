@@ -85,6 +85,8 @@ defmodule FitTrackerz.Notifications.Notification do
           :payment_received,
           :invitation_received,
           :plan_assigned,
+          :streak_milestone,
+          :inactivity_reminder,
           :general
         ]
       )

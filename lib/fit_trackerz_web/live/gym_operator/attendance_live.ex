@@ -52,75 +52,43 @@ defmodule FitTrackerzWeb.GymOperator.AttendanceLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
-      <div class="space-y-8">
-        <div class="flex items-center gap-3">
-          <Layouts.back_button />
-          <div>
-            <h1 class="text-2xl sm:text-3xl font-brand">Attendance</h1>
-            <p class="text-base-content/50 mt-1">View attendance records for your gym.</p>
-          </div>
-        </div>
+      <div class="space-y-6">
+        <.page_header title="Attendance" subtitle="View attendance records for your gym." back_path="/gym" />
 
         <%= if @gym == nil do %>
-          <div class="card bg-base-200/50 border border-base-300/50" id="no-gym-card">
-            <div class="card-body p-6 text-center">
-              <.icon name="hero-building-office-solid" class="size-12 text-base-content/20 mx-auto" />
-              <h2 class="text-lg font-bold mt-4">No Gym Found</h2>
-              <p class="text-base-content/50 mt-1">
-                You need to create a gym first before viewing attendance.
-              </p>
-              <a href="/gym/setup" class="btn btn-primary btn-sm mt-4 gap-2">
-                <.icon name="hero-plus-mini" class="size-4" /> Setup Gym
-              </a>
-            </div>
-          </div>
+          <.empty_state icon="hero-building-office-solid" title="No Gym Found" subtitle="You need to create a gym first before viewing attendance.">
+            <:action>
+              <.button variant="primary" size="sm" icon="hero-plus-mini" navigate="/gym/setup">Setup Gym</.button>
+            </:action>
+          </.empty_state>
         <% else %>
-          <div class="card bg-base-200/50 border border-base-300/50" id="attendance-card">
-            <div class="card-body p-6">
-              <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                <.icon name="hero-clipboard-document-check-solid" class="size-5 text-success" />
-                Attendance Records
-                <span class="badge badge-neutral badge-sm">{length(@records)}</span>
-              </h2>
-              <%= if @records == [] do %>
-                <div
-                  class="flex flex-col items-center gap-3 p-8 rounded-lg bg-base-300/20"
-                  id="no-attendance-state"
-                >
-                  <.icon name="hero-clipboard-document-check" class="size-12 text-base-content/20" />
-                  <p class="text-base-content/50 font-medium">No attendance records yet</p>
-                  <p class="text-sm text-base-content/40">
-                    Attendance records will appear here once members start checking in.
-                  </p>
-                </div>
-              <% else %>
-                <div class="overflow-x-auto">
-                  <table class="table table-sm" id="attendance-table">
-                    <thead>
-                      <tr class="text-base-content/40">
-                        <th>Member</th>
-                        <th>Attended At</th>
-                        <th>Notes</th>
-                        <th>Marked By</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <%= for record <- @records do %>
-                        <tr id={"attendance-#{record.id}"}>
-                          <td class="font-medium">{get_member_name(record)}</td>
-                          <td class="text-base-content/60">{format_datetime(record.attended_at)}</td>
-                          <td class="text-base-content/60 text-sm max-w-xs truncate">
-                            {record.notes || "--"}
-                          </td>
-                          <td class="text-base-content/60">{get_marked_by_name(record)}</td>
-                        </tr>
-                      <% end %>
-                    </tbody>
-                  </table>
-                </div>
-              <% end %>
-            </div>
-          </div>
+          <.card title="Attendance Records" subtitle={"#{length(@records)} records"}>
+            <%= if @records == [] do %>
+              <.empty_state
+                icon="hero-clipboard-document-check"
+                title="No attendance records yet"
+                subtitle="Attendance records will appear here once members start checking in."
+              />
+            <% else %>
+              <.data_table id="attendance-table" rows={@records} row_id={fn record -> "attendance-#{record.id}" end}>
+                <:col :let={record} label="Member">
+                  <div class="flex items-center gap-2">
+                    <.avatar name={get_member_name(record)} size="sm" />
+                    <span class="font-medium">{get_member_name(record)}</span>
+                  </div>
+                </:col>
+                <:col :let={record} label="Attended At">
+                  {format_datetime(record.attended_at)}
+                </:col>
+                <:col :let={record} label="Notes">
+                  <span class="text-base-content/60 text-sm max-w-xs truncate">{record.notes || "--"}</span>
+                </:col>
+                <:col :let={record} label="Marked By">
+                  {get_marked_by_name(record)}
+                </:col>
+              </.data_table>
+            <% end %>
+          </.card>
         <% end %>
       </div>
     </Layouts.app>

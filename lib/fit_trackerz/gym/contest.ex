@@ -4,6 +4,8 @@ defmodule FitTrackerz.Gym.Contest do
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer]
 
+  import Ecto.Query, only: [from: 2]
+
   postgres do
     table("contests")
     repo(FitTrackerz.Repo)
@@ -64,6 +66,43 @@ defmodule FitTrackerz.Gym.Contest do
         :starts_at, :ends_at, :max_participants,
         :prize_description, :banner_url, :gym_id, :branch_id
       ])
+
+      validate fn changeset, _context ->
+        gym_id = Ash.Changeset.get_attribute(changeset, :gym_id)
+
+        if gym_id do
+          tier =
+            from(g in FitTrackerz.Gym.Gym, where: g.id == ^gym_id, select: g.tier)
+            |> FitTrackerz.Repo.one()
+
+          cond do
+            is_nil(tier) ->
+              :ok
+
+            tier == :free ->
+              active_count =
+                from(c in FitTrackerz.Gym.Contest,
+                  where: c.gym_id == ^gym_id and c.status in [:upcoming, :active],
+                  select: count(c.id)
+                )
+                |> FitTrackerz.Repo.one()
+
+              if active_count >= 2 do
+                {:error,
+                 field: :gym_id,
+                 message:
+                   "Free tier gyms can have at most 2 active contests. Upgrade to Premium for unlimited contests."}
+              else
+                :ok
+              end
+
+            true ->
+              :ok
+          end
+        else
+          :ok
+        end
+      end
     end
 
     update :update do

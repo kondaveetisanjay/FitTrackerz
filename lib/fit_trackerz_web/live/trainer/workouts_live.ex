@@ -217,270 +217,245 @@ defmodule FitTrackerzWeb.Trainer.WorkoutsLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
-      <div class="space-y-8">
-        <%!-- Page Header --%>
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div class="flex items-center gap-3">
-            <Layouts.back_button />
-            <div>
-              <h1 class="text-2xl sm:text-3xl font-black tracking-tight">Workout Plans</h1>
-              <p class="text-base-content/50 mt-1">Create and manage workout plans for your clients.</p>
-            </div>
-          </div>
+      <.page_header title="Workout Plans" subtitle="Create and manage workout plans for your clients." back_path="/trainer">
+        <:actions>
           <%= unless @no_gym do %>
-            <button
-              class="btn btn-primary btn-sm gap-2 font-semibold"
-              phx-click="toggle_form"
-              id="toggle-workout-form-btn"
-            >
-              <.icon name="hero-plus-mini" class="size-4" /> New Workout Plan
-            </button>
+            <.button variant="primary" size="sm" icon="hero-plus" phx-click="toggle_form" id="toggle-workout-form-btn">
+              New Workout Plan
+            </.button>
           <% end %>
-        </div>
+        </:actions>
+      </.page_header>
 
-        <%= if @no_gym do %>
-          <div class="card bg-base-200/50 border border-base-300/50" id="no-gym-notice">
-            <div class="card-body p-8 items-center text-center">
-              <div class="w-16 h-16 rounded-full bg-warning/10 flex items-center justify-center mb-4">
-                <.icon name="hero-exclamation-triangle-solid" class="size-8 text-warning" />
-              </div>
-              <h2 class="text-lg font-bold">No Gym Association</h2>
-              <p class="text-base-content/50 mt-2 max-w-md">
-                You haven't been added to any gym yet. Ask a gym operator to invite you.
-              </p>
-            </div>
-          </div>
-        <% else %>
-          <%!-- Create Form --%>
-          <%= if @show_form do %>
-            <div class="card bg-base-200/50 border border-base-300/50" id="workout-form-card">
-              <div class="card-body p-5">
-                <h2 class="text-lg font-bold flex items-center gap-2">
-                  <.icon name="hero-fire-solid" class="size-5 text-accent" /> New Workout Plan
-                </h2>
-                <.form
-                  for={@form}
-                  id="workout-form"
-                  phx-change="validate"
-                  phx-submit="save_workout"
-                  class="mt-4 space-y-4"
-                >
-                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <.input
-                      field={@form[:name]}
-                      label="Plan Name"
-                      placeholder="e.g., Full Body Strength"
+      <%= if @no_gym do %>
+        <.empty_state
+          icon="hero-exclamation-triangle"
+          title="No Gym Association"
+          subtitle="You haven't been added to any gym yet. Ask a gym operator to invite you."
+        />
+      <% else %>
+        <%!-- Create Form --%>
+        <%= if @show_form do %>
+          <div class="mb-8">
+            <.card title="New Workout Plan">
+              <.form
+                for={@form}
+                id="workout-form"
+                phx-change="validate"
+                phx-submit="save_workout"
+                class="space-y-4"
+              >
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <.input
+                    field={@form[:name]}
+                    label="Plan Name"
+                    placeholder="e.g., Full Body Strength"
+                    required
+                  />
+                  <div>
+                    <label class="label"><span class="label-text font-medium">Client</span></label>
+                    <select
+                      name="workout[member_id]"
+                      class="select select-bordered w-full"
+                      id="workout-member-select"
                       required
-                    />
-                    <div>
-                      <label class="label"><span class="label-text font-medium">Client</span></label>
-                      <select
-                        name="workout[member_id]"
-                        class="select select-bordered w-full"
-                        id="workout-member-select"
-                        required
-                      >
-                        <option value="">Select a client...</option>
-                        <option :for={client <- @clients} value={client.id}>
-                          {client.user.name}
-                        </option>
-                      </select>
-                    </div>
-                    <div>
-                      <label class="label"><span class="label-text font-medium">Gym</span></label>
-                      <select
-                        name="workout[gym_id]"
-                        class="select select-bordered w-full"
-                        id="workout-gym-select"
-                        required
-                      >
-                        <option value="">Select a gym...</option>
-                        <option :for={gym <- @gyms} value={gym.id}>
-                          {gym.name}
-                        </option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <%!-- Exercises --%>
-                  <div class="space-y-3">
-                    <div class="flex items-center justify-between">
-                      <h3 class="font-semibold text-sm">Exercises</h3>
-                      <button
-                        type="button"
-                        class="btn btn-ghost btn-xs gap-1"
-                        phx-click="add_exercise"
-                        id="add-exercise-btn"
-                      >
-                        <.icon name="hero-plus-mini" class="size-3" /> Add Exercise
-                      </button>
-                    </div>
-                    <div
-                      :for={{exercise, idx} <- Enum.with_index(@exercises)}
-                      class="p-4 rounded-lg bg-base-300/20 space-y-3"
-                      id={"exercise-row-#{idx}"}
                     >
-                      <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold text-base-content/40 uppercase">
-                          Exercise #{idx + 1}
-                        </span>
-                        <%= if length(@exercises) > 1 do %>
-                          <button
-                            type="button"
-                            class="btn btn-ghost btn-xs text-error"
-                            phx-click="remove_exercise"
-                            phx-value-index={idx}
-                            id={"remove-exercise-#{idx}"}
-                          >
-                            <.icon name="hero-trash-mini" class="size-3" />
-                          </button>
-                        <% end %>
-                      </div>
-                      <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                        <div class="col-span-2 sm:col-span-1">
-                          <label class="label"><span class="label-text text-xs">Name</span></label>
-                          <input
-                            type="text"
-                            value={exercise["name"]}
-                            placeholder="e.g., Squats"
-                            class="input input-bordered input-sm w-full"
-                            phx-blur="update_exercise"
-                            phx-value-index={idx}
-                            phx-value-field="name"
-                            id={"exercise-name-#{idx}"}
-                          />
-                        </div>
-                        <div>
-                          <label class="label"><span class="label-text text-xs">Sets</span></label>
-                          <input
-                            type="number"
-                            value={exercise["sets"]}
-                            placeholder="3"
-                            class="input input-bordered input-sm w-full"
-                            phx-blur="update_exercise"
-                            phx-value-index={idx}
-                            phx-value-field="sets"
-                            id={"exercise-sets-#{idx}"}
-                          />
-                        </div>
-                        <div>
-                          <label class="label"><span class="label-text text-xs">Reps</span></label>
-                          <input
-                            type="number"
-                            value={exercise["reps"]}
-                            placeholder="12"
-                            class="input input-bordered input-sm w-full"
-                            phx-blur="update_exercise"
-                            phx-value-index={idx}
-                            phx-value-field="reps"
-                            id={"exercise-reps-#{idx}"}
-                          />
-                        </div>
-                        <div>
-                          <label class="label">
-                            <span class="label-text text-xs">Duration (s)</span>
-                          </label>
-                          <input
-                            type="number"
-                            value={exercise["duration_seconds"]}
-                            placeholder="60"
-                            class="input input-bordered input-sm w-full"
-                            phx-blur="update_exercise"
-                            phx-value-index={idx}
-                            phx-value-field="duration_seconds"
-                            id={"exercise-duration-#{idx}"}
-                          />
-                        </div>
-                        <div>
-                          <label class="label">
-                            <span class="label-text text-xs">Rest (s)</span>
-                          </label>
-                          <input
-                            type="number"
-                            value={exercise["rest_seconds"]}
-                            placeholder="30"
-                            class="input input-bordered input-sm w-full"
-                            phx-blur="update_exercise"
-                            phx-value-index={idx}
-                            phx-value-field="rest_seconds"
-                            id={"exercise-rest-#{idx}"}
-                          />
-                        </div>
-                      </div>
-                    </div>
+                      <option value="">Select a client...</option>
+                      <option :for={client <- @clients} value={client.id}>
+                        {client.user.name}
+                      </option>
+                    </select>
                   </div>
-
-                  <div class="flex justify-end gap-2 pt-2">
-                    <button
-                      type="button"
-                      class="btn btn-ghost btn-sm"
-                      phx-click="toggle_form"
-                      id="cancel-workout-btn"
+                  <div>
+                    <label class="label"><span class="label-text font-medium">Gym</span></label>
+                    <select
+                      name="workout[gym_id]"
+                      class="select select-bordered w-full"
+                      id="workout-gym-select"
+                      required
                     >
-                      Cancel
-                    </button>
-                    <button type="submit" class="btn btn-primary btn-sm gap-2" id="submit-workout-btn">
-                      <.icon name="hero-check-mini" class="size-4" /> Create Plan
-                    </button>
+                      <option value="">Select a gym...</option>
+                      <option :for={gym <- @gyms} value={gym.id}>
+                        {gym.name}
+                      </option>
+                    </select>
                   </div>
-                </.form>
-              </div>
-            </div>
-          <% end %>
-
-          <%!-- Workout Plans Grid --%>
-          <%= if @workouts == [] do %>
-            <div class="card bg-base-200/50 border border-base-300/50" id="workouts-empty">
-              <div class="card-body p-8 items-center text-center">
-                <div class="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-4">
-                  <.icon name="hero-fire-solid" class="size-8 text-accent" />
                 </div>
-                <h2 class="text-lg font-bold">No Workout Plans Yet</h2>
-                <p class="text-base-content/50 mt-2 max-w-md">
-                  Create your first workout plan to get started with training your clients.
+
+                <%!-- Exercises --%>
+                <div class="space-y-3">
+                  <div class="flex items-center justify-between">
+                    <h3 class="font-semibold text-sm">Exercises</h3>
+                    <.button type="button" variant="ghost" size="sm" icon="hero-plus" phx-click="add_exercise" id="add-exercise-btn">
+                      Add Exercise
+                    </.button>
+                  </div>
+                  <div
+                    :for={{exercise, idx} <- Enum.with_index(@exercises)}
+                    class="p-4 rounded-lg bg-base-200/50 space-y-3"
+                    id={"exercise-row-#{idx}"}
+                  >
+                    <div class="flex items-center justify-between">
+                      <span class="text-xs font-semibold text-base-content/40 uppercase">
+                        Exercise #{idx + 1}
+                      </span>
+                      <%= if length(@exercises) > 1 do %>
+                        <.button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          icon="hero-trash"
+                          phx-click="remove_exercise"
+                          phx-value-index={idx}
+                          id={"remove-exercise-#{idx}"}
+                          class="text-error"
+                        >
+                          <span class="sr-only">Remove</span>
+                        </.button>
+                      <% end %>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                      <div class="col-span-2 sm:col-span-1">
+                        <label class="label"><span class="label-text text-xs">Name</span></label>
+                        <input
+                          type="text"
+                          value={exercise["name"]}
+                          placeholder="e.g., Squats"
+                          class="input input-bordered input-sm w-full"
+                          phx-blur="update_exercise"
+                          phx-value-index={idx}
+                          phx-value-field="name"
+                          id={"exercise-name-#{idx}"}
+                        />
+                      </div>
+                      <div>
+                        <label class="label"><span class="label-text text-xs">Sets</span></label>
+                        <input
+                          type="number"
+                          value={exercise["sets"]}
+                          placeholder="3"
+                          class="input input-bordered input-sm w-full"
+                          phx-blur="update_exercise"
+                          phx-value-index={idx}
+                          phx-value-field="sets"
+                          id={"exercise-sets-#{idx}"}
+                        />
+                      </div>
+                      <div>
+                        <label class="label"><span class="label-text text-xs">Reps</span></label>
+                        <input
+                          type="number"
+                          value={exercise["reps"]}
+                          placeholder="12"
+                          class="input input-bordered input-sm w-full"
+                          phx-blur="update_exercise"
+                          phx-value-index={idx}
+                          phx-value-field="reps"
+                          id={"exercise-reps-#{idx}"}
+                        />
+                      </div>
+                      <div>
+                        <label class="label"><span class="label-text text-xs">Duration (s)</span></label>
+                        <input
+                          type="number"
+                          value={exercise["duration_seconds"]}
+                          placeholder="60"
+                          class="input input-bordered input-sm w-full"
+                          phx-blur="update_exercise"
+                          phx-value-index={idx}
+                          phx-value-field="duration_seconds"
+                          id={"exercise-duration-#{idx}"}
+                        />
+                      </div>
+                      <div>
+                        <label class="label"><span class="label-text text-xs">Rest (s)</span></label>
+                        <input
+                          type="number"
+                          value={exercise["rest_seconds"]}
+                          placeholder="30"
+                          class="input input-bordered input-sm w-full"
+                          phx-blur="update_exercise"
+                          phx-value-index={idx}
+                          phx-value-field="rest_seconds"
+                          id={"exercise-rest-#{idx}"}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2">
+                  <.button type="button" variant="ghost" size="sm" phx-click="toggle_form" id="cancel-workout-btn">
+                    Cancel
+                  </.button>
+                  <.button type="submit" variant="primary" size="sm" icon="hero-check" id="submit-workout-btn">
+                    Create Plan
+                  </.button>
+                </div>
+              </.form>
+            </.card>
+          </div>
+        <% end %>
+
+        <%!-- Workout Plans --%>
+        <%= if @workouts == [] do %>
+          <.empty_state
+            icon="hero-fire"
+            title="No Workout Plans Yet"
+            subtitle="Create your first workout plan to get started with training your clients."
+          >
+            <:action>
+              <.button variant="primary" size="sm" icon="hero-plus" phx-click="toggle_form">
+                Create Workout Plan
+              </.button>
+            </:action>
+          </.empty_state>
+        <% else %>
+          <.data_table id="workouts-table" rows={@workouts} row_id={fn w -> "workout-#{w.id}" end}>
+            <:col :let={workout} label="Plan Name">
+              <span class="font-bold">{workout.name}</span>
+            </:col>
+            <:col :let={workout} label="Client">
+              <div class="flex items-center gap-2">
+                <%= if workout.member do %>
+                  <.avatar name={workout.member.user.name} size="sm" />
+                  <span>{workout.member.user.name}</span>
+                <% else %>
+                  <span class="text-base-content/40">Unassigned</span>
+                <% end %>
+              </div>
+            </:col>
+            <:col :let={workout} label="Gym">
+              {if workout.gym, do: workout.gym.name, else: "N/A"}
+            </:col>
+            <:col :let={workout} label="Exercises">
+              <.badge variant="neutral">{length(workout.exercises || [])} exercise(s)</.badge>
+            </:col>
+            <:actions :let={workout}>
+              <.button
+                variant="danger"
+                size="sm"
+                icon="hero-trash"
+                phx-click="delete_workout"
+                phx-value-id={workout.id}
+                data-confirm="Are you sure you want to delete this workout plan?"
+                id={"delete-workout-#{workout.id}"}
+              >
+                <span class="sr-only">Delete</span>
+              </.button>
+            </:actions>
+            <:mobile_card :let={workout}>
+              <div>
+                <p class="font-bold">{workout.name}</p>
+                <p class="text-xs text-base-content/50 mt-1">
+                  {if workout.member, do: workout.member.user.name, else: "Unassigned"} &middot;
+                  {length(workout.exercises || [])} exercise(s)
                 </p>
               </div>
-            </div>
-          <% else %>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="workouts-grid">
-              <div
-                :for={workout <- @workouts}
-                class="card bg-base-200/50 border border-base-300/50"
-                id={"workout-card-#{workout.id}"}
-              >
-                <div class="card-body p-5">
-                  <div class="flex items-start justify-between">
-                    <h3 class="font-bold text-md">{workout.name}</h3>
-                    <button
-                      class="btn btn-ghost btn-xs text-error"
-                      phx-click="delete_workout"
-                      phx-value-id={workout.id}
-                      data-confirm="Are you sure you want to delete this workout plan?"
-                      id={"delete-workout-#{workout.id}"}
-                    >
-                      <.icon name="hero-trash-mini" class="size-4" />
-                    </button>
-                  </div>
-                  <div class="space-y-2 mt-2">
-                    <div class="flex items-center gap-2 text-sm text-base-content/60">
-                      <.icon name="hero-user-mini" class="size-4" />
-                      <span>{if workout.member, do: workout.member.user.name, else: "Unassigned"}</span>
-                    </div>
-                    <div class="flex items-center gap-2 text-sm text-base-content/60">
-                      <.icon name="hero-building-office-2-mini" class="size-4" />
-                      <span>{if workout.gym, do: workout.gym.name, else: "N/A"}</span>
-                    </div>
-                    <div class="flex items-center gap-2 text-sm text-base-content/60">
-                      <.icon name="hero-list-bullet-mini" class="size-4" />
-                      <span>{length(workout.exercises || [])} exercise(s)</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          <% end %>
+            </:mobile_card>
+          </.data_table>
         <% end %>
-      </div>
+      <% end %>
     </Layouts.app>
     """
   end

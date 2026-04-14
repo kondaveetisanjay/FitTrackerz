@@ -86,6 +86,9 @@ defmodule FitTrackerzWeb do
       import Phoenix.HTML
       # Core UI components
       import FitTrackerzWeb.CoreComponents
+      import FitTrackerzWeb.LayoutComponents
+      import FitTrackerzWeb.DataComponents
+      import FitTrackerzWeb.FeedbackComponents
 
       # Common modules used in templates
       alias Phoenix.LiveView.JS

@@ -44,7 +44,8 @@
       "Bash(mix ecto.gen.migration add_notifications_and_joined_at)",
       "Bash(timeout 15 mix phx.server)",
       "Bash(mix:*)",
-      "WebFetch(domain:www.rockstargames.com)"
+      "WebFetch(domain:www.rockstargames.com)",
+      "Bash(xargs -I {} basename {})"
     ]
   }
 }

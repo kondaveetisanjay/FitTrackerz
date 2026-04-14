@@ -522,104 +522,57 @@ defmodule FitTrackerzWeb.Member.WorkoutLive do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
       <div class="space-y-8">
-        <%!-- Page Header --%>
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div class="flex items-center gap-3">
-            <Layouts.back_button />
-            <div>
-              <h1 class="text-2xl sm:text-3xl font-brand">My Workout</h1>
-              <p class="text-base-content/50 mt-1">
-                <%= if @plan_type == :general do %>
-                  Create, manage, and log your workout programs.
-                <% else %>
-                  View and log your personalized workout programs.
-                <% end %>
-              </p>
+        <.page_header
+          title="My Workout"
+          subtitle={if @plan_type == :general, do: "Create, manage, and log your workout programs.", else: "View and log your personalized workout programs."}
+          back_path="/member"
+        >
+          <:actions>
+            <div class="flex gap-2">
+              <%= if not @no_gym and @workout_plans != [] and not @show_log_form do %>
+                <.button variant="primary" size="sm" icon="hero-check-circle" phx-click="show_log_form" id="log-workout-btn" class="btn-success">
+                  Log Today's Workout
+                </.button>
+              <% end %>
+              <%= if @plan_type == :general and not @no_gym do %>
+                <.button variant="primary" size="sm" icon="hero-plus" phx-click="toggle_form" id="toggle-workout-form-btn">
+                  New Workout Plan
+                </.button>
+              <% end %>
             </div>
-          </div>
-          <div class="flex gap-2">
-            <%= if not @no_gym and @workout_plans != [] and not @show_log_form do %>
-              <button
-                class="btn btn-success btn-sm gap-2 font-semibold"
-                phx-click="show_log_form"
-                id="log-workout-btn"
-              >
-                <.icon name="hero-check-circle-mini" class="size-4" /> Log Today's Workout
-              </button>
-            <% end %>
-            <%= if @plan_type == :general and not @no_gym do %>
-              <button
-                class="btn btn-primary btn-sm gap-2 font-semibold"
-                phx-click="toggle_form"
-                id="toggle-workout-form-btn"
-              >
-                <.icon name="hero-plus-mini" class="size-4" /> New Workout Plan
-              </button>
-            <% end %>
-          </div>
-        </div>
+          </:actions>
+        </.page_header>
 
         <%= if @no_gym do %>
-          <div class="card bg-base-200/50 border border-base-300/50" id="no-gym-card">
-            <div class="card-body items-center text-center p-8">
-              <div class="w-16 h-16 rounded-2xl bg-warning/10 flex items-center justify-center mb-4">
-                <.icon name="hero-building-office-2" class="size-8 text-warning" />
-              </div>
-              <h2 class="text-lg font-bold">No Gym Membership</h2>
-              <p class="text-sm text-base-content/50 max-w-md mt-2">
-                You haven't joined any gym yet. Ask a gym operator to invite you.
-              </p>
-            </div>
-          </div>
+          <.empty_state
+            icon="hero-building-office-2"
+            title="No Gym Membership"
+            subtitle="You haven't joined any gym yet. Ask a gym operator to invite you."
+          />
         <% else %>
           <%!-- Streak Counters --%>
           <div class="grid grid-cols-2 gap-4" id="streak-section">
-            <div class="card bg-base-200/50 border border-base-300/50">
-              <div class="card-body p-5 flex flex-row items-center gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-warning/10 flex items-center justify-center shrink-0">
-                  <span class="text-2xl">🔥</span>
-                </div>
-                <div>
-                  <div class="text-xs text-base-content/40 uppercase font-medium">Current Streak</div>
-                  <div class="flex items-baseline gap-1 mt-1">
-                    <span class="text-3xl font-black text-warning">{@current_streak}</span>
-                    <span class="text-sm text-base-content/50">days</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="card bg-base-200/50 border border-base-300/50">
-              <div class="card-body p-5 flex flex-row items-center gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center shrink-0">
-                  <.icon name="hero-trophy-solid" class="size-6 text-accent" />
-                </div>
-                <div>
-                  <div class="text-xs text-base-content/40 uppercase font-medium">Best Streak</div>
-                  <div class="flex items-baseline gap-1 mt-1">
-                    <span class="text-3xl font-black text-accent">{@best_streak}</span>
-                    <span class="text-sm text-base-content/50">days</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <.stat_card
+              label="Current Streak"
+              value={"#{@current_streak} days"}
+              icon="hero-fire-solid"
+              color="warning"
+            />
+            <.stat_card
+              label="Best Streak"
+              value={"#{@best_streak} days"}
+              icon="hero-trophy-solid"
+              color="accent"
+            />
           </div>
 
           <%!-- PR Alerts --%>
           <%= if @new_prs != [] do %>
-            <div class="card bg-success/10 border border-success/30" id="pr-alerts">
-              <div class="card-body p-5">
-                <div class="flex items-center justify-between">
-                  <h2 class="text-lg font-bold flex items-center gap-2 text-success">
-                    <.icon name="hero-trophy-solid" class="size-5" /> New Personal Records!
-                  </h2>
-                  <button
-                    class="btn btn-ghost btn-xs"
-                    phx-click="dismiss_prs"
-                    id="dismiss-prs-btn"
-                  >
-                    <.icon name="hero-x-mark-mini" class="size-4" />
-                  </button>
-                </div>
+            <.alert variant="success" dismissible id="pr-alerts">
+              <div>
+                <h2 class="text-lg font-bold flex items-center gap-2 text-success">
+                  <.icon name="hero-trophy-solid" class="size-5" /> New Personal Records!
+                </h2>
                 <div class="mt-3 space-y-2">
                   <div
                     :for={pr <- @new_prs}
@@ -631,7 +584,7 @@ defmodule FitTrackerzWeb.Member.WorkoutLive do
                     <div>
                       <span class="font-semibold text-sm">{pr.exercise}</span>
                       <span class="text-sm text-base-content/60">
-                        — {pr.new_weight} kg
+                        -- {pr.new_weight} kg
                         <%= if pr.previous_weight do %>
                           <span class="text-base-content/40">(prev: {pr.previous_weight} kg)</span>
                         <% else %>
@@ -641,185 +594,116 @@ defmodule FitTrackerzWeb.Member.WorkoutLive do
                     </div>
                   </div>
                 </div>
+                <.button variant="ghost" size="sm" phx-click="dismiss_prs" id="dismiss-prs-btn" class="mt-2">
+                  Dismiss
+                </.button>
               </div>
-            </div>
+            </.alert>
           <% end %>
 
           <%!-- Log Workout Form --%>
           <%= if @show_log_form do %>
-            <div class="card bg-base-200/50 border border-base-300/50" id="log-form-card">
-              <div class="card-body p-5">
-                <h2 class="text-lg font-bold flex items-center gap-2">
-                  <.icon name="hero-clipboard-document-check-solid" class="size-5 text-success" /> Log Workout
-                </h2>
-                <%= if @selected_plan do %>
-                  <p class="text-sm text-base-content/50 mt-1">
-                    Logging against: <span class="font-semibold text-base-content/70">{@selected_plan.name}</span>
-                  </p>
-                <% end %>
+            <.card title="Log Workout" id="log-form-card">
+              <%= if @selected_plan do %>
+                <p class="text-sm text-base-content/50 mt-1">
+                  Logging against: <span class="font-semibold text-base-content/70">{@selected_plan.name}</span>
+                </p>
+              <% end %>
 
-                <div class="mt-4 overflow-x-auto">
-                  <table class="table table-sm" id="log-entries-table">
-                    <thead>
-                      <tr class="text-base-content/40">
-                        <th>Exercise</th>
-                        <th>Plan</th>
-                        <th>Actual Sets</th>
-                        <th>Actual Reps</th>
-                        <th>Weight (kg)</th>
+              <div class="mt-4 overflow-x-auto">
+                <table class="table table-sm" id="log-entries-table">
+                  <thead>
+                    <tr class="text-base-content/40">
+                      <th>Exercise</th>
+                      <th>Plan</th>
+                      <th>Actual Sets</th>
+                      <th>Actual Reps</th>
+                      <th>Weight (kg)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <%= for {entry, idx} <- Enum.with_index(@log_entries) do %>
+                      <tr id={"log-entry-#{idx}"}>
+                        <td class="font-medium text-sm">{entry.name}</td>
+                        <td class="text-sm text-base-content/50">
+                          {entry.planned_sets || "-"} x {entry.planned_reps || "-"}
+                        </td>
+                        <td>
+                          <input type="number" value={entry.actual_sets} class="input input-bordered input-sm w-20" phx-blur="update_log_entry" phx-value-index={idx} phx-value-field="actual_sets" id={"log-sets-#{idx}"} min="0" />
+                        </td>
+                        <td>
+                          <input type="number" value={entry.actual_reps} class="input input-bordered input-sm w-20" phx-blur="update_log_entry" phx-value-index={idx} phx-value-field="actual_reps" id={"log-reps-#{idx}"} min="0" />
+                        </td>
+                        <td>
+                          <input type="number" value={entry.weight_kg} class="input input-bordered input-sm w-24" phx-blur="update_log_entry" phx-value-index={idx} phx-value-field="weight_kg" id={"log-weight-#{idx}"} step="0.5" min="0" placeholder="0" />
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      <%= for {entry, idx} <- Enum.with_index(@log_entries) do %>
-                        <tr id={"log-entry-#{idx}"}>
-                          <td class="font-medium text-sm">{entry.name}</td>
-                          <td class="text-sm text-base-content/50">
-                            {entry.planned_sets || "—"} x {entry.planned_reps || "—"}
-                          </td>
-                          <td>
-                            <input
-                              type="number"
-                              value={entry.actual_sets}
-                              class="input input-bordered input-sm w-20"
-                              phx-blur="update_log_entry"
-                              phx-value-index={idx}
-                              phx-value-field="actual_sets"
-                              id={"log-sets-#{idx}"}
-                              min="0"
-                            />
-                          </td>
-                          <td>
-                            <input
-                              type="number"
-                              value={entry.actual_reps}
-                              class="input input-bordered input-sm w-20"
-                              phx-blur="update_log_entry"
-                              phx-value-index={idx}
-                              phx-value-field="actual_reps"
-                              id={"log-reps-#{idx}"}
-                              min="0"
-                            />
-                          </td>
-                          <td>
-                            <input
-                              type="number"
-                              value={entry.weight_kg}
-                              class="input input-bordered input-sm w-24"
-                              phx-blur="update_log_entry"
-                              phx-value-index={idx}
-                              phx-value-field="weight_kg"
-                              id={"log-weight-#{idx}"}
-                              step="0.5"
-                              min="0"
-                              placeholder="0"
-                            />
-                          </td>
-                        </tr>
-                      <% end %>
-                    </tbody>
-                  </table>
-                </div>
+                    <% end %>
+                  </tbody>
+                </table>
+              </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                  <div>
-                    <label class="label"><span class="label-text font-medium">Duration (minutes)</span></label>
-                    <input
-                      type="number"
-                      value={@log_duration}
-                      class="input input-bordered input-sm w-full"
-                      phx-blur="update_log_field"
-                      phx-value-field="duration"
-                      id="log-duration"
-                      min="1"
-                      placeholder="e.g., 45"
-                    />
-                  </div>
-                  <div>
-                    <label class="label"><span class="label-text font-medium">Notes</span></label>
-                    <input
-                      type="text"
-                      value={@log_notes}
-                      class="input input-bordered input-sm w-full"
-                      phx-blur="update_log_field"
-                      phx-value-field="notes"
-                      id="log-notes"
-                      placeholder="How did it feel?"
-                    />
-                  </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <label class="label"><span class="label-text font-medium">Duration (minutes)</span></label>
+                  <input type="number" value={@log_duration} class="input input-bordered input-sm w-full" phx-blur="update_log_field" phx-value-field="duration" id="log-duration" min="1" placeholder="e.g., 45" />
                 </div>
-
-                <div class="flex justify-end gap-2 pt-4">
-                  <button
-                    type="button"
-                    class="btn btn-ghost btn-sm"
-                    phx-click="cancel_log"
-                    id="cancel-log-btn"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-success btn-sm gap-2"
-                    phx-click="save_workout_log"
-                    id="complete-workout-btn"
-                  >
-                    <.icon name="hero-check-mini" class="size-4" /> Complete Workout
-                  </button>
+                <div>
+                  <label class="label"><span class="label-text font-medium">Notes</span></label>
+                  <input type="text" value={@log_notes} class="input input-bordered input-sm w-full" phx-blur="update_log_field" phx-value-field="notes" id="log-notes" placeholder="How did it feel?" />
                 </div>
               </div>
-            </div>
+
+              <div class="flex justify-end gap-2 pt-4">
+                <.button variant="ghost" size="sm" type="button" phx-click="cancel_log" id="cancel-log-btn">Cancel</.button>
+                <.button variant="primary" size="sm" icon="hero-check" type="button" phx-click="save_workout_log" id="complete-workout-btn" class="btn-success">
+                  Complete Workout
+                </.button>
+              </div>
+            </.card>
           <% end %>
 
           <%!-- Create Plan Form (General only) --%>
           <%= if @plan_type == :general and @show_form do %>
-            <div class="card bg-base-200/50 border border-base-300/50" id="workout-form-card">
-              <div class="card-body p-5">
-                <h2 class="text-lg font-bold flex items-center gap-2">
-                  <.icon name="hero-fire-solid" class="size-5 text-accent" /> New Workout Plan
-                </h2>
-                <.form
-                  for={@form}
-                  id="workout-form"
-                  phx-change="validate"
-                  phx-submit="save_workout"
-                  class="mt-4 space-y-4"
-                >
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <.input
-                      field={@form[:name]}
-                      label="Plan Name"
-                      placeholder="e.g., Full Body Strength"
+            <.card title="New Workout Plan" id="workout-form-card">
+              <.form
+                for={@form}
+                id="workout-form"
+                phx-change="validate"
+                phx-submit="save_workout"
+                class="space-y-4"
+              >
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <.input
+                    field={@form[:name]}
+                    label="Plan Name"
+                    placeholder="e.g., Full Body Strength"
+                    required
+                  />
+                  <div>
+                    <label class="label"><span class="label-text font-medium">Gym</span></label>
+                    <select
+                      name="workout[gym_id]"
+                      class="select select-bordered w-full"
+                      id="workout-gym-select"
                       required
-                    />
-                    <div>
-                      <label class="label"><span class="label-text font-medium">Gym</span></label>
-                      <select
-                        name="workout[gym_id]"
-                        class="select select-bordered w-full"
-                        id="workout-gym-select"
-                        required
-                      >
-                        <option value="">Select a gym...</option>
-                        <option :for={m <- @memberships} value={m.gym_id}>
-                          {m.gym.name}
-                        </option>
-                      </select>
-                    </div>
+                    >
+                      <option value="">Select a gym...</option>
+                      <option :for={m <- @memberships} value={m.gym_id}>
+                        {m.gym.name}
+                      </option>
+                    </select>
                   </div>
+                </div>
 
-                  <%!-- Exercises --%>
+                <%!-- Exercises --%>
+                <.section title="Exercises">
+                  <:actions>
+                    <.button variant="ghost" size="sm" icon="hero-plus" type="button" phx-click="add_exercise" id="add-exercise-btn">
+                      Add Exercise
+                    </.button>
+                  </:actions>
                   <div class="space-y-3">
-                    <div class="flex items-center justify-between">
-                      <h3 class="font-semibold text-sm">Exercises</h3>
-                      <button
-                        type="button"
-                        class="btn btn-ghost btn-xs gap-1"
-                        phx-click="add_exercise"
-                        id="add-exercise-btn"
-                      >
-                        <.icon name="hero-plus-mini" class="size-3" /> Add Exercise
-                      </button>
-                    </div>
                     <div
                       :for={{exercise, idx} <- Enum.with_index(@exercises)}
                       class="p-4 rounded-lg bg-base-300/20 space-y-3"
@@ -830,130 +714,63 @@ defmodule FitTrackerzWeb.Member.WorkoutLive do
                           Exercise #{idx + 1}
                         </span>
                         <%= if length(@exercises) > 1 do %>
-                          <button
-                            type="button"
-                            class="btn btn-ghost btn-xs text-error"
-                            phx-click="remove_exercise"
-                            phx-value-index={idx}
-                            id={"remove-exercise-#{idx}"}
-                          >
+                          <.button variant="ghost" size="sm" type="button" phx-click="remove_exercise" phx-value-index={idx} id={"remove-exercise-#{idx}"} class="text-error">
                             <.icon name="hero-trash-mini" class="size-3" />
-                          </button>
+                          </.button>
                         <% end %>
                       </div>
                       <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
                         <div class="col-span-2 sm:col-span-1">
                           <label class="label"><span class="label-text text-xs">Name</span></label>
-                          <input
-                            type="text"
-                            value={exercise["name"]}
-                            placeholder="e.g., Squats"
-                            class="input input-bordered input-sm w-full"
-                            phx-blur="update_exercise"
-                            phx-value-index={idx}
-                            phx-value-field="name"
-                            id={"exercise-name-#{idx}"}
-                          />
+                          <input type="text" value={exercise["name"]} placeholder="e.g., Squats" class="input input-bordered input-sm w-full" phx-blur="update_exercise" phx-value-index={idx} phx-value-field="name" id={"exercise-name-#{idx}"} />
                         </div>
                         <div>
                           <label class="label"><span class="label-text text-xs">Sets</span></label>
-                          <input
-                            type="number"
-                            value={exercise["sets"]}
-                            placeholder="3"
-                            class="input input-bordered input-sm w-full"
-                            phx-blur="update_exercise"
-                            phx-value-index={idx}
-                            phx-value-field="sets"
-                            id={"exercise-sets-#{idx}"}
-                          />
+                          <input type="number" value={exercise["sets"]} placeholder="3" class="input input-bordered input-sm w-full" phx-blur="update_exercise" phx-value-index={idx} phx-value-field="sets" id={"exercise-sets-#{idx}"} />
                         </div>
                         <div>
                           <label class="label"><span class="label-text text-xs">Reps</span></label>
-                          <input
-                            type="number"
-                            value={exercise["reps"]}
-                            placeholder="12"
-                            class="input input-bordered input-sm w-full"
-                            phx-blur="update_exercise"
-                            phx-value-index={idx}
-                            phx-value-field="reps"
-                            id={"exercise-reps-#{idx}"}
-                          />
+                          <input type="number" value={exercise["reps"]} placeholder="12" class="input input-bordered input-sm w-full" phx-blur="update_exercise" phx-value-index={idx} phx-value-field="reps" id={"exercise-reps-#{idx}"} />
                         </div>
                         <div>
                           <label class="label"><span class="label-text text-xs">Duration (s)</span></label>
-                          <input
-                            type="number"
-                            value={exercise["duration_seconds"]}
-                            placeholder="60"
-                            class="input input-bordered input-sm w-full"
-                            phx-blur="update_exercise"
-                            phx-value-index={idx}
-                            phx-value-field="duration_seconds"
-                            id={"exercise-duration-#{idx}"}
-                          />
+                          <input type="number" value={exercise["duration_seconds"]} placeholder="60" class="input input-bordered input-sm w-full" phx-blur="update_exercise" phx-value-index={idx} phx-value-field="duration_seconds" id={"exercise-duration-#{idx}"} />
                         </div>
                         <div>
                           <label class="label"><span class="label-text text-xs">Rest (s)</span></label>
-                          <input
-                            type="number"
-                            value={exercise["rest_seconds"]}
-                            placeholder="30"
-                            class="input input-bordered input-sm w-full"
-                            phx-blur="update_exercise"
-                            phx-value-index={idx}
-                            phx-value-field="rest_seconds"
-                            id={"exercise-rest-#{idx}"}
-                          />
+                          <input type="number" value={exercise["rest_seconds"]} placeholder="30" class="input input-bordered input-sm w-full" phx-blur="update_exercise" phx-value-index={idx} phx-value-field="rest_seconds" id={"exercise-rest-#{idx}"} />
                         </div>
                       </div>
                     </div>
                   </div>
+                </.section>
 
-                  <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" class="btn btn-ghost btn-sm" phx-click="toggle_form" id="cancel-workout-btn">
-                      Cancel
-                    </button>
-                    <button type="submit" class="btn btn-primary btn-sm gap-2" id="submit-workout-btn">
-                      <.icon name="hero-check-mini" class="size-4" /> Create Plan
-                    </button>
-                  </div>
-                </.form>
-              </div>
-            </div>
+                <div class="flex justify-end gap-2 pt-2">
+                  <.button variant="ghost" size="sm" type="button" phx-click="toggle_form" id="cancel-workout-btn">Cancel</.button>
+                  <.button variant="primary" size="sm" icon="hero-check" type="submit" id="submit-workout-btn">Create Plan</.button>
+                </div>
+              </.form>
+            </.card>
           <% end %>
 
           <%!-- Workout Plans --%>
           <%= if @workout_plans == [] do %>
-            <div class="card bg-base-200/50 border border-base-300/50" id="no-workout-plans">
-              <div class="card-body items-center text-center p-8">
-                <div class="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mb-4">
-                  <.icon name="hero-fire" class="size-8 text-accent" />
-                </div>
-                <h2 class="text-lg font-bold">No Workout Plans Yet</h2>
-                <p class="text-sm text-base-content/50 max-w-md mt-2">
-                  <%= if @plan_type == :general do %>
-                    Create your first workout plan to start your fitness journey!
-                  <% else %>
-                    Your trainer will assign a workout plan tailored for you. Check back soon!
-                  <% end %>
-                </p>
-              </div>
-            </div>
+            <.empty_state
+              icon="hero-fire"
+              title="No Workout Plans Yet"
+              subtitle={if @plan_type == :general, do: "Create your first workout plan to start your fitness journey!", else: "Your trainer will assign a workout plan tailored for you. Check back soon!"}
+            />
           <% else %>
-            <div>
-              <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                <.icon name="hero-fire-solid" class="size-5 text-accent" /> Workout Plans
-                <span class="badge badge-neutral badge-sm">{length(@workout_plans)}</span>
-              </h2>
+            <.section title="Workout Plans">
+              <:actions>
+                <.badge variant="neutral" size="sm">{length(@workout_plans)}</.badge>
+              </:actions>
               <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div
                   :for={plan <- @workout_plans}
-                  class="card bg-base-200/50 border border-base-300/50"
                   id={"workout-plan-#{plan.id}"}
                 >
-                  <div class="card-body p-5">
+                  <.card>
                     <div class="flex items-start justify-between gap-3">
                       <div>
                         <h3 class="text-lg font-bold flex items-center gap-2">
@@ -967,25 +784,27 @@ defmodule FitTrackerzWeb.Member.WorkoutLive do
                               {plan.gym.name}
                             </span>
                           <% end %>
-                          <span class="badge badge-ghost badge-xs">
+                          <.badge variant="neutral" size="sm">
                             <%= if @plan_type == :general, do: "Self-created", else: "Trainer assigned" %>
-                          </span>
+                          </.badge>
                         </div>
                       </div>
                       <div class="flex items-center gap-2">
-                        <div class="badge badge-accent badge-outline badge-sm">
+                        <.badge variant="secondary" size="sm">
                           {length(plan.exercises || [])} exercises
-                        </div>
+                        </.badge>
                         <%= if @plan_type == :general do %>
-                          <button
-                            class="btn btn-ghost btn-xs text-error"
+                          <.button
+                            variant="ghost"
+                            size="sm"
                             phx-click="delete_workout"
                             phx-value-id={plan.id}
                             data-confirm="Are you sure you want to delete this workout plan?"
                             id={"delete-workout-#{plan.id}"}
+                            class="text-error"
                           >
                             <.icon name="hero-trash-mini" class="size-4" />
-                          </button>
+                          </.button>
                         <% end %>
                       </div>
                     </div>
@@ -1024,60 +843,57 @@ defmodule FitTrackerzWeb.Member.WorkoutLive do
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </.card>
                 </div>
               </div>
-            </div>
+            </.section>
           <% end %>
 
           <%!-- Workout History --%>
-          <div class="card bg-base-200/50 border border-base-300/50" id="workout-history-card">
-            <div class="card-body p-6">
-              <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                <.icon name="hero-clock-solid" class="size-5 text-primary" /> Workout History
-                <span class="badge badge-neutral badge-sm">{length(@workout_logs)}</span>
-              </h2>
-              <%= if @workout_logs == [] do %>
-                <div class="flex items-center gap-3 p-4 rounded-lg bg-base-300/20">
-                  <p class="text-sm text-base-content/50">No workouts logged yet. Complete your first workout above!</p>
-                </div>
-              <% else %>
-                <div class="space-y-2">
-                  <%= for log <- @workout_logs do %>
-                    <div
-                      class="flex items-center justify-between p-3 rounded-lg bg-base-300/20"
-                      id={"log-#{log.id}"}
-                    >
-                      <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                          <.icon name="hero-check-circle-solid" class="size-4 text-primary" />
-                        </div>
-                        <div>
-                          <p class="text-sm font-semibold">
-                            {Calendar.strftime(log.completed_on, "%b %d, %Y")}
-                          </p>
-                          <div class="flex flex-wrap items-center gap-2 mt-0.5">
-                            <%= if log.workout_plan do %>
-                              <span class="text-xs text-base-content/50">{log.workout_plan.name}</span>
-                            <% end %>
-                            <%= if log.duration_minutes do %>
-                              <span class="badge badge-ghost badge-xs">{log.duration_minutes} min</span>
-                            <% end %>
-                            <%= if log.entries && length(log.entries) > 0 do %>
-                              <span class="badge badge-ghost badge-xs">{length(log.entries)} exercises</span>
-                            <% end %>
-                          </div>
+          <.card title="Workout History" id="workout-history-card">
+            <:header_actions>
+              <.badge variant="neutral" size="sm">{length(@workout_logs)}</.badge>
+            </:header_actions>
+            <%= if @workout_logs == [] do %>
+              <div class="flex items-center gap-3 p-4 rounded-lg bg-base-300/20">
+                <p class="text-sm text-base-content/50">No workouts logged yet. Complete your first workout above!</p>
+              </div>
+            <% else %>
+              <div class="space-y-2">
+                <%= for log <- @workout_logs do %>
+                  <div
+                    class="flex items-center justify-between p-3 rounded-lg bg-base-300/20"
+                    id={"log-#{log.id}"}
+                  >
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                        <.icon name="hero-check-circle-solid" class="size-4 text-primary" />
+                      </div>
+                      <div>
+                        <p class="text-sm font-semibold">
+                          {Calendar.strftime(log.completed_on, "%b %d, %Y")}
+                        </p>
+                        <div class="flex flex-wrap items-center gap-2 mt-0.5">
+                          <%= if log.workout_plan do %>
+                            <span class="text-xs text-base-content/50">{log.workout_plan.name}</span>
+                          <% end %>
+                          <%= if log.duration_minutes do %>
+                            <.badge variant="neutral" size="sm">{log.duration_minutes} min</.badge>
+                          <% end %>
+                          <%= if log.entries && length(log.entries) > 0 do %>
+                            <.badge variant="neutral" size="sm">{length(log.entries)} exercises</.badge>
+                          <% end %>
                         </div>
                       </div>
-                      <%= if log.notes do %>
-                        <span class="text-xs text-base-content/40 max-w-[200px] truncate">{log.notes}</span>
-                      <% end %>
                     </div>
-                  <% end %>
-                </div>
-              <% end %>
-            </div>
-          </div>
+                    <%= if log.notes do %>
+                      <span class="text-xs text-base-content/40 max-w-[200px] truncate">{log.notes}</span>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          </.card>
         <% end %>
       </div>
     </Layouts.app>

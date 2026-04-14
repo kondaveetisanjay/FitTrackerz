@@ -176,194 +176,177 @@ defmodule FitTrackerzWeb.Trainer.DietsLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
-      <div class="space-y-8">
-        <%!-- Page Header --%>
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div class="flex items-center gap-3">
-            <Layouts.back_button />
-            <div>
-              <h1 class="text-2xl sm:text-3xl font-black tracking-tight">Diet Plans</h1>
-              <p class="text-base-content/50 mt-1">Create and manage diet plans for your clients.</p>
-            </div>
-          </div>
+      <.page_header title="Diet Plans" subtitle="Create and manage diet plans for your clients." back_path="/trainer">
+        <:actions>
           <%= unless @no_gym do %>
-            <button
-              class="btn btn-primary btn-sm gap-2 font-semibold"
-              phx-click="toggle_form"
-              id="toggle-diet-form-btn"
-            >
-              <.icon name="hero-plus-mini" class="size-4" /> New Diet Plan
-            </button>
+            <.button variant="primary" size="sm" icon="hero-plus" phx-click="toggle_form" id="toggle-diet-form-btn">
+              New Diet Plan
+            </.button>
           <% end %>
-        </div>
+        </:actions>
+      </.page_header>
 
-        <%= if @no_gym do %>
-          <div class="card bg-base-200/50 border border-base-300/50" id="no-gym-notice">
-            <div class="card-body p-8 items-center text-center">
-              <div class="w-16 h-16 rounded-full bg-warning/10 flex items-center justify-center mb-4">
-                <.icon name="hero-exclamation-triangle-solid" class="size-8 text-warning" />
-              </div>
-              <h2 class="text-lg font-bold">No Gym Association</h2>
-              <p class="text-base-content/50 mt-2 max-w-md">
-                You haven't been added to any gym yet. Ask a gym operator to invite you.
-              </p>
-            </div>
-          </div>
-        <% else %>
-          <%!-- Create Form --%>
-          <%= if @show_form do %>
-            <div class="card bg-base-200/50 border border-base-300/50" id="diet-form-card">
-              <div class="card-body p-5">
-                <h2 class="text-lg font-bold flex items-center gap-2">
-                  <.icon name="hero-heart-solid" class="size-5 text-success" /> New Diet Plan
-                </h2>
-                <.form
-                  for={@form}
-                  id="diet-form"
-                  phx-change="validate"
-                  phx-submit="save_diet"
-                  class="mt-4 space-y-4"
-                >
-                  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <.input
-                      field={@form[:name]}
-                      label="Plan Name"
-                      placeholder="e.g., High Protein Plan"
-                      required
-                    />
-                    <.input
-                      field={@form[:calorie_target]}
-                      label="Calorie Target"
-                      type="number"
-                      placeholder="2000"
-                    />
-                    <div>
-                      <label class="label">
-                        <span class="label-text font-medium">Dietary Type</span>
-                      </label>
-                      <select
-                        name="diet[dietary_type]"
-                        class="select select-bordered w-full"
-                        id="diet-type-select"
-                      >
-                        <option value="">Select type...</option>
-                        <option value="vegetarian">Vegetarian</option>
-                        <option value="non_vegetarian">Non-Vegetarian</option>
-                        <option value="vegan">Vegan</option>
-                        <option value="eggetarian">Eggetarian</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label class="label"><span class="label-text font-medium">Client</span></label>
-                      <select
-                        name="diet[member_id]"
-                        class="select select-bordered w-full"
-                        id="diet-member-select"
-                        required
-                      >
-                        <option value="">Select a client...</option>
-                        <option :for={client <- @clients} value={client.id}>
-                          {client.user.name}
-                        </option>
-                      </select>
-                    </div>
-                    <div>
-                      <label class="label"><span class="label-text font-medium">Gym</span></label>
-                      <select
-                        name="diet[gym_id]"
-                        class="select select-bordered w-full"
-                        id="diet-gym-select"
-                        required
-                      >
-                        <option value="">Select a gym...</option>
-                        <option :for={gym <- @gyms} value={gym.id}>
-                          {gym.name}
-                        </option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="flex justify-end gap-2 pt-2">
-                    <button
-                      type="button"
-                      class="btn btn-ghost btn-sm"
-                      phx-click="toggle_form"
-                      id="cancel-diet-btn"
+      <%= if @no_gym do %>
+        <.empty_state
+          icon="hero-exclamation-triangle"
+          title="No Gym Association"
+          subtitle="You haven't been added to any gym yet. Ask a gym operator to invite you."
+        />
+      <% else %>
+        <%!-- Create Form --%>
+        <%= if @show_form do %>
+          <div class="mb-8">
+            <.card title="New Diet Plan">
+              <.form
+                for={@form}
+                id="diet-form"
+                phx-change="validate"
+                phx-submit="save_diet"
+                class="space-y-4"
+              >
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <.input
+                    field={@form[:name]}
+                    label="Plan Name"
+                    placeholder="e.g., High Protein Plan"
+                    required
+                  />
+                  <.input
+                    field={@form[:calorie_target]}
+                    label="Calorie Target"
+                    type="number"
+                    placeholder="2000"
+                  />
+                  <div>
+                    <label class="label">
+                      <span class="label-text font-medium">Dietary Type</span>
+                    </label>
+                    <select
+                      name="diet[dietary_type]"
+                      class="select select-bordered w-full"
+                      id="diet-type-select"
                     >
-                      Cancel
-                    </button>
-                    <button type="submit" class="btn btn-primary btn-sm gap-2" id="submit-diet-btn">
-                      <.icon name="hero-check-mini" class="size-4" /> Create Plan
-                    </button>
+                      <option value="">Select type...</option>
+                      <option value="vegetarian">Vegetarian</option>
+                      <option value="non_vegetarian">Non-Vegetarian</option>
+                      <option value="vegan">Vegan</option>
+                      <option value="eggetarian">Eggetarian</option>
+                    </select>
                   </div>
-                </.form>
-              </div>
-            </div>
-          <% end %>
-
-          <%!-- Diet Plans Grid --%>
-          <%= if @diets == [] do %>
-            <div class="card bg-base-200/50 border border-base-300/50" id="diets-empty">
-              <div class="card-body p-8 items-center text-center">
-                <div class="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center mb-4">
-                  <.icon name="hero-heart-solid" class="size-8 text-success" />
                 </div>
-                <h2 class="text-lg font-bold">No Diet Plans Yet</h2>
-                <p class="text-base-content/50 mt-2 max-w-md">
-                  Create your first diet plan to help your clients with their nutrition.
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label class="label"><span class="label-text font-medium">Client</span></label>
+                    <select
+                      name="diet[member_id]"
+                      class="select select-bordered w-full"
+                      id="diet-member-select"
+                      required
+                    >
+                      <option value="">Select a client...</option>
+                      <option :for={client <- @clients} value={client.id}>
+                        {client.user.name}
+                      </option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="label"><span class="label-text font-medium">Gym</span></label>
+                    <select
+                      name="diet[gym_id]"
+                      class="select select-bordered w-full"
+                      id="diet-gym-select"
+                      required
+                    >
+                      <option value="">Select a gym...</option>
+                      <option :for={gym <- @gyms} value={gym.id}>
+                        {gym.name}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                  <.button type="button" variant="ghost" size="sm" phx-click="toggle_form" id="cancel-diet-btn">
+                    Cancel
+                  </.button>
+                  <.button type="submit" variant="primary" size="sm" icon="hero-check" id="submit-diet-btn">
+                    Create Plan
+                  </.button>
+                </div>
+              </.form>
+            </.card>
+          </div>
+        <% end %>
+
+        <%!-- Diet Plans --%>
+        <%= if @diets == [] do %>
+          <.empty_state
+            icon="hero-heart"
+            title="No Diet Plans Yet"
+            subtitle="Create your first diet plan to help your clients with their nutrition."
+          >
+            <:action>
+              <.button variant="primary" size="sm" icon="hero-plus" phx-click="toggle_form">
+                Create Diet Plan
+              </.button>
+            </:action>
+          </.empty_state>
+        <% else %>
+          <.data_table id="diets-table" rows={@diets} row_id={fn d -> "diet-#{d.id}" end}>
+            <:col :let={diet} label="Plan Name">
+              <span class="font-bold">{diet.name}</span>
+            </:col>
+            <:col :let={diet} label="Client">
+              <div class="flex items-center gap-2">
+                <%= if diet.member do %>
+                  <.avatar name={diet.member.user.name} size="sm" />
+                  <span>{diet.member.user.name}</span>
+                <% else %>
+                  <span class="text-base-content/40">Unassigned</span>
+                <% end %>
+              </div>
+            </:col>
+            <:col :let={diet} label="Gym">
+              {if diet.gym, do: diet.gym.name, else: "N/A"}
+            </:col>
+            <:col :let={diet} label="Calories">
+              {if diet.calorie_target, do: "#{diet.calorie_target} kcal", else: "--"}
+            </:col>
+            <:col :let={diet} label="Type">
+              <%= if diet.dietary_type do %>
+                <span class={"badge badge-sm #{dietary_type_badge_class(diet.dietary_type)}"}>
+                  {format_dietary_type(diet.dietary_type)}
+                </span>
+              <% else %>
+                <span class="text-base-content/40">--</span>
+              <% end %>
+            </:col>
+            <:actions :let={diet}>
+              <.button
+                variant="danger"
+                size="sm"
+                icon="hero-trash"
+                phx-click="delete_diet"
+                phx-value-id={diet.id}
+                data-confirm="Are you sure you want to delete this diet plan?"
+                id={"delete-diet-#{diet.id}"}
+              >
+                <span class="sr-only">Delete</span>
+              </.button>
+            </:actions>
+            <:mobile_card :let={diet}>
+              <div>
+                <p class="font-bold">{diet.name}</p>
+                <p class="text-xs text-base-content/50 mt-1">
+                  {if diet.member, do: diet.member.user.name, else: "Unassigned"}
+                  <%= if diet.dietary_type do %>
+                    &middot; {format_dietary_type(diet.dietary_type)}
+                  <% end %>
                 </p>
               </div>
-            </div>
-          <% else %>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="diets-grid">
-              <div
-                :for={diet <- @diets}
-                class="card bg-base-200/50 border border-base-300/50"
-                id={"diet-card-#{diet.id}"}
-              >
-                <div class="card-body p-5">
-                  <div class="flex items-start justify-between">
-                    <h3 class="font-bold text-md">{diet.name}</h3>
-                    <button
-                      class="btn btn-ghost btn-xs text-error"
-                      phx-click="delete_diet"
-                      phx-value-id={diet.id}
-                      data-confirm="Are you sure you want to delete this diet plan?"
-                      id={"delete-diet-#{diet.id}"}
-                    >
-                      <.icon name="hero-trash-mini" class="size-4" />
-                    </button>
-                  </div>
-                  <div class="space-y-2 mt-2">
-                    <div class="flex items-center gap-2 text-sm text-base-content/60">
-                      <.icon name="hero-user-mini" class="size-4" />
-                      <span>{if diet.member, do: diet.member.user.name, else: "Unassigned"}</span>
-                    </div>
-                    <div class="flex items-center gap-2 text-sm text-base-content/60">
-                      <.icon name="hero-building-office-2-mini" class="size-4" />
-                      <span>{if diet.gym, do: diet.gym.name, else: "N/A"}</span>
-                    </div>
-                    <%= if diet.calorie_target do %>
-                      <div class="flex items-center gap-2 text-sm text-base-content/60">
-                        <.icon name="hero-fire-mini" class="size-4" />
-                        <span>{diet.calorie_target} kcal/day</span>
-                      </div>
-                    <% end %>
-                    <%= if diet.dietary_type do %>
-                      <div class="mt-2">
-                        <span class={"badge badge-sm #{dietary_type_badge_class(diet.dietary_type)}"}>
-                          {format_dietary_type(diet.dietary_type)}
-                        </span>
-                      </div>
-                    <% end %>
-                  </div>
-                </div>
-              </div>
-            </div>
-          <% end %>
+            </:mobile_card>
+          </.data_table>
         <% end %>
-      </div>
+      <% end %>
     </Layouts.app>
     """
   end

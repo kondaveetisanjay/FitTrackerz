@@ -7,8 +7,8 @@
 @source "../../lib/fit_trackerz_web";
 @source "../../deps/ash_authentication_phoenix";
 
-/* Google Fonts – Oswald for brand headings */
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap');
+/* Google Fonts – Inter for body text */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 /* A Tailwind plugin that makes "hero-#{ICON}" classes available.
    The heroicons installation itself is managed by your mix.exs */
@@ -23,44 +23,44 @@
 
 /* ============================================================
    FitTrackerz Brand Theme – Light (DEFAULT)
-   Indigo + Coral palette – Modern Fitness SaaS
-   Clean whites with cool undertones
+   Electric Blue + Vibrant Orange + Emerald Green
+   Bold & Energetic Fitness Platform
    ============================================================ */
 @plugin "../vendor/daisyui-theme" {
   name: "light";
   default: true;
   prefersdark: false;
   color-scheme: "light";
-  /* Base surfaces – clean white with cool undertones */
+  /* Base surfaces – clean white with cool slate undertones */
   --color-base-100: oklch(100% 0 0);
-  --color-base-200: oklch(97% 0.003 280);
-  --color-base-300: oklch(92% 0.005 280);
-  --color-base-content: oklch(18% 0.005 280);
-  /* Indigo – rich purple-blue, trust & professionalism */
-  --color-primary: oklch(40% 0.22 280);
+  --color-base-200: oklch(98.5% 0.002 255);
+  --color-base-300: oklch(91.5% 0.01 255);
+  --color-base-content: oklch(13% 0.02 255);
+  /* Electric Blue – trust, action, primary CTA */
+  --color-primary: oklch(58.5% 0.19 260);
   --color-primary-content: oklch(100% 0 0);
-  /* Coral – energy & motivation */
-  --color-secondary: oklch(68% 0.18 25);
+  /* Vibrant Orange – energy, motivation, secondary CTA */
+  --color-secondary: oklch(68% 0.17 45);
   --color-secondary-content: oklch(100% 0 0);
-  /* Amber – warm supporting accent */
-  --color-accent: oklch(72% 0.15 75);
-  --color-accent-content: oklch(18% 0.02 75);
-  /* Neutral – cool charcoal */
-  --color-neutral: oklch(28% 0.01 280);
+  /* Emerald Green – health, growth, success */
+  --color-accent: oklch(65% 0.17 160);
+  --color-accent-content: oklch(100% 0 0);
+  /* Neutral – cool slate */
+  --color-neutral: oklch(23% 0.02 255);
   --color-neutral-content: oklch(98% 0 0);
   /* Semantic colors */
-  --color-info: oklch(52% 0.15 250);
-  --color-info-content: oklch(98% 0.005 250);
-  --color-success: oklch(55% 0.16 155);
-  --color-success-content: oklch(98% 0.005 155);
-  --color-warning: oklch(72% 0.14 82);
-  --color-warning-content: oklch(18% 0.02 82);
-  --color-error: oklch(50% 0.20 25);
+  --color-info: oklch(62% 0.15 230);
+  --color-info-content: oklch(98% 0.005 230);
+  --color-success: oklch(62% 0.17 145);
+  --color-success-content: oklch(98% 0.005 145);
+  --color-warning: oklch(75% 0.15 80);
+  --color-warning-content: oklch(18% 0.02 80);
+  --color-error: oklch(57% 0.22 25);
   --color-error-content: oklch(98% 0.005 25);
-  /* Shape */
-  --radius-selector: 0.5rem;
+  /* Shape – slightly rounder for energetic feel */
+  --radius-selector: 0.625rem;
   --radius-field: 0.5rem;
-  --radius-box: 0.75rem;
+  --radius-box: 1rem;
   --size-selector: 0.25rem;
   --size-field: 0.25rem;
   --border: 1px;
@@ -70,43 +70,43 @@
 
 /* ============================================================
    FitTrackerz Brand Theme – Dark variant
-   Indigo + Coral on dark surfaces
+   Electric Blue + Orange + Emerald on dark surfaces
    ============================================================ */
 @plugin "../vendor/daisyui-theme" {
   name: "dark";
   default: false;
   prefersdark: false;
   color-scheme: "dark";
-  /* Base surfaces – deep indigo-blacks */
-  --color-base-100: oklch(8% 0.005 280);
-  --color-base-200: oklch(15% 0.005 280);
-  --color-base-300: oklch(22% 0.005 280);
-  --color-base-content: oklch(94% 0 0);
-  /* Indigo – brighter for dark bg readability */
-  --color-primary: oklch(55% 0.22 280);
-  --color-primary-content: oklch(100% 0 0);
-  /* Coral – brighter on dark */
-  --color-secondary: oklch(72% 0.18 25);
-  --color-secondary-content: oklch(100% 0 0);
-  /* Amber – brighter on dark */
-  --color-accent: oklch(78% 0.15 75);
-  --color-accent-content: oklch(14% 0.02 75);
-  /* Neutral tones – cool */
-  --color-neutral: oklch(25% 0.005 280);
+  /* Base surfaces – deep slate blacks */
+  --color-base-100: oklch(13% 0.02 255);
+  --color-base-200: oklch(20% 0.015 255);
+  --color-base-300: oklch(28% 0.015 255);
+  --color-base-content: oklch(97% 0.003 255);
+  /* Electric Blue – brighter for dark bg readability */
+  --color-primary: oklch(72% 0.16 255);
+  --color-primary-content: oklch(13% 0.02 255);
+  /* Vibrant Orange – brighter on dark */
+  --color-secondary: oklch(74% 0.16 50);
+  --color-secondary-content: oklch(13% 0.02 50);
+  /* Emerald – brighter on dark */
+  --color-accent: oklch(73% 0.17 160);
+  --color-accent-content: oklch(13% 0.02 160);
+  /* Neutral – dark slate */
+  --color-neutral: oklch(20% 0.01 255);
   --color-neutral-content: oklch(90% 0 0);
-  /* Semantic colors */
-  --color-info: oklch(62% 0.16 250);
-  --color-info-content: oklch(95% 0.01 250);
-  --color-success: oklch(65% 0.14 155);
-  --color-success-content: oklch(15% 0.02 155);
-  --color-warning: oklch(80% 0.16 82);
-  --color-warning-content: oklch(14% 0.02 82);
-  --color-error: oklch(55% 0.20 25);
+  /* Semantic colors – brighter on dark */
+  --color-info: oklch(72% 0.14 225);
+  --color-info-content: oklch(15% 0.01 225);
+  --color-success: oklch(72% 0.16 150);
+  --color-success-content: oklch(15% 0.02 150);
+  --color-warning: oklch(82% 0.14 80);
+  --color-warning-content: oklch(14% 0.02 80);
+  --color-error: oklch(65% 0.2 25);
   --color-error-content: oklch(95% 0.02 25);
-  /* Shape */
-  --radius-selector: 0.5rem;
+  /* Shape – match light theme */
+  --radius-selector: 0.625rem;
   --radius-field: 0.5rem;
-  --radius-box: 0.75rem;
+  --radius-box: 1rem;
   --size-selector: 0.25rem;
   --size-field: 0.25rem;
   --border: 1px;
@@ -165,6 +165,11 @@
   font-display: swap;
 }
 
+/* Body font – Inter for clean readability */
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
 /* Brand heading font – Gilroy Bold */
 .font-brand {
   font-family: 'Gilroy', 'Impact', 'Arial Narrow', sans-serif;
@@ -201,8 +206,8 @@ a, button, .btn, .card, .badge, .collapse, input, select, textarea,
 }
 
 @keyframes glowPulse {
-  0%, 100% { box-shadow: 0 0 8px 2px oklch(40% 0.22 280 / 0.3); }
-  50% { box-shadow: 0 0 20px 6px oklch(40% 0.22 280 / 0.5); }
+  0%, 100% { box-shadow: 0 0 8px 2px oklch(58.5% 0.19 260 / 0.3); }
+  50% { box-shadow: 0 0 20px 6px oklch(58.5% 0.19 260 / 0.5); }
 }
 
 @keyframes marqueeLeft {
@@ -314,7 +319,7 @@ a, button, .btn, .card, .badge, .collapse, input, select, textarea,
 }
 
 .pac-item-query {
-  color: oklch(40% 0.22 280);
+  color: oklch(58.5% 0.19 260);
   font-weight: 600;
 }
 
@@ -323,7 +328,7 @@ a, button, .btn, .card, .badge, .collapse, input, select, textarea,
 }
 
 .pac-matched {
-  color: oklch(40% 0.22 280);
+  color: oklch(58.5% 0.19 260);
 }
 
 /* Dark theme overrides for PAC container */
@@ -342,7 +347,59 @@ a, button, .btn, .card, .badge, .collapse, input, select, textarea,
 }
 :where([data-theme=dark]) .pac-item-query,
 :where([data-theme=dark]) .pac-matched {
-  color: oklch(55% 0.22 280);
+  color: oklch(72% 0.16 255);
+}
+
+/* ============================================================
+   Skeleton Loading Animation
+   ============================================================ */
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg,
+    oklch(92% 0 0 / 0.6) 25%,
+    oklch(96% 0 0 / 0.8) 50%,
+    oklch(92% 0 0 / 0.6) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 0.5rem;
+}
+
+:where([data-theme=dark]) .skeleton-shimmer {
+  background: linear-gradient(90deg,
+    oklch(22% 0 0 / 0.6) 25%,
+    oklch(28% 0 0 / 0.8) 50%,
+    oklch(22% 0 0 / 0.6) 75%
+  );
+  background-size: 200% 100%;
+}
+
+/* ============================================================
+   Command Palette Overlay
+   ============================================================ */
+
+.command-palette-backdrop {
+  position: fixed;
+  inset: 0;
+  background: oklch(0% 0 0 / 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 100;
+}
+
+.command-palette {
+  position: fixed;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 560px;
+  z-index: 101;
 }
 
 /* Scrollbar styling */

@@ -23,5 +23,20 @@ defmodule FitTrackerz.Health do
       define :update_food_log, action: :update
       define :destroy_food_log, action: :destroy
     end
+
+    resource FitTrackerz.Health.BodyMeasurement do
+      define :list_body_measurements, args: [:member_ids], action: :list_by_member
+      define :log_body_measurement, action: :create
+      define :update_body_measurement, action: :update
+      define :destroy_body_measurement, action: :destroy
+    end
+
+    resource FitTrackerz.Health.ProgressPhoto do
+      define :list_progress_photos, args: [:member_ids], action: :list_by_member
+      define :list_shared_progress_photos, args: [:member_ids], action: :list_shared_with_trainer
+      define :create_progress_photo, action: :create
+      define :update_progress_photo, action: :update
+      define :destroy_progress_photo, action: :destroy
+    end
   end
 end

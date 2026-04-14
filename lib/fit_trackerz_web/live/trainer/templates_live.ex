@@ -289,324 +289,258 @@ defmodule FitTrackerzWeb.Trainer.TemplatesLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
-      <div class="space-y-8">
-        <%!-- Page Header --%>
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div class="flex items-center gap-3">
-            <Layouts.back_button />
-            <div>
-              <h1 class="text-2xl sm:text-3xl font-black tracking-tight">Templates</h1>
-              <p class="text-base-content/50 mt-1">Reusable workout and diet plan templates.</p>
-            </div>
-          </div>
-        </div>
+      <.page_header title="Templates" subtitle="Reusable workout and diet plan templates." back_path="/trainer" />
 
-        <%= if @no_gym do %>
-          <div class="card bg-base-200/50 border border-base-300/50" id="no-gym-notice">
-            <div class="card-body p-8 items-center text-center">
-              <div class="w-16 h-16 rounded-full bg-warning/10 flex items-center justify-center mb-4">
-                <.icon name="hero-exclamation-triangle-solid" class="size-8 text-warning" />
-              </div>
-              <h2 class="text-lg font-bold">No Gym Association</h2>
-              <p class="text-base-content/50 mt-2 max-w-md">
-                You haven't been added to any gym yet. Ask a gym operator to invite you.
-              </p>
-            </div>
-          </div>
-        <% else %>
-          <%!-- Workout Templates Section --%>
-          <div class="space-y-4">
-            <div class="flex items-center justify-between">
-              <h2 class="text-xl font-bold flex items-center gap-2">
-                <.icon name="hero-fire-solid" class="size-5 text-accent" /> Workout Templates
-              </h2>
-              <button
-                class="btn btn-primary btn-sm gap-2 font-semibold"
-                phx-click="toggle_workout_form"
-                id="toggle-workout-template-btn"
-              >
-                <.icon name="hero-plus-mini" class="size-4" /> New Template
-              </button>
-            </div>
+      <%= if @no_gym do %>
+        <.empty_state
+          icon="hero-exclamation-triangle"
+          title="No Gym Association"
+          subtitle="You haven't been added to any gym yet. Ask a gym operator to invite you."
+        />
+      <% else %>
+        <.tab_group active="workouts" on_tab_change="change_tab">
+          <:tab id="workouts" label="Workout Templates" icon="hero-fire-solid">
+            <%!-- Workout Templates --%>
+            <.section title="Workout Templates">
+              <:actions>
+                <.button variant="primary" size="sm" icon="hero-plus" phx-click="toggle_workout_form" id="toggle-workout-template-btn">
+                  New Template
+                </.button>
+              </:actions>
 
-            <%!-- Workout Template Form --%>
-            <%= if @show_workout_form do %>
-              <div
-                class="card bg-base-200/50 border border-base-300/50"
-                id="workout-template-form-card"
-              >
-                <div class="card-body p-5">
-                  <.form
-                    for={@workout_form}
-                    id="workout-template-form"
-                    phx-change="validate_workout_template"
-                    phx-submit="save_workout_template"
-                    class="space-y-4"
-                  >
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <.input
-                        field={@workout_form[:name]}
-                        label="Template Name"
-                        placeholder="e.g., Push Pull Legs"
-                        required
-                      />
-                      <div>
-                        <label class="label">
-                          <span class="label-text font-medium">Difficulty Level</span>
-                        </label>
-                        <select
-                          name="workout_template[difficulty_level]"
-                          class="select select-bordered w-full"
-                          id="workout-template-difficulty-select"
-                        >
-                          <option value="">Select level...</option>
-                          <option value="beginner">Beginner</option>
-                          <option value="intermediate">Intermediate</option>
-                          <option value="advanced">Advanced</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label class="label"><span class="label-text font-medium">Gym</span></label>
-                        <select
-                          name="workout_template[gym_id]"
-                          class="select select-bordered w-full"
-                          id="workout-template-gym-select"
+              <%!-- Workout Template Form --%>
+              <%= if @show_workout_form do %>
+                <div class="mb-6">
+                  <.card title="New Workout Template">
+                    <.form
+                      for={@workout_form}
+                      id="workout-template-form"
+                      phx-change="validate_workout_template"
+                      phx-submit="save_workout_template"
+                      class="space-y-4"
+                    >
+                      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <.input
+                          field={@workout_form[:name]}
+                          label="Template Name"
+                          placeholder="e.g., Push Pull Legs"
                           required
-                        >
-                          <option value="">Select a gym...</option>
-                          <option :for={gym <- @gyms} value={gym.id}>
-                            {gym.name}
-                          </option>
-                        </select>
-                      </div>
-                    </div>
-                    <div class="flex justify-end gap-2 pt-2">
-                      <button
-                        type="button"
-                        class="btn btn-ghost btn-sm"
-                        phx-click="toggle_workout_form"
-                        id="cancel-workout-template-btn"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        class="btn btn-primary btn-sm gap-2"
-                        id="submit-workout-template-btn"
-                      >
-                        <.icon name="hero-check-mini" class="size-4" /> Create Template
-                      </button>
-                    </div>
-                  </.form>
-                </div>
-              </div>
-            <% end %>
-
-            <%!-- Workout Templates List --%>
-            <%= if @workout_templates == [] do %>
-              <div class="card bg-base-200/50 border border-base-300/50" id="workout-templates-empty">
-                <div class="card-body p-6 items-center text-center">
-                  <div class="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mb-3">
-                    <.icon name="hero-fire-solid" class="size-6 text-accent" />
-                  </div>
-                  <p class="text-base-content/50 text-sm">
-                    No workout templates yet. Create one to reuse across clients.
-                  </p>
-                </div>
-              </div>
-            <% else %>
-              <div
-                class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
-                id="workout-templates-grid"
-              >
-                <div
-                  :for={template <- @workout_templates}
-                  class="card bg-base-200/50 border border-base-300/50"
-                  id={"workout-template-#{template.id}"}
-                >
-                  <div class="card-body p-5">
-                    <div class="flex items-start justify-between">
-                      <h3 class="font-bold text-md">{template.name}</h3>
-                      <button
-                        class="btn btn-ghost btn-xs text-error"
-                        phx-click="delete_workout_template"
-                        phx-value-id={template.id}
-                        data-confirm="Are you sure you want to delete this template?"
-                        id={"delete-workout-template-#{template.id}"}
-                      >
-                        <.icon name="hero-trash-mini" class="size-4" />
-                      </button>
-                    </div>
-                    <div class="space-y-2 mt-2">
-                      <div class="flex items-center gap-2 text-sm text-base-content/60">
-                        <.icon name="hero-list-bullet-mini" class="size-4" />
-                        <span>{length(template.exercises || [])} exercise(s)</span>
-                      </div>
-                      <%= if template.difficulty_level do %>
-                        <div class="mt-2">
-                          <span class={"badge badge-sm #{difficulty_badge_class(template.difficulty_level)}"}>
-                            {format_difficulty(template.difficulty_level)}
-                          </span>
+                        />
+                        <div>
+                          <label class="label">
+                            <span class="label-text font-medium">Difficulty Level</span>
+                          </label>
+                          <select
+                            name="workout_template[difficulty_level]"
+                            class="select select-bordered w-full"
+                            id="workout-template-difficulty-select"
+                          >
+                            <option value="">Select level...</option>
+                            <option value="beginner">Beginner</option>
+                            <option value="intermediate">Intermediate</option>
+                            <option value="advanced">Advanced</option>
+                          </select>
                         </div>
-                      <% end %>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            <% end %>
-          </div>
-
-          <div class="divider"></div>
-
-          <%!-- Diet Templates Section --%>
-          <div class="space-y-4">
-            <div class="flex items-center justify-between">
-              <h2 class="text-xl font-bold flex items-center gap-2">
-                <.icon name="hero-heart-solid" class="size-5 text-success" /> Diet Templates
-              </h2>
-              <button
-                class="btn btn-success btn-sm gap-2 font-semibold"
-                phx-click="toggle_diet_form"
-                id="toggle-diet-template-btn"
-              >
-                <.icon name="hero-plus-mini" class="size-4" /> New Template
-              </button>
-            </div>
-
-            <%!-- Diet Template Form --%>
-            <%= if @show_diet_form do %>
-              <div class="card bg-base-200/50 border border-base-300/50" id="diet-template-form-card">
-                <div class="card-body p-5">
-                  <.form
-                    for={@diet_form}
-                    id="diet-template-form"
-                    phx-change="validate_diet_template"
-                    phx-submit="save_diet_template"
-                    class="space-y-4"
-                  >
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                      <.input
-                        field={@diet_form[:name]}
-                        label="Template Name"
-                        placeholder="e.g., Keto Starter"
-                        required
-                      />
-                      <.input
-                        field={@diet_form[:calorie_target]}
-                        label="Calorie Target"
-                        type="number"
-                        placeholder="2000"
-                      />
-                      <div>
-                        <label class="label">
-                          <span class="label-text font-medium">Dietary Type</span>
-                        </label>
-                        <select
-                          name="diet_template[dietary_type]"
-                          class="select select-bordered w-full"
-                          id="diet-template-type-select"
-                        >
-                          <option value="">Select type...</option>
-                          <option value="vegetarian">Vegetarian</option>
-                          <option value="non_vegetarian">Non-Vegetarian</option>
-                          <option value="vegan">Vegan</option>
-                          <option value="eggetarian">Eggetarian</option>
-                        </select>
+                        <div>
+                          <label class="label"><span class="label-text font-medium">Gym</span></label>
+                          <select
+                            name="workout_template[gym_id]"
+                            class="select select-bordered w-full"
+                            id="workout-template-gym-select"
+                            required
+                          >
+                            <option value="">Select a gym...</option>
+                            <option :for={gym <- @gyms} value={gym.id}>
+                              {gym.name}
+                            </option>
+                          </select>
+                        </div>
                       </div>
-                      <div>
-                        <label class="label"><span class="label-text font-medium">Gym</span></label>
-                        <select
-                          name="diet_template[gym_id]"
-                          class="select select-bordered w-full"
-                          id="diet-template-gym-select"
+                      <div class="flex justify-end gap-2 pt-2">
+                        <.button type="button" variant="ghost" size="sm" phx-click="toggle_workout_form" id="cancel-workout-template-btn">
+                          Cancel
+                        </.button>
+                        <.button type="submit" variant="primary" size="sm" icon="hero-check" id="submit-workout-template-btn">
+                          Create Template
+                        </.button>
+                      </div>
+                    </.form>
+                  </.card>
+                </div>
+              <% end %>
+
+              <%= if @workout_templates == [] do %>
+                <.empty_state
+                  icon="hero-fire"
+                  title="No workout templates yet"
+                  subtitle="Create one to reuse across clients."
+                >
+                  <:action>
+                    <.button variant="primary" size="sm" icon="hero-plus" phx-click="toggle_workout_form">
+                      Create Template
+                    </.button>
+                  </:action>
+                </.empty_state>
+              <% else %>
+                <.data_table id="workout-templates-table" rows={@workout_templates} row_id={fn t -> "wt-#{t.id}" end}>
+                  <:col :let={template} label="Name">
+                    <span class="font-bold">{template.name}</span>
+                  </:col>
+                  <:col :let={template} label="Exercises">
+                    <.badge variant="neutral">{length(template.exercises || [])} exercise(s)</.badge>
+                  </:col>
+                  <:col :let={template} label="Difficulty">
+                    <%= if template.difficulty_level do %>
+                      <span class={"badge badge-sm #{difficulty_badge_class(template.difficulty_level)}"}>
+                        {format_difficulty(template.difficulty_level)}
+                      </span>
+                    <% else %>
+                      <span class="text-base-content/40">--</span>
+                    <% end %>
+                  </:col>
+                  <:actions :let={template}>
+                    <.button
+                      variant="danger"
+                      size="sm"
+                      icon="hero-trash"
+                      phx-click="delete_workout_template"
+                      phx-value-id={template.id}
+                      data-confirm="Are you sure you want to delete this template?"
+                      id={"delete-workout-template-#{template.id}"}
+                    >
+                      <span class="sr-only">Delete</span>
+                    </.button>
+                  </:actions>
+                </.data_table>
+              <% end %>
+            </.section>
+          </:tab>
+
+          <:tab id="diets" label="Diet Templates" icon="hero-heart-solid">
+            <%!-- Diet Templates --%>
+            <.section title="Diet Templates">
+              <:actions>
+                <.button variant="primary" size="sm" icon="hero-plus" phx-click="toggle_diet_form" id="toggle-diet-template-btn">
+                  New Template
+                </.button>
+              </:actions>
+
+              <%!-- Diet Template Form --%>
+              <%= if @show_diet_form do %>
+                <div class="mb-6">
+                  <.card title="New Diet Template">
+                    <.form
+                      for={@diet_form}
+                      id="diet-template-form"
+                      phx-change="validate_diet_template"
+                      phx-submit="save_diet_template"
+                      class="space-y-4"
+                    >
+                      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <.input
+                          field={@diet_form[:name]}
+                          label="Template Name"
+                          placeholder="e.g., Keto Starter"
                           required
-                        >
-                          <option value="">Select a gym...</option>
-                          <option :for={gym <- @gyms} value={gym.id}>
-                            {gym.name}
-                          </option>
-                        </select>
+                        />
+                        <.input
+                          field={@diet_form[:calorie_target]}
+                          label="Calorie Target"
+                          type="number"
+                          placeholder="2000"
+                        />
+                        <div>
+                          <label class="label">
+                            <span class="label-text font-medium">Dietary Type</span>
+                          </label>
+                          <select
+                            name="diet_template[dietary_type]"
+                            class="select select-bordered w-full"
+                            id="diet-template-type-select"
+                          >
+                            <option value="">Select type...</option>
+                            <option value="vegetarian">Vegetarian</option>
+                            <option value="non_vegetarian">Non-Vegetarian</option>
+                            <option value="vegan">Vegan</option>
+                            <option value="eggetarian">Eggetarian</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label class="label"><span class="label-text font-medium">Gym</span></label>
+                          <select
+                            name="diet_template[gym_id]"
+                            class="select select-bordered w-full"
+                            id="diet-template-gym-select"
+                            required
+                          >
+                            <option value="">Select a gym...</option>
+                            <option :for={gym <- @gyms} value={gym.id}>
+                              {gym.name}
+                            </option>
+                          </select>
+                        </div>
                       </div>
-                    </div>
-                    <div class="flex justify-end gap-2 pt-2">
-                      <button
-                        type="button"
-                        class="btn btn-ghost btn-sm"
-                        phx-click="toggle_diet_form"
-                        id="cancel-diet-template-btn"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        class="btn btn-primary btn-sm gap-2"
-                        id="submit-diet-template-btn"
-                      >
-                        <.icon name="hero-check-mini" class="size-4" /> Create Template
-                      </button>
-                    </div>
-                  </.form>
+                      <div class="flex justify-end gap-2 pt-2">
+                        <.button type="button" variant="ghost" size="sm" phx-click="toggle_diet_form" id="cancel-diet-template-btn">
+                          Cancel
+                        </.button>
+                        <.button type="submit" variant="primary" size="sm" icon="hero-check" id="submit-diet-template-btn">
+                          Create Template
+                        </.button>
+                      </div>
+                    </.form>
+                  </.card>
                 </div>
-              </div>
-            <% end %>
+              <% end %>
 
-            <%!-- Diet Templates List --%>
-            <%= if @diet_templates == [] do %>
-              <div class="card bg-base-200/50 border border-base-300/50" id="diet-templates-empty">
-                <div class="card-body p-6 items-center text-center">
-                  <div class="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center mb-3">
-                    <.icon name="hero-heart-solid" class="size-6 text-success" />
-                  </div>
-                  <p class="text-base-content/50 text-sm">
-                    No diet templates yet. Create one to reuse across clients.
-                  </p>
-                </div>
-              </div>
-            <% else %>
-              <div
-                class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
-                id="diet-templates-grid"
-              >
-                <div
-                  :for={template <- @diet_templates}
-                  class="card bg-base-200/50 border border-base-300/50"
-                  id={"diet-template-#{template.id}"}
+              <%= if @diet_templates == [] do %>
+                <.empty_state
+                  icon="hero-heart"
+                  title="No diet templates yet"
+                  subtitle="Create one to reuse across clients."
                 >
-                  <div class="card-body p-5">
-                    <div class="flex items-start justify-between">
-                      <h3 class="font-bold text-md">{template.name}</h3>
-                      <button
-                        class="btn btn-ghost btn-xs text-error"
-                        phx-click="delete_diet_template"
-                        phx-value-id={template.id}
-                        data-confirm="Are you sure you want to delete this template?"
-                        id={"delete-diet-template-#{template.id}"}
-                      >
-                        <.icon name="hero-trash-mini" class="size-4" />
-                      </button>
-                    </div>
-                    <div class="space-y-2 mt-2">
-                      <%= if template.calorie_target do %>
-                        <div class="flex items-center gap-2 text-sm text-base-content/60">
-                          <.icon name="hero-fire-mini" class="size-4" />
-                          <span>{template.calorie_target} kcal/day</span>
-                        </div>
-                      <% end %>
-                      <%= if template.dietary_type do %>
-                        <div class="mt-2">
-                          <span class={"badge badge-sm #{dietary_type_badge_class(template.dietary_type)}"}>
-                            {format_dietary_type(template.dietary_type)}
-                          </span>
-                        </div>
-                      <% end %>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            <% end %>
-          </div>
-        <% end %>
-      </div>
+                  <:action>
+                    <.button variant="primary" size="sm" icon="hero-plus" phx-click="toggle_diet_form">
+                      Create Template
+                    </.button>
+                  </:action>
+                </.empty_state>
+              <% else %>
+                <.data_table id="diet-templates-table" rows={@diet_templates} row_id={fn t -> "dt-#{t.id}" end}>
+                  <:col :let={template} label="Name">
+                    <span class="font-bold">{template.name}</span>
+                  </:col>
+                  <:col :let={template} label="Calories">
+                    {if template.calorie_target, do: "#{template.calorie_target} kcal/day", else: "--"}
+                  </:col>
+                  <:col :let={template} label="Type">
+                    <%= if template.dietary_type do %>
+                      <span class={"badge badge-sm #{dietary_type_badge_class(template.dietary_type)}"}>
+                        {format_dietary_type(template.dietary_type)}
+                      </span>
+                    <% else %>
+                      <span class="text-base-content/40">--</span>
+                    <% end %>
+                  </:col>
+                  <:actions :let={template}>
+                    <.button
+                      variant="danger"
+                      size="sm"
+                      icon="hero-trash"
+                      phx-click="delete_diet_template"
+                      phx-value-id={template.id}
+                      data-confirm="Are you sure you want to delete this template?"
+                      id={"delete-diet-template-#{template.id}"}
+                    >
+                      <span class="sr-only">Delete</span>
+                    </.button>
+                  </:actions>
+                </.data_table>
+              <% end %>
+            </.section>
+          </:tab>
+        </.tab_group>
+      <% end %>
     </Layouts.app>
     """
   end

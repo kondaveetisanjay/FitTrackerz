@@ -12,10 +12,11 @@ defmodule FitTrackerzWeb.Member.ProgressLive do
 
     case memberships do
       [] ->
-        {:ok, assign(socket, page_title: "My Progress", no_gym: true)}
+        {:ok, assign(socket, page_title: "My Progress", no_gym: true, streaks: [], milestones: [], photo_count: 0)}
 
       memberships ->
         member_ids = Enum.map(memberships, & &1.id)
+        membership = List.first(memberships)
         today = Date.utc_today()
         thirty_days_ago = Date.add(today, -30)
 
@@ -70,6 +71,24 @@ defmodule FitTrackerzWeb.Member.ProgressLive do
         weight_chart = weight_chart_config(chart_metrics)
         calorie_chart = calorie_chart_config(daily_calories, week_start, today, calorie_target)
 
+        streaks =
+          case FitTrackerz.Gamification.list_streaks_by_member(membership.id, actor: actor) do
+            {:ok, s} -> s
+            _ -> []
+          end
+
+        milestones =
+          case FitTrackerz.Gamification.list_milestones_by_member(membership.id, actor: actor) do
+            {:ok, m} -> m
+            _ -> []
+          end
+
+        photo_count =
+          case FitTrackerz.Health.list_progress_photos(member_ids, actor: actor) do
+            {:ok, photos} -> length(photos)
+            _ -> 0
+          end
+
         {:ok,
          assign(socket,
            page_title: "My Progress",
@@ -82,7 +101,10 @@ defmodule FitTrackerzWeb.Member.ProgressLive do
            weight_chart: Jason.encode!(weight_chart),
            calorie_chart: Jason.encode!(calorie_chart),
            prs: Enum.take(prs, 6),
-           has_metrics: chart_metrics != []
+           has_metrics: chart_metrics != [],
+           streaks: streaks,
+           milestones: milestones,
+           photo_count: photo_count
          )}
     end
   end
@@ -207,119 +229,126 @@ defmodule FitTrackerzWeb.Member.ProgressLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
-      <div class="space-y-8">
-        <div class="flex items-center gap-3">
-          <Layouts.back_button />
-          <div>
-            <h1 class="text-2xl sm:text-3xl font-brand">My Progress</h1>
-            <p class="text-base-content/50 mt-1">Track your fitness journey over time.</p>
-          </div>
-        </div>
+      <.page_header title="My Progress" subtitle="Track your fitness journey over time." back_path="/member" />
 
-        <%= if @no_gym do %>
-          <div class="card bg-base-200/50 border border-base-300/50" id="no-gym-card">
-            <div class="card-body items-center text-center p-8">
-              <.icon name="hero-building-office-2" class="size-8 text-warning" />
-              <h2 class="text-lg font-bold mt-4">No Gym Membership</h2>
-            </div>
-          </div>
-        <% else %>
+      <%= if @no_gym do %>
+        <.empty_state
+          icon="hero-building-office-2"
+          title="No Gym Membership"
+          subtitle="You need a gym membership to view your progress."
+        />
+      <% else %>
+        <div class="space-y-8">
           <%!-- Stat Cards --%>
-          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="card bg-base-200/50 border border-base-300/50" id="stat-weight">
-              <div class="card-body p-4">
-                <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">Weight Change</p>
-                <p class="text-2xl font-black mt-1">
-                  <%= if @weight_change do %>
-                    <span class={if @weight_change < 0, do: "text-success", else: "text-warning"}>
-                      {if @weight_change < 0, do: "", else: "+"}{@weight_change} kg
-                    </span>
-                  <% else %>
-                    <span class="text-base-content/30">--</span>
-                  <% end %>
-                </p>
-                <p class="text-xs text-base-content/40 mt-1">Last 30 days</p>
-              </div>
-            </div>
-            <div class="card bg-base-200/50 border border-base-300/50" id="stat-bmi">
-              <div class="card-body p-4">
-                <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">Current BMI</p>
-                <p class="text-2xl font-black text-info mt-1">{format_bmi(@latest_bmi)}</p>
-                <p class="text-xs text-base-content/40 mt-1">{bmi_category(@latest_bmi)}</p>
-              </div>
-            </div>
-            <div class="card bg-base-200/50 border border-base-300/50" id="stat-streak">
-              <div class="card-body p-4">
-                <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">Workout Streak</p>
-                <p class="text-2xl font-black text-accent mt-1">{@current_streak} days</p>
-                <p class="text-xs text-base-content/40 mt-1">Current streak</p>
-              </div>
-            </div>
-            <div class="card bg-base-200/50 border border-base-300/50" id="stat-calories">
-              <div class="card-body p-4">
-                <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">Avg Calories</p>
-                <p class="text-2xl font-black text-warning mt-1">{@avg_calories}</p>
-                <p class="text-xs text-base-content/40 mt-1">
-                  <%= if @calorie_target do %>
-                    / {@calorie_target} target
-                  <% else %>
-                    no target set
-                  <% end %>
-                </p>
-              </div>
-            </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+            <.stat_card
+              label="Weight Change (30d)"
+              value={if @weight_change, do: "#{if @weight_change < 0, do: "", else: "+"}#{@weight_change} kg", else: "--"}
+              icon="hero-scale"
+              color={if @weight_change && @weight_change < 0, do: "success", else: "warning"}
+            />
+            <.stat_card
+              label="Workout Streak"
+              value={"#{@current_streak} days"}
+              icon="hero-fire"
+              color="accent"
+            />
+            <.stat_card
+              label="Avg Daily Calories"
+              value={@avg_calories}
+              icon="hero-heart"
+              color="warning"
+              change={if @calorie_target, do: "/ #{@calorie_target} target", else: nil}
+            />
           </div>
+
+          <%!-- BMI Card --%>
+          <.card title="Current BMI">
+            <div class="flex items-center gap-4">
+              <span class="text-3xl font-black text-info">{format_bmi(@latest_bmi)}</span>
+              <.badge variant="info" size="sm">{bmi_category(@latest_bmi)}</.badge>
+            </div>
+          </.card>
 
           <%!-- Charts --%>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="card bg-base-200/50 border border-base-300/50" id="weight-chart-card">
-              <div class="card-body p-5">
-                <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                  <.icon name="hero-chart-bar-solid" class="size-5 text-success" /> Weight Trend
-                </h2>
-                <%= if @has_metrics do %>
-                  <div id="weight-chart" phx-hook="ChartHook" data-chart={@weight_chart} phx-update="ignore" style="height: 250px;">
-                    <canvas></canvas>
-                  </div>
-                <% else %>
-                  <div class="flex items-center justify-center h-[250px]">
-                    <p class="text-sm text-base-content/40">No health data yet. Start logging at /member/health</p>
-                  </div>
-                <% end %>
-              </div>
-            </div>
-            <div class="card bg-base-200/50 border border-base-300/50" id="calorie-chart-card">
-              <div class="card-body p-5">
-                <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                  <.icon name="hero-fire-solid" class="size-5 text-warning" /> This Week's Calories
-                </h2>
-                <div id="calorie-chart" phx-hook="ChartHook" data-chart={@calorie_chart} phx-update="ignore" style="height: 250px;">
+            <.card title="Weight Trend" id="weight-chart-card">
+              <%= if @has_metrics do %>
+                <div id="weight-chart" phx-hook="ChartHook" data-chart={@weight_chart} phx-update="ignore" style="height: 250px;">
                   <canvas></canvas>
                 </div>
+              <% else %>
+                <.empty_state
+                  icon="hero-chart-bar"
+                  title="No Data Yet"
+                  subtitle="Start logging at /member/health to see your weight trend."
+                />
+              <% end %>
+            </.card>
+
+            <.card title="This Week's Calories" id="calorie-chart-card">
+              <div id="calorie-chart" phx-hook="ChartHook" data-chart={@calorie_chart} phx-update="ignore" style="height: 250px;">
+                <canvas></canvas>
               </div>
-            </div>
+            </.card>
           </div>
 
           <%!-- Recent PRs --%>
           <%= if @prs != [] do %>
-            <div class="card bg-base-200/50 border border-base-300/50" id="prs-card">
-              <div class="card-body p-5">
-                <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                  <span class="text-xl">&#127942;</span> Personal Records
-                </h2>
-                <div class="flex flex-wrap gap-3">
-                  <%= for pr <- @prs do %>
-                    <div class="px-4 py-2 rounded-lg bg-warning/10 border border-warning/20">
-                      <span class="font-bold text-sm">{pr.name}</span>
-                      <span class="text-sm text-warning ml-2">{pr.weight} kg</span>
-                    </div>
-                  <% end %>
+            <.card title="Personal Records" id="prs-card">
+              <div class="flex flex-wrap gap-3">
+                <%= for pr <- @prs do %>
+                  <div class="px-4 py-3 rounded-xl bg-warning/10 border border-warning/20">
+                    <span class="font-bold text-sm">{pr.name}</span>
+                    <span class="text-sm text-warning ml-2">{pr.weight} kg</span>
+                  </div>
+                <% end %>
+              </div>
+            </.card>
+          <% end %>
+
+          <%!-- Streaks Summary --%>
+          <.card title="Streaks" id="streaks-card">
+            <div class="grid grid-cols-2 gap-4">
+              <%= for streak <- @streaks do %>
+                <div class="text-center p-4 bg-base-200/50 rounded-xl">
+                  <p class="text-3xl font-bold">{streak.current_streak}</p>
+                  <p class="text-sm text-base-content/50">{streak.streak_type |> to_string() |> String.capitalize()} streak</p>
+                  <p class="text-xs text-base-content/30 mt-1">Best: {streak.longest_streak} days</p>
+                </div>
+              <% end %>
+            </div>
+            <%= if @milestones != [] do %>
+              <div class="flex flex-wrap gap-2 mt-4">
+                <%= for m <- @milestones do %>
+                  <.badge variant="warning" size="sm">
+                    <.icon name="hero-star-solid" class="size-3 mr-1" />
+                    {m.milestone_days}-day {m.streak_type}
+                  </.badge>
+                <% end %>
+              </div>
+            <% end %>
+          </.card>
+
+          <%!-- Progress Photos Link --%>
+          <.card id="photos-link-card">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="size-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <.icon name="hero-camera" class="size-6 text-primary" />
+                </div>
+                <div>
+                  <p class="font-semibold">Progress Photos</p>
+                  <p class="text-sm text-base-content/50">{@photo_count} photos</p>
                 </div>
               </div>
+              <.button variant="ghost" size="sm" icon="hero-arrow-right" navigate="/member/photos">
+                View
+              </.button>
             </div>
-          <% end %>
-        <% end %>
-      </div>
+          </.card>
+        </div>
+      <% end %>
     </Layouts.app>
     """
   end

@@ -481,21 +481,12 @@ defmodule FitTrackerzWeb.Admin.DashboardsLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
-      <div class="space-y-6">
-        <%!-- Header --%>
-        <div>
-          <div class="flex items-center gap-3 mb-1">
-            <.link navigate="/admin" class="btn btn-ghost btn-sm btn-circle">
-              <.icon name="hero-arrow-left-mini" class="size-4" />
-            </.link>
-            <h1 class="text-2xl sm:text-3xl font-brand">Platform Dashboards</h1>
-          </div>
-          <p class="text-base-content/50 ml-12">Platform-wide performance metrics</p>
-        </div>
+      <.page_header title="Platform Dashboards" subtitle="Platform-wide performance metrics" back_path="/admin/dashboard" />
 
-        <%!-- Date Range Card --%>
-        <div class="card bg-base-200/50 border border-base-300/50">
-          <div class="card-body p-4">
+      <%!-- Date Range Controls --%>
+      <.section>
+        <.card padded={false}>
+          <div class="p-4">
             <div class="flex flex-wrap items-center gap-3">
               <div class="flex gap-1">
                 <%= for preset <- ["7d", "30d", "90d", "year"] do %>
@@ -526,58 +517,23 @@ defmodule FitTrackerzWeb.Admin.DashboardsLive do
                   value={@custom_end}
                   class="input input-sm input-bordered w-36"
                 />
-                <button type="submit" class="btn btn-sm btn-primary">
-                  Apply
-                </button>
+                <.button type="submit" variant="primary" size="sm">Apply</.button>
               </form>
             </div>
           </div>
-        </div>
+        </.card>
+      </.section>
 
-        <%!-- Summary Cards --%>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <%!-- Total Gyms --%>
-          <div class="card bg-base-200/50 border border-base-300/50">
-            <div class="card-body p-4">
-              <p class="text-sm text-base-content/40">Total Gyms</p>
-              <span class="text-3xl font-bold">{@total_gyms}</span>
-              <p class="text-xs text-base-content/60">
-                {Map.get(@gyms_by_status, "verified", 0)} verified,
-                {Map.get(@gyms_by_status, "pending_verification", 0)} pending,
-                {Map.get(@gyms_by_status, "suspended", 0)} suspended
-              </p>
-            </div>
-          </div>
+      <%!-- Summary Stat Cards --%>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+        <.stat_card label="Total Gyms" value={@total_gyms} icon="hero-building-office-2-solid" color="primary" />
+        <.stat_card label="Total Members" value={@total_members} icon="hero-user-group-solid" color="secondary" />
+        <.stat_card label="Total Trainers" value={@total_trainers} icon="hero-academic-cap-solid" color="accent" />
+        <.stat_card label={"Revenue (\u20B9)"} value={format_currency(@revenue_total)} icon="hero-currency-rupee-solid" color="success" />
+      </div>
 
-          <%!-- Total Members --%>
-          <div class="card bg-base-200/50 border border-base-300/50">
-            <div class="card-body p-4">
-              <p class="text-sm text-base-content/40">Total Members</p>
-              <span class="text-3xl font-bold">{@total_members}</span>
-              <p class="text-xs text-base-content/60">across all gyms</p>
-            </div>
-          </div>
-
-          <%!-- Total Trainers --%>
-          <div class="card bg-base-200/50 border border-base-300/50">
-            <div class="card-body p-4">
-              <p class="text-sm text-base-content/40">Total Trainers</p>
-              <span class="text-3xl font-bold">{@total_trainers}</span>
-              <p class="text-xs text-base-content/60">active trainers</p>
-            </div>
-          </div>
-
-          <%!-- Platform Revenue --%>
-          <div class="card bg-base-200/50 border border-base-300/50">
-            <div class="card-body p-4">
-              <p class="text-sm text-base-content/40">Platform Revenue</p>
-              <span class="text-3xl font-bold">&#8377;{format_currency(@revenue_total)}</span>
-              <p class="text-xs text-base-content/60">in selected period</p>
-            </div>
-          </div>
-        </div>
-
-        <%!-- Charts Grid --%>
+      <%!-- Charts Grid --%>
+      <.section title="Analytics">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <.chart_card id="gym-registrations-chart" title="Gym Registrations" chart_data={@gym_registrations_chart}
             viz_options={["line", "bar", "table"]} current_viz={@viz_types["gym-registrations-chart"]} />
@@ -592,7 +548,7 @@ defmodule FitTrackerzWeb.Admin.DashboardsLive do
           <.chart_card id="top-gyms-chart" title="Top Gyms by Members" chart_data={@top_gyms_chart}
             viz_options={["bar", "doughnut", "table"]} current_viz={@viz_types["top-gyms-chart"]} />
         </div>
-      </div>
+      </.section>
     </Layouts.app>
     """
   end

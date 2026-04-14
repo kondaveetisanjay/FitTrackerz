@@ -1,12 +1,6 @@
 defmodule FitTrackerzWeb.Admin.GymsLive do
   use FitTrackerzWeb, :live_view
 
-  @status_badge_classes %{
-    pending_verification: "badge-warning",
-    verified: "badge-success",
-    suspended: "badge-error"
-  }
-
   @impl true
   def mount(_params, _session, socket) do
     actor = socket.assigns.current_user
@@ -57,6 +51,24 @@ defmodule FitTrackerzWeb.Admin.GymsLive do
   end
 
   @impl true
+  def handle_event("toggle_tier", %{"id" => gym_id}, socket) do
+    actor = socket.assigns.current_user
+
+    case FitTrackerz.Gym.get_gym(gym_id, actor: actor) do
+      {:ok, gym} ->
+        new_tier = if gym.tier == :free, do: :premium, else: :free
+
+        case Ash.update(gym, %{tier: new_tier}, action: :upgrade_tier, authorize?: false) do
+          {:ok, _} -> {:noreply, reload_gyms(socket)}
+          {:error, _} -> {:noreply, put_flash(socket, :error, "Failed to update tier.")}
+        end
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Gym not found.")}
+    end
+  end
+
+  @impl true
   def handle_event("toggle_promoted", %{"id" => gym_id}, socket) do
     actor = socket.assigns.current_user
 
@@ -84,10 +96,6 @@ defmodule FitTrackerzWeb.Admin.GymsLive do
     assign(socket, gyms: gyms)
   end
 
-  defp status_badge_class(status) do
-    Map.get(@status_badge_classes, status, "badge-ghost")
-  end
-
   defp format_status(status) do
     status
     |> Atom.to_string()
@@ -102,157 +110,150 @@ defmodule FitTrackerzWeb.Admin.GymsLive do
   defp count_loaded(assoc) when is_list(assoc), do: length(assoc)
   defp count_loaded(_), do: 0
 
+  defp status_badge_variant(:verified), do: "success"
+  defp status_badge_variant(:pending_verification), do: "warning"
+  defp status_badge_variant(:suspended), do: "error"
+  defp status_badge_variant(_), do: "neutral"
+
   @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
-      <div class="space-y-8">
-        <%!-- Page Header --%>
-        <div class="flex items-center justify-between" id="gyms-header">
-          <div class="flex items-center gap-3">
-            <Layouts.back_button />
-            <div>
-              <h1 class="text-2xl sm:text-3xl font-brand">Gyms</h1>
-              <p class="text-base-content/50 mt-1">
-                {length(@gyms)} total gyms on the platform
-              </p>
-            </div>
-          </div>
-          <div class="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center">
-            <.icon name="hero-building-office-2-solid" class="size-6 text-secondary" />
-          </div>
-        </div>
+      <.page_header title="Gyms" subtitle={"#{length(@gyms)} total gyms on the platform"} back_path="/admin/dashboard" />
 
-        <%!-- Gyms Grid --%>
-        <%= if Enum.empty?(@gyms) do %>
-          <div class="card bg-base-200/50 border border-base-300/50" id="gyms-empty-state">
-            <div class="card-body flex flex-col items-center justify-center py-16 px-4">
-              <div class="w-16 h-16 rounded-2xl bg-base-300/50 flex items-center justify-center mb-4">
-                <.icon name="hero-building-office-2" class="size-8 text-base-content/30" />
+      <%= if Enum.empty?(@gyms) do %>
+        <.card>
+          <.empty_state
+            icon="hero-building-office-2"
+            title="No gyms found"
+            subtitle="Gyms will appear here once operators create them."
+          />
+        </.card>
+      <% else %>
+        <.card padded={false}>
+          <.data_table id="gyms-table" rows={@gyms} row_id={fn gym -> "gym-row-#{gym.id}" end}>
+            <:col :let={gym} label="Gym">
+              <div class="min-w-0">
+                <p class="font-semibold truncate" id={"gym-name-#{gym.id}"}>{gym.name}</p>
+                <p class="text-xs text-base-content/40 font-mono" id={"gym-slug-#{gym.id}"}>{gym.slug}</p>
               </div>
-              <p class="text-lg font-semibold text-base-content/50">No gyms found</p>
-              <p class="text-sm text-base-content/30 mt-1">
-                Gyms will appear here once operators create them.
-              </p>
-            </div>
-          </div>
-        <% else %>
-          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6" id="gyms-grid">
-            <div
-              :for={gym <- @gyms}
-              class="card bg-base-200/50 border border-base-300/50"
-              id={"gym-card-#{gym.id}"}
-            >
-              <div class="card-body p-5 space-y-4">
-                <%!-- Gym Name & Status --%>
-                <div class="flex items-start justify-between">
-                  <div class="min-w-0">
-                    <h2 class="text-lg font-bold truncate" id={"gym-name-#{gym.id}"}>{gym.name}</h2>
-                    <p class="text-xs text-base-content/40 font-mono mt-0.5" id={"gym-slug-#{gym.id}"}>
-                      {gym.slug}
-                    </p>
-                  </div>
-                  <span
-                    class={"badge badge-sm #{status_badge_class(gym.status)} shrink-0"}
-                    id={"gym-status-#{gym.id}"}
+            </:col>
+            <:col :let={gym} label="Owner">
+              <div class="flex items-center gap-2">
+                <.avatar name={owner_name(gym)} size="sm" />
+                <span class="text-sm" id={"gym-owner-#{gym.id}"}>{owner_name(gym)}</span>
+              </div>
+            </:col>
+            <:col :let={gym} label="Status">
+              <div class="flex items-center gap-2">
+                <.badge variant={status_badge_variant(gym.status)} size="sm">
+                  {format_status(gym.status)}
+                </.badge>
+                <.badge :if={gym.is_promoted} variant="warning" size="sm">
+                  <.icon name="hero-star-solid" class="size-3 mr-0.5" /> Promoted
+                </.badge>
+              </div>
+            </:col>
+            <:col :let={gym} label="Tier">
+              <.badge variant={if(gym.tier == :premium, do: "primary", else: "neutral")} size="sm">
+                {if gym.tier == :premium, do: "Premium", else: "Free"}
+              </.badge>
+            </:col>
+            <:col :let={gym} label="Locations">
+              <span class="font-semibold" id={"gym-location-#{gym.id}"}>{count_loaded(gym.branches)}</span>
+            </:col>
+            <:col :let={gym} label="Members">
+              <span class="font-semibold" id={"gym-members-#{gym.id}"}>{count_loaded(gym.gym_members)}</span>
+            </:col>
+            <:mobile_card :let={gym}>
+              <div>
+                <div class="flex items-center gap-2 mb-1">
+                  <p class="font-semibold">{gym.name}</p>
+                  <.badge variant={status_badge_variant(gym.status)} size="sm">{format_status(gym.status)}</.badge>
+                </div>
+                <p class="text-xs text-base-content/50">Owner: {owner_name(gym)}</p>
+                <div class="flex items-center gap-3 mt-1 text-xs text-base-content/60">
+                  <span>{count_loaded(gym.branches)} locations</span>
+                  <span>{count_loaded(gym.gym_members)} members</span>
+                  <.badge :if={gym.is_promoted} variant="warning" size="sm">Promoted</.badge>
+                  <.badge variant={if(gym.tier == :premium, do: "primary", else: "neutral")} size="sm">
+                    {if gym.tier == :premium, do: "Premium", else: "Free"}
+                  </.badge>
+                </div>
+              </div>
+            </:mobile_card>
+            <:actions :let={gym}>
+              <div class="flex items-center gap-1">
+                <%= if gym.status == :pending_verification do %>
+                  <.button
+                    variant="primary"
+                    size="sm"
+                    icon="hero-shield-check-mini"
+                    phx-click="verify_gym"
+                    phx-value-id={gym.id}
+                    id={"verify-gym-#{gym.id}"}
                   >
-                    {format_status(gym.status)}
-                  </span>
-                </div>
-
-                <%!-- Owner --%>
-                <div class="flex items-center gap-2">
-                  <div class="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <.icon name="hero-user-solid" class="size-3.5 text-primary" />
-                  </div>
-                  <div>
-                    <p class="text-xs text-base-content/40">Owner</p>
-                    <p class="text-sm font-semibold" id={"gym-owner-#{gym.id}"}>{owner_name(gym)}</p>
-                  </div>
-                </div>
-
-                <%!-- Stats Row --%>
-                <div class="grid grid-cols-2 gap-3">
-                  <div class="text-center p-2 rounded-lg bg-base-300/30" id={"gym-location-#{gym.id}"}>
-                    <p class="text-lg font-black">{count_loaded(gym.branches)}</p>
-                    <p class="text-xs text-base-content/40">Location</p>
-                  </div>
-                  <div class="text-center p-2 rounded-lg bg-base-300/30" id={"gym-members-#{gym.id}"}>
-                    <p class="text-lg font-black">{count_loaded(gym.gym_members)}</p>
-                    <p class="text-xs text-base-content/40">Members</p>
-                  </div>
-                </div>
-
-                <%!-- Promoted Badge --%>
-                <%= if gym.is_promoted do %>
-                  <div
-                    class="flex items-center gap-1.5 text-warning"
-                    id={"gym-promoted-badge-#{gym.id}"}
-                  >
-                    <.icon name="hero-star-solid" class="size-4" />
-                    <span class="text-xs font-semibold">Promoted</span>
-                  </div>
+                    Verify
+                  </.button>
                 <% end %>
 
-                <%!-- Actions --%>
-                <div class="flex flex-wrap gap-2 pt-2 border-t border-base-300/50">
-                  <%= if gym.status == :pending_verification do %>
-                    <button
-                      phx-click="verify_gym"
-                      phx-value-id={gym.id}
-                      class="btn btn-success btn-xs gap-1 font-medium"
-                      id={"verify-gym-#{gym.id}"}
-                    >
-                      <.icon name="hero-shield-check-mini" class="size-3" /> Verify
-                    </button>
-                  <% end %>
-
-                  <%= if gym.status != :suspended do %>
-                    <button
-                      phx-click="suspend_gym"
-                      phx-value-id={gym.id}
-                      class="btn btn-error btn-xs btn-ghost gap-1 font-medium"
-                      id={"suspend-gym-#{gym.id}"}
-                    >
-                      <.icon name="hero-no-symbol-mini" class="size-3" /> Suspend
-                    </button>
-                  <% end %>
-
-                  <%= if gym.status == :suspended do %>
-                    <button
-                      phx-click="verify_gym"
-                      phx-value-id={gym.id}
-                      class="btn btn-success btn-xs gap-1 font-medium"
-                      id={"unsuspend-gym-#{gym.id}"}
-                    >
-                      <.icon name="hero-arrow-path-mini" class="size-3" /> Reinstate
-                    </button>
-                  <% end %>
-
-                  <button
-                    phx-click="toggle_promoted"
+                <%= if gym.status != :suspended do %>
+                  <.button
+                    variant="danger"
+                    size="sm"
+                    icon="hero-no-symbol-mini"
+                    phx-click="suspend_gym"
                     phx-value-id={gym.id}
-                    class={[
-                      "btn btn-xs gap-1 font-medium",
-                      if(gym.is_promoted,
-                        do: "btn-ghost text-warning",
-                        else: "btn-ghost text-base-content/50"
-                      )
-                    ]}
-                    id={"toggle-promoted-#{gym.id}"}
+                    id={"suspend-gym-#{gym.id}"}
                   >
-                    <%= if gym.is_promoted do %>
-                      <.icon name="hero-star-solid" class="size-3" /> Unpromote
-                    <% else %>
-                      <.icon name="hero-star" class="size-3" /> Promote
-                    <% end %>
-                  </button>
-                </div>
+                    Suspend
+                  </.button>
+                <% end %>
+
+                <%= if gym.status == :suspended do %>
+                  <.button
+                    variant="primary"
+                    size="sm"
+                    icon="hero-arrow-path-mini"
+                    phx-click="verify_gym"
+                    phx-value-id={gym.id}
+                    id={"unsuspend-gym-#{gym.id}"}
+                  >
+                    Reinstate
+                  </.button>
+                <% end %>
+
+                <.button
+                  variant="ghost"
+                  size="sm"
+                  icon={if(gym.is_promoted, do: "hero-star-solid", else: "hero-star")}
+                  phx-click="toggle_promoted"
+                  phx-value-id={gym.id}
+                  id={"toggle-promoted-#{gym.id}"}
+                >
+                  <%= if gym.is_promoted do %>
+                    Unpromote
+                  <% else %>
+                    Promote
+                  <% end %>
+                </.button>
+
+                <.button
+                  variant={if(gym.tier == :free, do: "primary", else: "ghost")}
+                  size="sm"
+                  icon={if(gym.tier == :free, do: "hero-arrow-up-circle", else: "hero-arrow-down-circle")}
+                  phx-click="toggle_tier"
+                  phx-value-id={gym.id}
+                  data-confirm={if(gym.tier == :free, do: "Upgrade this gym to Premium?", else: "Downgrade this gym to Free tier?")}
+                  id={"toggle-tier-#{gym.id}"}
+                >
+                  {if gym.tier == :free, do: "Upgrade", else: "Downgrade"}
+                </.button>
               </div>
-            </div>
-          </div>
-        <% end %>
-      </div>
+            </:actions>
+          </.data_table>
+        </.card>
+      <% end %>
     </Layouts.app>
     """
   end

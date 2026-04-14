@@ -219,139 +219,101 @@ defmodule FitTrackerzWeb.Trainer.ReportDetailLive do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
       <div class="space-y-6" id="report-detail" phx-hook="CsvDownload">
-        <%!-- Header --%>
-        <div>
-          <div class="flex items-center gap-3 mb-1">
-            <.link navigate="/trainer/reports" class="btn btn-ghost btn-sm btn-circle">
-              <.icon name="hero-arrow-left-mini" class="size-4" />
-            </.link>
-            <h1 class="text-2xl sm:text-3xl font-brand">{@report_name}</h1>
-          </div>
-          <p class="text-base-content/50 ml-12">{@gym.name}</p>
-        </div>
+        <.page_header title={@report_name} subtitle={@gym.name} back_path="/trainer/reports">
+          <:actions>
+            <%= if @report_data do %>
+              <.button variant="outline" size="sm" icon="hero-arrow-down-tray" phx-click="export_csv">
+                Export CSV
+              </.button>
+            <% end %>
+          </:actions>
+        </.page_header>
 
         <%!-- Date Range --%>
-        <div class="card bg-base-200/50 border border-base-300/50">
-          <div class="card-body p-4">
-            <div class="flex flex-wrap items-center gap-3">
-              <div class="flex gap-1">
-                <%= for preset <- ["7d", "30d", "90d", "year"] do %>
-                  <button
-                    phx-click="select_preset"
-                    phx-value-preset={preset}
-                    class={[
-                      "btn btn-sm",
-                      if(@preset == preset, do: "btn-primary", else: "btn-ghost")
-                    ]}
-                  >
-                    {preset_label(preset)}
-                  </button>
-                <% end %>
-              </div>
-
-              <form phx-submit="apply_custom_range" phx-change="update_custom" class="flex items-center gap-2 ml-auto">
-                <input
-                  type="date"
-                  name="custom_start"
-                  value={@custom_start}
-                  class="input input-sm input-bordered w-36"
-                />
-                <span class="text-base-content/40">to</span>
-                <input
-                  type="date"
-                  name="custom_end"
-                  value={@custom_end}
-                  class="input input-sm input-bordered w-36"
-                />
-                <button type="submit" class="btn btn-sm btn-primary">Apply</button>
-              </form>
+        <.card>
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="flex gap-1">
+              <%= for preset <- ["7d", "30d", "90d", "year"] do %>
+                <.button
+                  variant={if(@preset == preset, do: "primary", else: "ghost")}
+                  size="sm"
+                  phx-click="select_preset"
+                  phx-value-preset={preset}
+                >
+                  {preset_label(preset)}
+                </.button>
+              <% end %>
             </div>
+
+            <form phx-submit="apply_custom_range" phx-change="update_custom" class="flex items-center gap-2 ml-auto">
+              <input
+                type="date"
+                name="custom_start"
+                value={@custom_start}
+                class="input input-sm input-bordered w-36"
+              />
+              <span class="text-base-content/40">to</span>
+              <input
+                type="date"
+                name="custom_end"
+                value={@custom_end}
+                class="input input-sm input-bordered w-36"
+              />
+              <.button variant="primary" size="sm" type="submit">Apply</.button>
+            </form>
           </div>
-        </div>
+        </.card>
 
         <%= if @report_data do %>
           <%!-- Summary Cards --%>
           <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            <div
+            <.stat_card
               :for={item <- @report_data.summary}
-              class="card bg-base-200/50 border border-base-300/50"
-            >
-              <div class="card-body p-4">
-                <p class="text-sm text-base-content/40">{item.label}</p>
-                <span class="text-2xl font-bold">{item.value}</span>
-              </div>
-            </div>
-          </div>
-
-          <%!-- Actions --%>
-          <div class="flex justify-end">
-            <button phx-click="export_csv" class="btn btn-sm btn-outline gap-2">
-              <.icon name="hero-arrow-down-tray-mini" class="size-4" /> Export CSV
-            </button>
+              label={item.label}
+              value={item.value}
+              icon="hero-chart-bar-solid"
+              color="primary"
+            />
           </div>
 
           <%!-- Data Table --%>
-          <div class="card bg-base-200/50 border border-base-300/50">
-            <div class="card-body p-4">
-              <div class="overflow-x-auto">
-                <table class="table table-sm table-zebra">
-                  <thead>
-                    <tr class="text-base-content/40">
-                      <th :for={col <- @report_data.columns}>{col.label}</th>
+          <.card>
+            <div class="overflow-x-auto">
+              <table class="table table-sm table-zebra">
+                <thead>
+                  <tr class="text-base-content/40">
+                    <th :for={col <- @report_data.columns}>{col.label}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <%= if @report_data.rows == [] do %>
+                    <tr>
+                      <td colspan={length(@report_data.columns)} class="text-center text-base-content/50 py-8">
+                        No data found for the selected period.
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    <%= if @report_data.rows == [] do %>
-                      <tr>
-                        <td colspan={length(@report_data.columns)} class="text-center text-base-content/50 py-8">
-                          No data found for the selected period.
-                        </td>
-                      </tr>
-                    <% else %>
-                      <tr :for={row <- @report_data.rows}>
-                        <td :for={col <- @report_data.columns}>
-                          <%= if is_status_field?(col.key) do %>
-                            <span class={"badge badge-sm #{status_badge(Map.get(row, col.key))}"}>
-                              {format_cell(Map.get(row, col.key))}
-                            </span>
-                          <% else %>
+                  <% else %>
+                    <tr :for={row <- @report_data.rows}>
+                      <td :for={col <- @report_data.columns}>
+                        <%= if is_status_field?(col.key) do %>
+                          <span class={"badge badge-sm #{status_badge(Map.get(row, col.key))}"}>
                             {format_cell(Map.get(row, col.key))}
-                          <% end %>
-                        </td>
-                      </tr>
-                    <% end %>
-                  </tbody>
-                </table>
-              </div>
-
-              <%!-- Pagination --%>
-              <%= if @total_pages > 1 do %>
-                <div class="flex items-center justify-center gap-2 mt-4">
-                  <button
-                    phx-click="change_page"
-                    phx-value-page={@page - 1}
-                    disabled={@page <= 1}
-                    class="btn btn-sm btn-ghost"
-                  >
-                    <.icon name="hero-chevron-left-mini" class="size-4" />
-                  </button>
-
-                  <span class="text-sm text-base-content/60">
-                    Page {@page} of {@total_pages}
-                  </span>
-
-                  <button
-                    phx-click="change_page"
-                    phx-value-page={@page + 1}
-                    disabled={@page >= @total_pages}
-                    class="btn btn-sm btn-ghost"
-                  >
-                    <.icon name="hero-chevron-right-mini" class="size-4" />
-                  </button>
-                </div>
-              <% end %>
+                          </span>
+                        <% else %>
+                          {format_cell(Map.get(row, col.key))}
+                        <% end %>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
             </div>
-          </div>
+
+            <%!-- Pagination --%>
+            <%= if @total_pages > 1 do %>
+              <.pagination current_page={@page} total_pages={@total_pages} on_page_change="change_page" />
+            <% end %>
+          </.card>
         <% end %>
       </div>
     </Layouts.app>

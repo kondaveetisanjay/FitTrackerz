@@ -396,10 +396,10 @@ defmodule FitTrackerzWeb.GymOperator.SetupLive do
 
   defp format_errors(error), do: inspect(error)
 
-  defp status_badge_class(:verified), do: "badge-success"
-  defp status_badge_class(:pending_verification), do: "badge-warning"
-  defp status_badge_class(:suspended), do: "badge-error"
-  defp status_badge_class(_), do: "badge-neutral"
+  defp status_badge_variant(:verified), do: "success"
+  defp status_badge_variant(:pending_verification), do: "warning"
+  defp status_badge_variant(:suspended), do: "error"
+  defp status_badge_variant(_), do: "neutral"
 
   defp equipment_options do
     ["Cardio Machines", "Free Weights", "CrossFit Zone", "Swimming Pool",
@@ -416,541 +416,45 @@ defmodule FitTrackerzWeb.GymOperator.SetupLive do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
       <div class="space-y-8">
-        <%!-- Page Header --%>
-        <div class="flex items-center gap-3">
-          <Layouts.back_button />
-          <div>
-            <h1 class="text-2xl sm:text-3xl font-brand">
-              {if @gym, do: "My Gym", else: "Setup Your Gym"}
-            </h1>
-            <p class="text-base-content/50 mt-1">
-              {if @gym,
-                do: "Manage your gym profile and location.",
-                else: "Create your gym to get started."}
-            </p>
-          </div>
-        </div>
+        <.page_header
+          title={if @gym, do: "My Gym", else: "Setup Your Gym"}
+          subtitle={if @gym, do: "Manage your gym profile and location.", else: "Create your gym to get started."}
+          back_path="/gym"
+        />
 
         <%= if @gym do %>
-          <%!-- Progress Steps --%>
-          <div class="flex items-center justify-center gap-2 mb-2">
-            <%= for {label, step_num} <- [{"Basics", 1}, {"Location", 2}, {"Photos & Details", 3}] do %>
-              <div class="flex items-center gap-2">
-                <button
-                  phx-click="go_to_step"
-                  phx-value-step={step_num}
-                  class={[
-                    "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold cursor-pointer",
-                    if(@current_step >= step_num, do: "bg-primary text-primary-content", else: "bg-base-300 text-base-content/50")
-                  ]}
-                >
-                  {step_num}
-                </button>
-                <span class={[
-                  "text-sm font-medium hidden sm:inline",
-                  if(@current_step >= step_num, do: "text-primary", else: "text-base-content/50")
-                ]}>
-                  {label}
-                </span>
-                <%= if step_num < 3 do %>
-                  <div class={[
-                    "w-12 h-0.5",
-                    if(@current_step > step_num, do: "bg-primary", else: "bg-base-300")
-                  ]} />
-                <% end %>
-              </div>
-            <% end %>
-          </div>
+          <%!-- Step Indicator --%>
+          <.step_indicator
+            steps={["Basics", "Location", "Photos & Details"]}
+            current={@current_step - 1}
+          />
 
           <%!-- STEP 1: Gym Details --%>
           <%= if @current_step == 1 do %>
-          <div class="card bg-base-200/50 border border-base-300/50" id="gym-details-card">
-            <div class="card-body p-6">
-              <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-bold flex items-center gap-2">
-                  <.icon name="hero-building-office-solid" class="size-5 text-primary" /> Step 1: Gym Profile
-                </h2>
-                <div class="flex items-center gap-3">
-                  <span class={"badge #{status_badge_class(@gym.status)}"}>
-                    {Phoenix.Naming.humanize(@gym.status)}
-                  </span>
-                  <%= unless @editing do %>
-                    <button phx-click="edit" class="btn btn-ghost btn-sm gap-1" id="edit-gym-btn">
-                      <.icon name="hero-pencil-square" class="size-4" /> Edit
-                    </button>
-                  <% end %>
-                </div>
-              </div>
-
-              <%= if @editing do %>
-                <.form for={@form} id="update-gym-form" phx-change="validate" phx-submit="update">
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <.input
-                      field={@form[:name]}
-                      label="Gym Name"
-                      placeholder="Enter gym name"
-                      required
-                    />
-                    <.input
-                      field={@form[:slug]}
-                      label="Slug (URL-friendly)"
-                      placeholder="e.g. iron-paradise"
-                      required
-                    />
-                  </div>
-                  <.input
-                    field={@form[:description]}
-                    type="textarea"
-                    label="Description"
-                    placeholder="Describe your gym..."
-                  />
-                  <div class="flex gap-2 mt-4">
-                    <button type="submit" class="btn btn-primary btn-sm gap-2" id="save-update-btn">
-                      <.icon name="hero-check-mini" class="size-4" /> Save Changes
-                    </button>
-                    <button
-                      type="button"
-                      phx-click="cancel_edit"
-                      class="btn btn-ghost btn-sm"
-                      id="cancel-edit-btn"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </.form>
-              <% else %>
-                <div class="space-y-3">
-                  <div class="flex items-center gap-3 p-3 rounded-lg bg-base-300/20">
-                    <span class="text-sm font-semibold text-base-content/60 w-24">Name</span>
-                    <span class="text-sm font-medium">{@gym.name}</span>
-                  </div>
-                  <div class="flex items-center gap-3 p-3 rounded-lg bg-base-300/20">
-                    <span class="text-sm font-semibold text-base-content/60 w-24">Slug</span>
-                    <span class="text-sm font-medium">{@gym.slug}</span>
-                  </div>
-                  <div class="flex items-center gap-3 p-3 rounded-lg bg-base-300/20">
-                    <span class="text-sm font-semibold text-base-content/60 w-24">Description</span>
-                    <span class="text-sm font-medium">
-                      {@gym.description || "No description set"}
-                    </span>
-                  </div>
-                  <div class="flex items-center gap-3 p-3 rounded-lg bg-base-300/20">
-                    <span class="text-sm font-semibold text-base-content/60 w-24">Promoted</span>
-                    <span class={"badge badge-sm #{if @gym.is_promoted, do: "badge-success", else: "badge-neutral"}"}>
-                      {if @gym.is_promoted, do: "Yes", else: "No"}
-                    </span>
-                  </div>
-                </div>
-              <% end %>
-
-              <%!-- Step Navigation --%>
-              <div class="flex justify-end mt-6 pt-4 border-t border-base-300/30">
-                <button phx-click="next_step" class="btn btn-primary btn-sm gap-2">
-                  Next: Location <.icon name="hero-arrow-right-mini" class="size-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-          <% end %>
-
-          <%!-- STEP 2: Location Card --%>
-          <%= if @current_step == 2 do %>
-          <div class="card bg-base-200/50 border border-base-300/50" id="location-card">
-            <div class="card-body p-6">
-              <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-bold flex items-center gap-2">
-                  <.icon name="hero-map-pin-solid" class="size-5 text-accent" /> Step 2: Location
-                </h2>
-                <%= unless @editing_location do %>
-                  <button
-                    phx-click="edit_location"
-                    class="btn btn-ghost btn-sm gap-1"
-                    id="edit-location-btn"
-                  >
-                    <.icon name="hero-pencil-square" class="size-4" />
-                    {if @branch, do: "Edit", else: "Add Location"}
-                  </button>
+          <.card id="gym-details-card">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-lg font-bold flex items-center gap-2">
+                <.icon name="hero-building-office-solid" class="size-5 text-primary" /> Step 1: Gym Profile
+              </h2>
+              <div class="flex items-center gap-3">
+                <.badge variant={status_badge_variant(@gym.status)}>
+                  {Phoenix.Naming.humanize(@gym.status)}
+                </.badge>
+                <%= unless @editing do %>
+                  <.button variant="ghost" size="sm" icon="hero-pencil-square" phx-click="edit" id="edit-gym-btn">
+                    Edit
+                  </.button>
                 <% end %>
               </div>
-
-              <%= if @editing_location do %>
-                <%!-- Location Edit Form --%>
-                <.form
-                  for={@location_form}
-                  id="location-form"
-                  phx-change="validate_location"
-                  phx-submit="save_location"
-                >
-                  <div class="mb-4" id="location-place-wrapper" phx-update="ignore">
-                    <label class="label">
-                      <span class="label-text font-medium">Search Place</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="location-place-search"
-                      phx-hook="PlacesAutocomplete"
-                      placeholder="Search for a place, e.g. 'Jaguar Gym Hyderabad'..."
-                      class="input input-bordered w-full"
-                      autocomplete="off"
-                    />
-                    <p class="text-xs text-base-content/40 mt-1">
-                      Start typing to search. Selecting a place will auto-fill the fields below.
-                    </p>
-                  </div>
-
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <.input
-                      field={@location_form[:address]}
-                      label="Address"
-                      placeholder="123 Main St"
-                      required
-                    />
-                    <.input
-                      field={@location_form[:city]}
-                      label="City"
-                      placeholder="Mumbai"
-                      required
-                    />
-                    <.input
-                      field={@location_form[:state]}
-                      label="State"
-                      placeholder="Maharashtra"
-                      required
-                    />
-                    <.input
-                      field={@location_form[:postal_code]}
-                      label="Postal Code"
-                      placeholder="400001"
-                      required
-                    />
-                  </div>
-
-                  <div class="mt-4">
-                    <label class="label">
-                      <span class="label-text font-medium">Location Coordinates</span>
-                    </label>
-                    <div class="flex flex-col sm:flex-row gap-3 items-start">
-                      <div class="flex-1 w-full">
-                        <.input
-                          field={@location_form[:latitude]}
-                          label="Latitude"
-                          type="number"
-                          placeholder="17.4400"
-                        />
-                      </div>
-                      <div class="flex-1 w-full">
-                        <.input
-                          field={@location_form[:longitude]}
-                          label="Longitude"
-                          type="number"
-                          placeholder="78.3000"
-                        />
-                      </div>
-                      <div class="pt-7">
-                        <button
-                          type="button"
-                          id="detect-location-btn"
-                          phx-hook="BranchGeolocation"
-                          class="btn btn-outline btn-sm gap-2 whitespace-nowrap"
-                        >
-                          <.icon name="hero-map-pin-mini" class="size-4" /> Detect my location
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <%!-- Logo Upload --%>
-                  <div class="mt-4">
-                    <label class="label">
-                      <span class="label-text font-medium">Gym Logo</span>
-                    </label>
-                    <%= if @existing_logo do %>
-                      <div class="flex items-center gap-3 mb-2 p-2 rounded-lg bg-base-300/20">
-                        <img
-                          src={@existing_logo}
-                          class="w-16 h-16 rounded-lg object-cover"
-                        />
-                        <span class="text-sm text-base-content/60">Current logo</span>
-                        <button
-                          type="button"
-                          phx-click="remove_existing_logo"
-                          class="btn btn-ghost btn-xs text-error ml-auto"
-                        >
-                          <.icon name="hero-trash-mini" class="size-4" /> Remove
-                        </button>
-                      </div>
-                    <% end %>
-                    <.live_file_input
-                      upload={@uploads.logo}
-                      class="file-input file-input-bordered file-input-sm w-full max-w-xs"
-                    />
-                    <%= for entry <- @uploads.logo.entries do %>
-                      <div class="flex items-center gap-3 mt-2">
-                        <.live_img_preview
-                          entry={entry}
-                          class="w-16 h-16 rounded-lg object-cover"
-                        />
-                        <span class="text-sm truncate flex-1">{entry.client_name}</span>
-                        <button
-                          type="button"
-                          phx-click="cancel_upload"
-                          phx-value-ref={entry.ref}
-                          phx-value-upload="logo"
-                          class="btn btn-ghost btn-xs text-error"
-                        >
-                          <.icon name="hero-x-mark-mini" class="size-4" />
-                        </button>
-                      </div>
-                      <%= for err <- upload_errors(@uploads.logo, entry) do %>
-                        <p class="text-xs text-error mt-1">{upload_error_to_string(err)}</p>
-                      <% end %>
-                    <% end %>
-                  </div>
-
-                  <%!-- Gallery Upload --%>
-                  <div class="mt-4">
-                    <label class="label">
-                      <span class="label-text font-medium">
-                        Gallery Images <span class="text-base-content/40">(up to 6)</span>
-                      </span>
-                    </label>
-                    <%= if @existing_gallery != [] do %>
-                      <div class="flex flex-wrap gap-3 mb-2">
-                        <%= for url <- @existing_gallery do %>
-                          <div class="relative">
-                            <img
-                              src={url}
-                              class="w-20 h-20 rounded-lg object-cover"
-                            />
-                            <button
-                              type="button"
-                              phx-click="remove_gallery_image"
-                              phx-value-url={url}
-                              class="btn btn-circle btn-xs btn-error absolute -top-2 -right-2"
-                            >
-                              <.icon name="hero-x-mark-mini" class="size-3" />
-                            </button>
-                          </div>
-                        <% end %>
-                      </div>
-                    <% end %>
-                    <.live_file_input
-                      upload={@uploads.gallery}
-                      class="file-input file-input-bordered file-input-sm w-full max-w-xs"
-                    />
-                    <div class="flex flex-wrap gap-3 mt-2">
-                      <%= for entry <- @uploads.gallery.entries do %>
-                        <div class="relative">
-                          <.live_img_preview
-                            entry={entry}
-                            class="w-20 h-20 rounded-lg object-cover"
-                          />
-                          <button
-                            type="button"
-                            phx-click="cancel_upload"
-                            phx-value-ref={entry.ref}
-                            phx-value-upload="gallery"
-                            class="btn btn-circle btn-xs btn-error absolute -top-2 -right-2"
-                          >
-                            <.icon name="hero-x-mark-mini" class="size-3" />
-                          </button>
-                        </div>
-                      <% end %>
-                    </div>
-                    <%= for err <- upload_errors(@uploads.gallery) do %>
-                      <p class="text-xs text-error mt-1">{upload_error_to_string(err)}</p>
-                    <% end %>
-                  </div>
-
-                  <div class="flex gap-2 mt-4">
-                    <button
-                      type="submit"
-                      class="btn btn-primary btn-sm gap-2"
-                      id="save-location-btn"
-                    >
-                      <.icon name="hero-check-mini" class="size-4" /> Save Location
-                    </button>
-                    <button
-                      type="button"
-                      phx-click="cancel_location_edit"
-                      class="btn btn-ghost btn-sm"
-                      id="cancel-location-btn"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </.form>
-              <% else %>
-                <%!-- Location Display --%>
-                <%= if @branch do %>
-                  <div class="flex items-start gap-4 p-4 rounded-xl bg-base-300/20">
-                    <%= if @branch.logo_url do %>
-                      <img
-                        src={@branch.logo_url}
-                        class="w-16 h-16 rounded-lg object-cover shrink-0"
-                      />
-                    <% else %>
-                      <div class="w-16 h-16 rounded-lg bg-base-300/30 flex items-center justify-center shrink-0">
-                        <.icon name="hero-photo" class="size-6 text-base-content/20" />
-                      </div>
-                    <% end %>
-
-                    <div class="flex-1 min-w-0">
-                      <p class="font-semibold">{@branch.city}, {@branch.state}</p>
-                      <p class="text-sm text-base-content/60 mt-0.5">
-                        {@branch.address} — {@branch.postal_code}
-                      </p>
-                      <%= if @branch.latitude && @branch.longitude do %>
-                        <p class="text-xs text-base-content/40 mt-1">
-                          Coordinates: {@branch.latitude}, {@branch.longitude}
-                        </p>
-                      <% end %>
-                      <%= if @branch.gallery_urls && @branch.gallery_urls != [] do %>
-                        <div class="flex gap-1.5 mt-3">
-                          <%= for url <- @branch.gallery_urls do %>
-                            <img
-                              src={url}
-                              alt="Gallery"
-                              class="w-12 h-12 rounded object-cover"
-                            />
-                          <% end %>
-                        </div>
-                      <% end %>
-                    </div>
-
-                    <%= if @branch.latitude && @branch.longitude do %>
-                      <a
-                        href={"https://www.google.com/maps?q=#{@branch.latitude},#{@branch.longitude}"}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="btn btn-outline btn-xs gap-1 shrink-0 self-center"
-                      >
-                        <.icon name="hero-map-pin-mini" class="size-3" /> Map
-                      </a>
-                    <% end %>
-                  </div>
-                <% else %>
-                  <div class="flex items-center gap-3 p-4 rounded-lg bg-base-300/20">
-                    <div class="w-2 h-2 rounded-full bg-base-content/20 shrink-0"></div>
-                    <p class="text-sm text-base-content/50">
-                      No location added yet. Add your gym's address and details.
-                    </p>
-                  </div>
-                <% end %>
-              <% end %>
-
-              <%!-- Step Navigation --%>
-              <div class="flex justify-between mt-6 pt-4 border-t border-base-300/30">
-                <button phx-click="prev_step" class="btn btn-ghost btn-sm gap-2">
-                  <.icon name="hero-arrow-left-mini" class="size-4" /> Back: Basics
-                </button>
-                <button phx-click="next_step" class="btn btn-primary btn-sm gap-2">
-                  Next: Photos & Details <.icon name="hero-arrow-right-mini" class="size-4" />
-                </button>
-              </div>
             </div>
-          </div>
-          <% end %>
 
-          <%!-- STEP 3: Photos & Equipment/Services --%>
-          <%= if @current_step == 3 do %>
-          <div class="card bg-base-200/50 border border-base-300/50" id="photos-details-card">
-            <div class="card-body p-6">
-              <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                <.icon name="hero-photo-solid" class="size-5 text-info" /> Step 3: Photos & Details
-              </h2>
-
-              <%!-- Gallery images display --%>
-              <%= if @existing_gallery != [] do %>
-                <div class="mb-4">
-                  <label class="label"><span class="label-text font-semibold">Current Gallery</span></label>
-                  <div class="flex flex-wrap gap-3">
-                    <%= for url <- @existing_gallery do %>
-                      <img src={url} class="w-20 h-20 rounded-lg object-cover" alt="Gallery" />
-                    <% end %>
-                  </div>
-                </div>
-              <% end %>
-
-              <p class="text-sm text-base-content/60 mb-6">
-                To update photos, go to the Location step and click Edit.
-              </p>
-
-              <%!-- Equipment & Amenities --%>
-              <div class="mb-6">
-                <label class="label"><span class="label-text font-semibold text-base">Equipment & Amenities</span></label>
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mt-2">
-                  <%= for item <- equipment_options() do %>
-                    <label
-                      class={[
-                        "label cursor-pointer justify-start gap-2 p-2 rounded-lg border",
-                        if(item in @selected_equipment, do: "border-primary bg-primary/5", else: "border-base-300 bg-base-300/20")
-                      ]}
-                      phx-click="toggle_equipment"
-                      phx-value-item={item}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={item in @selected_equipment}
-                        class="checkbox checkbox-primary checkbox-sm"
-                        readonly
-                      />
-                      <span class="label-text text-sm">{item}</span>
-                    </label>
-                  <% end %>
-                </div>
-              </div>
-
-              <%!-- Services Offered --%>
-              <div class="mb-6">
-                <label class="label"><span class="label-text font-semibold text-base">Services Offered</span></label>
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mt-2">
-                  <%= for item <- services_options() do %>
-                    <label
-                      class={[
-                        "label cursor-pointer justify-start gap-2 p-2 rounded-lg border",
-                        if(item in @selected_services, do: "border-primary bg-primary/5", else: "border-base-300 bg-base-300/20")
-                      ]}
-                      phx-click="toggle_service"
-                      phx-value-item={item}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={item in @selected_services}
-                        class="checkbox checkbox-primary checkbox-sm"
-                        readonly
-                      />
-                      <span class="label-text text-sm">{item}</span>
-                    </label>
-                  <% end %>
-                </div>
-              </div>
-
-              <%!-- Step Navigation --%>
-              <div class="flex justify-between mt-6 pt-4 border-t border-base-300/30">
-                <button phx-click="prev_step" class="btn btn-ghost btn-sm gap-2">
-                  <.icon name="hero-arrow-left-mini" class="size-4" /> Back: Location
-                </button>
-                <button phx-click="save_equipment_services" class="btn btn-primary btn-sm gap-2">
-                  <.icon name="hero-check-mini" class="size-4" /> Save & Complete Setup
-                </button>
-              </div>
-            </div>
-          </div>
-          <% end %>
-        <% else %>
-          <%!-- Create Gym Form --%>
-          <div class="card bg-base-200/50 border border-base-300/50" id="create-gym-card">
-            <div class="card-body p-6">
-              <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                <.icon name="hero-plus-circle-solid" class="size-5 text-primary" /> Create Your Gym
-              </h2>
-              <.form for={@form} id="create-gym-form" phx-change="validate" phx-submit="save">
+            <%= if @editing do %>
+              <.form for={@form} id="update-gym-form" phx-change="validate" phx-submit="update">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <.input
                     field={@form[:name]}
                     label="Gym Name"
-                    placeholder="e.g. Iron Paradise Fitness"
+                    placeholder="Enter gym name"
                     required
                   />
                   <.input
@@ -964,16 +468,427 @@ defmodule FitTrackerzWeb.GymOperator.SetupLive do
                   field={@form[:description]}
                   type="textarea"
                   label="Description"
-                  placeholder="Tell members about your gym..."
+                  placeholder="Describe your gym..."
                 />
-                <div class="mt-4">
-                  <button type="submit" class="btn btn-primary gap-2" id="create-gym-btn">
-                    <.icon name="hero-plus-mini" class="size-4" /> Create Gym
-                  </button>
+                <div class="flex gap-2 mt-4">
+                  <.button variant="primary" size="sm" icon="hero-check" type="submit" id="save-update-btn">
+                    Save Changes
+                  </.button>
+                  <.button variant="ghost" size="sm" type="button" phx-click="cancel_edit" id="cancel-edit-btn">
+                    Cancel
+                  </.button>
                 </div>
               </.form>
+            <% else %>
+              <.detail_grid>
+                <:item label="Name">{@gym.name}</:item>
+                <:item label="Slug">{@gym.slug}</:item>
+                <:item label="Description">{@gym.description || "No description set"}</:item>
+                <:item label="Promoted">
+                  <.badge variant={if @gym.is_promoted, do: "success", else: "neutral"} size="sm">
+                    {if @gym.is_promoted, do: "Yes", else: "No"}
+                  </.badge>
+                </:item>
+              </.detail_grid>
+            <% end %>
+
+            <%!-- Step Navigation --%>
+            <div class="flex justify-end mt-6 pt-4 border-t border-base-300/30">
+              <.button variant="primary" size="sm" icon="hero-arrow-right" phx-click="next_step">
+                Next: Location
+              </.button>
             </div>
-          </div>
+          </.card>
+          <% end %>
+
+          <%!-- STEP 2: Location Card --%>
+          <%= if @current_step == 2 do %>
+          <.card id="location-card">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-lg font-bold flex items-center gap-2">
+                <.icon name="hero-map-pin-solid" class="size-5 text-accent" /> Step 2: Location
+              </h2>
+              <%= unless @editing_location do %>
+                <.button variant="ghost" size="sm" icon="hero-pencil-square" phx-click="edit_location" id="edit-location-btn">
+                  {if @branch, do: "Edit", else: "Add Location"}
+                </.button>
+              <% end %>
+            </div>
+
+            <%= if @editing_location do %>
+              <%!-- Location Edit Form --%>
+              <.form
+                for={@location_form}
+                id="location-form"
+                phx-change="validate_location"
+                phx-submit="save_location"
+              >
+                <div class="mb-4" id="location-place-wrapper" phx-update="ignore">
+                  <label class="label">
+                    <span class="label-text font-medium">Search Place</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="location-place-search"
+                    phx-hook="PlacesAutocomplete"
+                    placeholder="Search for a place, e.g. 'Jaguar Gym Hyderabad'..."
+                    class="input input-bordered w-full"
+                    autocomplete="off"
+                  />
+                  <p class="text-xs text-base-content/40 mt-1">
+                    Start typing to search. Selecting a place will auto-fill the fields below.
+                  </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <.input
+                    field={@location_form[:address]}
+                    label="Address"
+                    placeholder="123 Main St"
+                    required
+                  />
+                  <.input
+                    field={@location_form[:city]}
+                    label="City"
+                    placeholder="Mumbai"
+                    required
+                  />
+                  <.input
+                    field={@location_form[:state]}
+                    label="State"
+                    placeholder="Maharashtra"
+                    required
+                  />
+                  <.input
+                    field={@location_form[:postal_code]}
+                    label="Postal Code"
+                    placeholder="400001"
+                    required
+                  />
+                </div>
+
+                <div class="mt-4">
+                  <label class="label">
+                    <span class="label-text font-medium">Location Coordinates</span>
+                  </label>
+                  <div class="flex flex-col sm:flex-row gap-3 items-start">
+                    <div class="flex-1 w-full">
+                      <.input
+                        field={@location_form[:latitude]}
+                        label="Latitude"
+                        type="number"
+                        placeholder="17.4400"
+                      />
+                    </div>
+                    <div class="flex-1 w-full">
+                      <.input
+                        field={@location_form[:longitude]}
+                        label="Longitude"
+                        type="number"
+                        placeholder="78.3000"
+                      />
+                    </div>
+                    <div class="pt-7">
+                      <.button variant="outline" size="sm" icon="hero-map-pin" type="button" id="detect-location-btn" phx-hook="BranchGeolocation">
+                        Detect my location
+                      </.button>
+                    </div>
+                  </div>
+                </div>
+
+                <%!-- Logo Upload --%>
+                <div class="mt-4">
+                  <label class="label">
+                    <span class="label-text font-medium">Gym Logo</span>
+                  </label>
+                  <%= if @existing_logo do %>
+                    <div class="flex items-center gap-3 mb-2 p-2 rounded-lg bg-base-300/20">
+                      <img
+                        src={@existing_logo}
+                        class="w-16 h-16 rounded-lg object-cover"
+                      />
+                      <span class="text-sm text-base-content/60">Current logo</span>
+                      <.button variant="ghost" size="sm" type="button" phx-click="remove_existing_logo" class="ml-auto text-error">
+                        <.icon name="hero-trash-mini" class="size-4" /> Remove
+                      </.button>
+                    </div>
+                  <% end %>
+                  <.live_file_input
+                    upload={@uploads.logo}
+                    class="file-input file-input-bordered file-input-sm w-full max-w-xs"
+                  />
+                  <%= for entry <- @uploads.logo.entries do %>
+                    <div class="flex items-center gap-3 mt-2">
+                      <.live_img_preview
+                        entry={entry}
+                        class="w-16 h-16 rounded-lg object-cover"
+                      />
+                      <span class="text-sm truncate flex-1">{entry.client_name}</span>
+                      <button
+                        type="button"
+                        phx-click="cancel_upload"
+                        phx-value-ref={entry.ref}
+                        phx-value-upload="logo"
+                        class="btn btn-ghost btn-xs text-error"
+                      >
+                        <.icon name="hero-x-mark-mini" class="size-4" />
+                      </button>
+                    </div>
+                    <%= for err <- upload_errors(@uploads.logo, entry) do %>
+                      <p class="text-xs text-error mt-1">{upload_error_to_string(err)}</p>
+                    <% end %>
+                  <% end %>
+                </div>
+
+                <%!-- Gallery Upload --%>
+                <div class="mt-4">
+                  <label class="label">
+                    <span class="label-text font-medium">
+                      Gallery Images <span class="text-base-content/40">(up to 6)</span>
+                    </span>
+                  </label>
+                  <%= if @existing_gallery != [] do %>
+                    <div class="flex flex-wrap gap-3 mb-2">
+                      <%= for url <- @existing_gallery do %>
+                        <div class="relative">
+                          <img
+                            src={url}
+                            class="w-20 h-20 rounded-lg object-cover"
+                          />
+                          <button
+                            type="button"
+                            phx-click="remove_gallery_image"
+                            phx-value-url={url}
+                            class="btn btn-circle btn-xs btn-error absolute -top-2 -right-2"
+                          >
+                            <.icon name="hero-x-mark-mini" class="size-3" />
+                          </button>
+                        </div>
+                      <% end %>
+                    </div>
+                  <% end %>
+                  <.live_file_input
+                    upload={@uploads.gallery}
+                    class="file-input file-input-bordered file-input-sm w-full max-w-xs"
+                  />
+                  <div class="flex flex-wrap gap-3 mt-2">
+                    <%= for entry <- @uploads.gallery.entries do %>
+                      <div class="relative">
+                        <.live_img_preview
+                          entry={entry}
+                          class="w-20 h-20 rounded-lg object-cover"
+                        />
+                        <button
+                          type="button"
+                          phx-click="cancel_upload"
+                          phx-value-ref={entry.ref}
+                          phx-value-upload="gallery"
+                          class="btn btn-circle btn-xs btn-error absolute -top-2 -right-2"
+                        >
+                          <.icon name="hero-x-mark-mini" class="size-3" />
+                        </button>
+                      </div>
+                    <% end %>
+                  </div>
+                  <%= for err <- upload_errors(@uploads.gallery) do %>
+                    <p class="text-xs text-error mt-1">{upload_error_to_string(err)}</p>
+                  <% end %>
+                </div>
+
+                <div class="flex gap-2 mt-4">
+                  <.button variant="primary" size="sm" icon="hero-check" type="submit" id="save-location-btn">
+                    Save Location
+                  </.button>
+                  <.button variant="ghost" size="sm" type="button" phx-click="cancel_location_edit" id="cancel-location-btn">
+                    Cancel
+                  </.button>
+                </div>
+              </.form>
+            <% else %>
+              <%!-- Location Display --%>
+              <%= if @branch do %>
+                <div class="flex items-start gap-4 p-4 rounded-xl bg-base-300/20">
+                  <%= if @branch.logo_url do %>
+                    <img
+                      src={@branch.logo_url}
+                      class="w-16 h-16 rounded-lg object-cover shrink-0"
+                    />
+                  <% else %>
+                    <div class="w-16 h-16 rounded-lg bg-base-300/30 flex items-center justify-center shrink-0">
+                      <.icon name="hero-photo" class="size-6 text-base-content/20" />
+                    </div>
+                  <% end %>
+
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold">{@branch.city}, {@branch.state}</p>
+                    <p class="text-sm text-base-content/60 mt-0.5">
+                      {@branch.address} -- {@branch.postal_code}
+                    </p>
+                    <%= if @branch.latitude && @branch.longitude do %>
+                      <p class="text-xs text-base-content/40 mt-1">
+                        Coordinates: {@branch.latitude}, {@branch.longitude}
+                      </p>
+                    <% end %>
+                    <%= if @branch.gallery_urls && @branch.gallery_urls != [] do %>
+                      <div class="flex gap-1.5 mt-3">
+                        <%= for url <- @branch.gallery_urls do %>
+                          <img
+                            src={url}
+                            alt="Gallery"
+                            class="w-12 h-12 rounded object-cover"
+                          />
+                        <% end %>
+                      </div>
+                    <% end %>
+                  </div>
+
+                  <%= if @branch.latitude && @branch.longitude do %>
+                    <.button
+                      variant="outline"
+                      size="sm"
+                      icon="hero-map-pin"
+                      href={"https://www.google.com/maps?q=#{@branch.latitude},#{@branch.longitude}"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Map
+                    </.button>
+                  <% end %>
+                </div>
+              <% else %>
+                <.empty_state
+                  icon="hero-map-pin"
+                  title="No Location"
+                  subtitle="No location added yet. Add your gym's address and details."
+                />
+              <% end %>
+            <% end %>
+
+            <%!-- Step Navigation --%>
+            <div class="flex justify-between mt-6 pt-4 border-t border-base-300/30">
+              <.button variant="ghost" size="sm" icon="hero-arrow-left" phx-click="prev_step">
+                Back: Basics
+              </.button>
+              <.button variant="primary" size="sm" icon="hero-arrow-right" phx-click="next_step">
+                Next: Photos & Details
+              </.button>
+            </div>
+          </.card>
+          <% end %>
+
+          <%!-- STEP 3: Photos & Equipment/Services --%>
+          <%= if @current_step == 3 do %>
+          <.card id="photos-details-card">
+            <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
+              <.icon name="hero-photo-solid" class="size-5 text-info" /> Step 3: Photos & Details
+            </h2>
+
+            <%!-- Gallery images display --%>
+            <%= if @existing_gallery != [] do %>
+              <div class="mb-4">
+                <label class="label"><span class="label-text font-semibold">Current Gallery</span></label>
+                <div class="flex flex-wrap gap-3">
+                  <%= for url <- @existing_gallery do %>
+                    <img src={url} class="w-20 h-20 rounded-lg object-cover" alt="Gallery" />
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+
+            <p class="text-sm text-base-content/60 mb-6">
+              To update photos, go to the Location step and click Edit.
+            </p>
+
+            <%!-- Equipment & Amenities --%>
+            <.section title="Equipment & Amenities">
+              <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mt-2">
+                <%= for item <- equipment_options() do %>
+                  <label
+                    class={[
+                      "label cursor-pointer justify-start gap-2 p-2 rounded-lg border",
+                      if(item in @selected_equipment, do: "border-primary bg-primary/5", else: "border-base-300 bg-base-300/20")
+                    ]}
+                    phx-click="toggle_equipment"
+                    phx-value-item={item}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={item in @selected_equipment}
+                      class="checkbox checkbox-primary checkbox-sm"
+                      readonly
+                    />
+                    <span class="label-text text-sm">{item}</span>
+                  </label>
+                <% end %>
+              </div>
+            </.section>
+
+            <%!-- Services Offered --%>
+            <.section title="Services Offered">
+              <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mt-2">
+                <%= for item <- services_options() do %>
+                  <label
+                    class={[
+                      "label cursor-pointer justify-start gap-2 p-2 rounded-lg border",
+                      if(item in @selected_services, do: "border-primary bg-primary/5", else: "border-base-300 bg-base-300/20")
+                    ]}
+                    phx-click="toggle_service"
+                    phx-value-item={item}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={item in @selected_services}
+                      class="checkbox checkbox-primary checkbox-sm"
+                      readonly
+                    />
+                    <span class="label-text text-sm">{item}</span>
+                  </label>
+                <% end %>
+              </div>
+            </.section>
+
+            <%!-- Step Navigation --%>
+            <div class="flex justify-between mt-6 pt-4 border-t border-base-300/30">
+              <.button variant="ghost" size="sm" icon="hero-arrow-left" phx-click="prev_step">
+                Back: Location
+              </.button>
+              <.button variant="primary" size="sm" icon="hero-check" phx-click="save_equipment_services">
+                Save & Complete Setup
+              </.button>
+            </div>
+          </.card>
+          <% end %>
+        <% else %>
+          <%!-- Create Gym Form --%>
+          <.card title="Create Your Gym" id="create-gym-card">
+            <.form for={@form} id="create-gym-form" phx-change="validate" phx-submit="save">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <.input
+                  field={@form[:name]}
+                  label="Gym Name"
+                  placeholder="e.g. Iron Paradise Fitness"
+                  required
+                />
+                <.input
+                  field={@form[:slug]}
+                  label="Slug (URL-friendly)"
+                  placeholder="e.g. iron-paradise"
+                  required
+                />
+              </div>
+              <.input
+                field={@form[:description]}
+                type="textarea"
+                label="Description"
+                placeholder="Tell members about your gym..."
+              />
+              <div class="mt-4">
+                <.button variant="primary" icon="hero-plus" type="submit" id="create-gym-btn">
+                  Create Gym
+                </.button>
+              </div>
+            </.form>
+          </.card>
         <% end %>
       </div>
     </Layouts.app>

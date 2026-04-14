@@ -73,6 +73,10 @@ defmodule FitTrackerz.Gym.Gym do
     update :update do
       accept([:name, :slug, :description, :status, :is_promoted, :phone, :equipment, :services])
     end
+
+    update :upgrade_tier do
+      accept([:tier])
+    end
   end
 
   attributes do
@@ -117,6 +121,12 @@ defmodule FitTrackerz.Gym.Gym do
     attribute :services, {:array, :string} do
       default []
       public? true
+    end
+
+    attribute :tier, :atom do
+      constraints(one_of: [:free, :premium])
+      allow_nil?(false)
+      default(:free)
     end
 
     timestamps()

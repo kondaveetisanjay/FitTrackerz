@@ -1,48 +1,32 @@
 defmodule FitTrackerzWeb.CoreComponents do
   @moduledoc """
-  Provides core UI components.
+  Core UI components — base primitives for the FitTrackerz design system.
 
-  At first glance, this module may seem daunting, but its goal is to provide
-  core building blocks for your application, such as tables, forms, and
-  inputs. The components consist mostly of markup and are well-documented
-  with doc strings and declarative assigns. You may customize and style
-  them in any way you want, based on your application growth and needs.
-
-  The foundation for styling is Tailwind CSS, a utility-first CSS framework,
-  augmented with daisyUI, a Tailwind CSS plugin that provides UI components
-  and themes. Here are useful references:
-
-    * [daisyUI](https://daisyui.com/docs/intro/) - a good place to get
-      started and see the available components.
-
-    * [Tailwind CSS](https://tailwindcss.com) - the foundational framework
-      we build on. You will use it for layout, sizing, flexbox, grid, and
-      spacing.
-
-    * [Heroicons](https://heroicons.com) - see `icon/1` for usage.
-
-    * [Phoenix.Component](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html) -
-      the component system used by Phoenix. Some components, such as `<.link>`
-      and `<.form>`, are defined there.
-
+  Provides button, input, icon, modal, flash, badge, avatar, dropdown, and tooltip.
+  All components use daisyUI classes internally and expose semantic props.
   """
   use Phoenix.Component
   use Gettext, backend: FitTrackerzWeb.Gettext
 
   alias Phoenix.LiveView.JS
 
+  # ────────────────────────────────────────────────────────
+  # Flash
+  # ────────────────────────────────────────────────────────
+
   @doc """
-  Renders flash notices.
+  Renders flash notices as toast notifications.
 
   ## Examples
 
       <.flash kind={:info} flash={@flash} />
-      <.flash kind={:info} phx-mounted={show("#flash")}>Welcome Back!</.flash>
+      <.flash kind={:success} flash={@flash} />
+      <.flash kind={:error} phx-mounted={show("#flash")}>Something failed</.flash>
   """
   attr :id, :string, doc: "the optional id of flash container"
   attr :flash, :map, default: %{}, doc: "the map of flash messages to display"
   attr :title, :string, default: nil
-  attr :kind, :atom, values: [:info, :error], doc: "used for styling and flash lookup"
+  attr :kind, :atom, values: [:info, :error, :success, :warning], doc: "used for styling and flash lookup"
   attr :rest, :global, doc: "the arbitrary HTML attributes to add to the flash container"
 
   slot :inner_block, doc: "the optional inner block that renders the flash message"
@@ -60,12 +44,16 @@ defmodule FitTrackerzWeb.CoreComponents do
       {@rest}
     >
       <div class={[
-        "alert w-80 sm:w-96 max-w-80 sm:max-w-96 text-wrap",
+        "alert w-80 sm:w-96 max-w-80 sm:max-w-96 text-wrap shadow-lg",
         @kind == :info && "alert-info",
-        @kind == :error && "alert-error"
+        @kind == :error && "alert-error",
+        @kind == :success && "alert-success",
+        @kind == :warning && "alert-warning"
       ]}>
         <.icon :if={@kind == :info} name="hero-information-circle" class="size-5 shrink-0" />
         <.icon :if={@kind == :error} name="hero-exclamation-circle" class="size-5 shrink-0" />
+        <.icon :if={@kind == :success} name="hero-check-circle" class="size-5 shrink-0" />
+        <.icon :if={@kind == :warning} name="hero-exclamation-triangle" class="size-5 shrink-0" />
         <div>
           <p :if={@title} class="font-semibold">{@title}</p>
           <p>{msg}</p>
@@ -79,42 +67,83 @@ defmodule FitTrackerzWeb.CoreComponents do
     """
   end
 
+  # ────────────────────────────────────────────────────────
+  # Button
+  # ────────────────────────────────────────────────────────
+
   @doc """
-  Renders a button with navigation support.
+  Renders a button with variant, size, icon, and loading support.
 
   ## Examples
 
-      <.button>Send!</.button>
-      <.button phx-click="go" variant="primary">Send!</.button>
+      <.button>Default</.button>
+      <.button variant="primary" icon="hero-plus">Add Member</.button>
+      <.button variant="ghost" size="sm">Cancel</.button>
+      <.button variant="danger" loading={true}>Deleting...</.button>
       <.button navigate={~p"/"}>Home</.button>
   """
-  attr :rest, :global, include: ~w(href navigate patch method download name value disabled)
-  attr :class, :any
-  attr :variant, :string, values: ~w(primary)
+  attr :variant, :string,
+    default: "primary",
+    values: ~w(primary secondary ghost danger outline)
+
+  attr :size, :string, default: "md", values: ~w(sm md lg)
+  attr :icon, :string, default: nil, doc: "heroicon name to show before label"
+  attr :loading, :boolean, default: false, doc: "show loading spinner"
+  attr :class, :any, default: nil
+  attr :rest, :global, include: ~w(href navigate patch method download name value disabled type form)
+
   slot :inner_block, required: true
 
   def button(%{rest: rest} = assigns) do
-    variants = %{"primary" => "btn-primary", nil => "btn-primary btn-soft"}
+    variant_classes = %{
+      "primary" => "btn-primary",
+      "secondary" => "btn-secondary",
+      "ghost" => "btn-ghost",
+      "danger" => "btn-error",
+      "outline" => "btn-outline btn-primary"
+    }
+
+    size_classes = %{
+      "sm" => "btn-sm",
+      "md" => "",
+      "lg" => "btn-lg"
+    }
 
     assigns =
-      assign_new(assigns, :class, fn ->
-        ["btn", Map.fetch!(variants, assigns[:variant])]
-      end)
+      assign(assigns, :computed_class, [
+        "btn rounded-xl",
+        Map.get(variant_classes, assigns.variant, "btn-primary"),
+        Map.get(size_classes, assigns.size, ""),
+        assigns.loading && "btn-disabled",
+        assigns.class
+      ])
 
     if rest[:href] || rest[:navigate] || rest[:patch] do
       ~H"""
-      <.link class={@class} {@rest}>
+      <.link class={@computed_class} {@rest}>
+        <span :if={@loading} class="loading loading-spinner loading-xs"></span>
+        <.icon :if={@icon && !@loading} name={@icon} class={icon_size(@size)} />
         {render_slot(@inner_block)}
       </.link>
       """
     else
       ~H"""
-      <button class={@class} {@rest}>
+      <button class={@computed_class} disabled={@loading || @rest[:disabled]} {@rest}>
+        <span :if={@loading} class="loading loading-spinner loading-xs"></span>
+        <.icon :if={@icon && !@loading} name={@icon} class={icon_size(@size)} />
         {render_slot(@inner_block)}
       </button>
       """
     end
   end
+
+  defp icon_size("sm"), do: "size-3.5"
+  defp icon_size("lg"), do: "size-5"
+  defp icon_size(_), do: "size-4"
+
+  # ────────────────────────────────────────────────────────
+  # Input
+  # ────────────────────────────────────────────────────────
 
   @doc """
   Renders an input with label and error messages.
@@ -123,43 +152,16 @@ defmodule FitTrackerzWeb.CoreComponents do
   which is used to retrieve the input name, id, and values.
   Otherwise all attributes may be passed explicitly.
 
-  ## Types
-
-  This function accepts all HTML input types, considering that:
-
-    * You may also set `type="select"` to render a `<select>` tag
-
-    * `type="checkbox"` is used exclusively to render boolean values
-
-    * For live file uploads, see `Phoenix.Component.live_file_input/1`
-
-  See https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input
-  for more information. Unsupported types, such as radio, are best
-  written directly in your templates.
-
   ## Examples
 
-  ```heex
-  <.input field={@form[:email]} type="email" />
-  <.input name="my-input" errors={["oh no!"]} />
-  ```
-
-  ## Select type
-
-  When using `type="select"`, you must pass the `options` and optionally
-  a `value` to mark which option should be preselected.
-
-  ```heex
-  <.input field={@form[:user_type]} type="select" options={["Admin": "admin", "User": "user"]} />
-  ```
-
-  For more information on what kind of data can be passed to `options` see
-  [`options_for_select`](https://hexdocs.pm/phoenix_html/Phoenix.HTML.Form.html#options_for_select/2).
+      <.input field={@form[:email]} type="email" />
+      <.input name="my-input" errors={["oh no!"]} />
   """
   attr :id, :any, default: nil
   attr :name, :any
   attr :label, :string, default: nil
-  attr :value, :any
+  attr :value, :any, default: nil
+  attr :icon, :string, default: nil, doc: "heroicon name for input prefix"
 
   attr :type, :string,
     default: "text",
@@ -221,7 +223,7 @@ defmodule FitTrackerzWeb.CoreComponents do
             name={@name}
             value="true"
             checked={@checked}
-            class={@class || "checkbox checkbox-sm"}
+            class={@class || "checkbox checkbox-sm checkbox-primary"}
             {@rest}
           />{@label}
         </span>
@@ -235,7 +237,7 @@ defmodule FitTrackerzWeb.CoreComponents do
     ~H"""
     <div class="fieldset mb-2">
       <label>
-        <span :if={@label} class="label mb-1">{@label}</span>
+        <span :if={@label} class="label mb-1 text-sm font-medium">{@label}</span>
         <select
           id={@id}
           name={@name}
@@ -256,7 +258,7 @@ defmodule FitTrackerzWeb.CoreComponents do
     ~H"""
     <div class="fieldset mb-2">
       <label>
-        <span :if={@label} class="label mb-1">{@label}</span>
+        <span :if={@label} class="label mb-1 text-sm font-medium">{@label}</span>
         <textarea
           id={@id}
           name={@name}
@@ -272,41 +274,310 @@ defmodule FitTrackerzWeb.CoreComponents do
     """
   end
 
-  # All other inputs text, datetime-local, url, password, etc. are handled here...
+  # All other inputs: text, datetime-local, url, password, etc.
   def input(assigns) do
     ~H"""
     <div class="fieldset mb-2">
       <label>
-        <span :if={@label} class="label mb-1">{@label}</span>
-        <input
-          type={@type}
-          name={@name}
-          id={@id}
-          value={Phoenix.HTML.Form.normalize_value(@type, @value)}
-          class={[
-            @class || "w-full input",
-            @errors != [] && (@error_class || "input-error")
-          ]}
-          {@rest}
-        />
+        <span :if={@label} class="label mb-1 text-sm font-medium">{@label}</span>
+        <div class={[@icon && "relative"]}>
+          <div :if={@icon} class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <.icon name={@icon} class="size-4 text-base-content/40" />
+          </div>
+          <input
+            type={@type}
+            name={@name}
+            id={@id}
+            value={Phoenix.HTML.Form.normalize_value(@type, @value)}
+            class={[
+              @class || "w-full input",
+              @icon && "pl-10",
+              @errors != [] && (@error_class || "input-error")
+            ]}
+            {@rest}
+          />
+        </div>
       </label>
       <.error :for={msg <- @errors}>{msg}</.error>
     </div>
     """
   end
 
-  # Helper used by inputs to generate form errors
   defp error(assigns) do
     ~H"""
     <p class="mt-1.5 flex gap-2 items-center text-sm text-error">
-      <.icon name="hero-exclamation-circle" class="size-5" />
+      <.icon name="hero-exclamation-circle" class="size-4 shrink-0" />
       {render_slot(@inner_block)}
     </p>
     """
   end
 
+  # ────────────────────────────────────────────────────────
+  # Badge
+  # ────────────────────────────────────────────────────────
+
   @doc """
-  Renders a header with title.
+  Renders a status badge.
+
+  ## Examples
+
+      <.badge variant="success">Active</.badge>
+      <.badge variant="warning" size="sm">Expiring</.badge>
+  """
+  attr :variant, :string,
+    default: "neutral",
+    values: ~w(success warning error info neutral primary secondary)
+
+  attr :size, :string, default: "md", values: ~w(sm md)
+  attr :class, :any, default: nil
+
+  slot :inner_block, required: true
+
+  def badge(assigns) do
+    variant_classes = %{
+      "success" => "badge-success",
+      "warning" => "badge-warning",
+      "error" => "badge-error",
+      "info" => "badge-info",
+      "neutral" => "badge-neutral",
+      "primary" => "badge-primary",
+      "secondary" => "badge-secondary"
+    }
+
+    size_classes = %{
+      "sm" => "badge-sm text-xs",
+      "md" => "text-xs"
+    }
+
+    assigns =
+      assign(assigns, :computed_class, [
+        "badge rounded-full font-medium",
+        Map.get(variant_classes, assigns.variant, "badge-neutral"),
+        Map.get(size_classes, assigns.size, ""),
+        assigns.class
+      ])
+
+    ~H"""
+    <span class={@computed_class}>
+      {render_slot(@inner_block)}
+    </span>
+    """
+  end
+
+  # ────────────────────────────────────────────────────────
+  # Avatar
+  # ────────────────────────────────────────────────────────
+
+  @doc """
+  Renders a user avatar with image or generated initials.
+
+  ## Examples
+
+      <.avatar name="John Doe" size="md" />
+      <.avatar name="Jane" src="/uploads/avatar.jpg" size="lg" />
+  """
+  attr :name, :string, default: "U", doc: "user name for initials generation"
+  attr :src, :string, default: nil, doc: "image URL"
+  attr :size, :string, default: "md", values: ~w(sm md lg)
+  attr :class, :any, default: nil
+
+  def avatar(assigns) do
+    size_classes = %{
+      "sm" => "w-8 h-8 text-xs",
+      "md" => "w-10 h-10 text-sm",
+      "lg" => "w-14 h-14 text-lg"
+    }
+
+    initials =
+      assigns.name
+      |> String.split(~r/\s+/, trim: true)
+      |> Enum.take(2)
+      |> Enum.map(&String.first/1)
+      |> Enum.join()
+      |> String.upcase()
+
+    assigns =
+      assigns
+      |> assign(:initials, initials)
+      |> assign(:size_class, Map.get(size_classes, assigns.size, "w-10 h-10 text-sm"))
+
+    ~H"""
+    <div class={["rounded-full shrink-0 overflow-hidden", @size_class, @class]}>
+      <img :if={@src} src={@src} alt={@name} class="w-full h-full object-cover" />
+      <div
+        :if={!@src}
+        class="w-full h-full bg-primary/15 flex items-center justify-center"
+      >
+        <span class="font-bold text-primary">{@initials}</span>
+      </div>
+    </div>
+    """
+  end
+
+  # ────────────────────────────────────────────────────────
+  # Dropdown
+  # ────────────────────────────────────────────────────────
+
+  @doc """
+  Renders an action dropdown menu.
+
+  ## Examples
+
+      <.dropdown id="user-actions">
+        <:trigger>
+          <.button variant="ghost" size="sm" icon="hero-ellipsis-vertical">
+            <span class="sr-only">Actions</span>
+          </.button>
+        </:trigger>
+        <:item>
+          <button phx-click="edit">Edit</button>
+        </:item>
+        <:item>
+          <button phx-click="delete" class="text-error">Delete</button>
+        </:item>
+      </.dropdown>
+  """
+  attr :id, :string, required: true
+  attr :class, :any, default: nil
+
+  slot :trigger, required: true
+  slot :item
+
+  def dropdown(assigns) do
+    ~H"""
+    <div class={["dropdown dropdown-end", @class]} id={@id}>
+      <div tabindex="0" role="button">
+        {render_slot(@trigger)}
+      </div>
+      <ul
+        tabindex="0"
+        class="dropdown-content menu bg-base-100 rounded-xl z-50 w-48 p-1.5 shadow-lg border border-base-300/50"
+      >
+        <li :for={item <- @item}>
+          {render_slot(item)}
+        </li>
+      </ul>
+    </div>
+    """
+  end
+
+  # ────────────────────────────────────────────────────────
+  # Tooltip
+  # ────────────────────────────────────────────────────────
+
+  @doc """
+  Renders a tooltip on hover.
+
+  ## Examples
+
+      <.tooltip text="Edit this item">
+        <.button variant="ghost" size="sm" icon="hero-pencil"></.button>
+      </.tooltip>
+  """
+  attr :text, :string, required: true
+  attr :position, :string, default: "top", values: ~w(top bottom left right)
+  attr :class, :any, default: nil
+
+  slot :inner_block, required: true
+
+  def tooltip(assigns) do
+    position_class = %{
+      "top" => "tooltip-top",
+      "bottom" => "tooltip-bottom",
+      "left" => "tooltip-left",
+      "right" => "tooltip-right"
+    }
+
+    assigns = assign(assigns, :pos_class, Map.get(position_class, assigns.position, "tooltip-top"))
+
+    ~H"""
+    <div class={["tooltip", @pos_class, @class]} data-tip={@text}>
+      {render_slot(@inner_block)}
+    </div>
+    """
+  end
+
+  # ────────────────────────────────────────────────────────
+  # Modal
+  # ────────────────────────────────────────────────────────
+
+  @doc """
+  Renders a modal dialog.
+
+  ## Examples
+
+      <.modal id="confirm-delete" title="Delete Member">
+        <p>Are you sure?</p>
+      </.modal>
+
+  JS.show(to: "#confirm-delete") to open, JS.hide(to: "#confirm-delete") to close.
+  """
+  attr :id, :string, required: true
+  attr :title, :string, default: nil
+  attr :size, :string, default: "md", values: ~w(sm md lg)
+
+  slot :inner_block, required: true
+  slot :actions
+
+  def modal(assigns) do
+    size_class = %{
+      "sm" => "max-w-sm",
+      "md" => "max-w-lg",
+      "lg" => "max-w-3xl"
+    }
+
+    assigns = assign(assigns, :size_class, Map.get(size_class, assigns.size, "max-w-lg"))
+
+    ~H"""
+    <div
+      id={@id}
+      phx-mounted={@id && JS.show(to: "##{@id}")}
+      class="hidden fixed inset-0 z-50"
+    >
+      <div
+        class="fixed inset-0 bg-black/50 backdrop-blur-sm"
+        phx-click={hide_modal(@id)}
+      />
+      <div class="fixed inset-0 overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-4">
+          <div class={[
+            "relative w-full bg-base-100 rounded-2xl shadow-2xl p-6",
+            @size_class
+          ]}>
+            <div :if={@title} class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-semibold">{@title}</h3>
+              <button
+                type="button"
+                class="btn btn-ghost btn-sm btn-circle"
+                phx-click={hide_modal(@id)}
+                aria-label="Close"
+              >
+                <.icon name="hero-x-mark" class="size-5" />
+              </button>
+            </div>
+            {render_slot(@inner_block)}
+            <div :if={@actions != []} class="mt-6 flex justify-end gap-3">
+              {render_slot(@actions)}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
+  defp hide_modal(id) do
+    JS.hide(to: "##{id}",
+      transition: {"ease-in duration-200", "opacity-100", "opacity-0"}
+    )
+  end
+
+  # ────────────────────────────────────────────────────────
+  # Header (kept for backwards compatibility)
+  # ────────────────────────────────────────────────────────
+
+  @doc """
+  Renders a header with title. Prefer `page_header` from LayoutComponents for new pages.
   """
   slot :inner_block, required: true
   slot :subtitle
@@ -328,30 +599,26 @@ defmodule FitTrackerzWeb.CoreComponents do
     """
   end
 
+  # ────────────────────────────────────────────────────────
+  # Table (kept for backwards compatibility)
+  # ────────────────────────────────────────────────────────
+
   @doc """
-  Renders a table with generic styling.
-
-  ## Examples
-
-      <.table id="users" rows={@users}>
-        <:col :let={user} label="id">{user.id}</:col>
-        <:col :let={user} label="username">{user.username}</:col>
-      </.table>
+  Renders a basic table. Prefer `data_table` from DataComponents for new pages.
   """
   attr :id, :string, required: true
   attr :rows, :list, required: true
-  attr :row_id, :any, default: nil, doc: "the function for generating the row id"
-  attr :row_click, :any, default: nil, doc: "the function for handling phx-click on each row"
+  attr :row_id, :any, default: nil
+  attr :row_click, :any, default: nil
 
   attr :row_item, :any,
-    default: &Function.identity/1,
-    doc: "the function for mapping each row before calling the :col and :action slots"
+    default: &Function.identity/1
 
   slot :col, required: true do
     attr :label, :string
   end
 
-  slot :action, doc: "the slot for showing user actions in the last table column"
+  slot :action
 
   def table(assigns) do
     assigns =
@@ -391,6 +658,10 @@ defmodule FitTrackerzWeb.CoreComponents do
     """
   end
 
+  # ────────────────────────────────────────────────────────
+  # List
+  # ────────────────────────────────────────────────────────
+
   @doc """
   Renders a data list.
 
@@ -398,7 +669,6 @@ defmodule FitTrackerzWeb.CoreComponents do
 
       <.list>
         <:item title="Title">{@post.title}</:item>
-        <:item title="Views">{@post.views}</:item>
       </.list>
   """
   slot :item, required: true do
@@ -418,18 +688,12 @@ defmodule FitTrackerzWeb.CoreComponents do
     """
   end
 
+  # ────────────────────────────────────────────────────────
+  # Icon
+  # ────────────────────────────────────────────────────────
+
   @doc """
   Renders a [Heroicon](https://heroicons.com).
-
-  Heroicons come in three styles – outline, solid, and mini.
-  By default, the outline style is used, but solid and mini may
-  be applied by using the `-solid` and `-mini` suffix.
-
-  You can customize the size and colors of the icons by setting
-  width, height, and background color classes.
-
-  Icons are extracted from the `deps/heroicons` directory and bundled within
-  your compiled app.css by the plugin in `assets/vendor/heroicons.js`.
 
   ## Examples
 
@@ -445,15 +709,12 @@ defmodule FitTrackerzWeb.CoreComponents do
     """
   end
 
+  # ────────────────────────────────────────────────────────
+  # Brand Logo
+  # ────────────────────────────────────────────────────────
+
   @doc """
-  Renders the FitTrackerz brand logo as an inline SVG using Gilroy font.
-
-  Uses daisyUI theme variables for automatic light/dark mode adaptation.
-
-  ## Examples
-
-      <.brand_logo class="h-8" />
-      <.brand_logo class="h-6" />
+  Renders the FitTrackerz brand logo as an inline SVG.
   """
   attr :class, :string, default: "h-8 w-auto"
 
@@ -475,7 +736,9 @@ defmodule FitTrackerzWeb.CoreComponents do
     """
   end
 
-  ## JS Commands
+  # ────────────────────────────────────────────────────────
+  # JS Commands
+  # ────────────────────────────────────────────────────────
 
   def show(js \\ %JS{}, selector) do
     JS.show(js,
@@ -498,20 +761,14 @@ defmodule FitTrackerzWeb.CoreComponents do
     )
   end
 
+  # ────────────────────────────────────────────────────────
+  # Translation Helpers
+  # ────────────────────────────────────────────────────────
+
   @doc """
   Translates an error message using gettext.
   """
   def translate_error({msg, opts}) do
-    # When using gettext, we typically pass the strings we want
-    # to translate as a static argument:
-    #
-    #     # Translate the number of files with plural rules
-    #     dngettext("errors", "1 file", "%{count} files", count)
-    #
-    # However the error messages in our forms and APIs are generated
-    # dynamically, so we need to translate them by calling Gettext
-    # with our gettext backend as first argument. Translations are
-    # available in the errors.po file (as we use the "errors" domain).
     if count = opts[:count] do
       Gettext.dngettext(FitTrackerzWeb.Gettext, "errors", msg, msg, count, opts)
     else

@@ -4,6 +4,8 @@ defmodule FitTrackerz.Billing.SubscriptionPlan do
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer]
 
+  import Ecto.Query, only: [from: 2]
+
   postgres do
     table("subscription_plans")
     repo(FitTrackerz.Repo)
@@ -48,6 +50,28 @@ defmodule FitTrackerz.Billing.SubscriptionPlan do
 
       validate string_length(:name, min: 1, max: 255)
       validate numericality(:price_in_paise, greater_than_or_equal_to: 0)
+
+      validate fn changeset, _context ->
+        plan_type = Ash.Changeset.get_attribute(changeset, :plan_type)
+        gym_id = Ash.Changeset.get_attribute(changeset, :gym_id)
+
+        if plan_type == :personal_training && gym_id do
+          tier =
+            from(g in FitTrackerz.Gym.Gym, where: g.id == ^gym_id, select: g.tier)
+            |> FitTrackerz.Repo.one()
+
+          if tier != :premium do
+            {:error,
+             field: :gym_id,
+             message:
+               "Personal Training plans require a Premium gym tier. Upgrade your gym to create this plan type."}
+          else
+            :ok
+          end
+        else
+          :ok
+        end
+      end
     end
 
     update :update do

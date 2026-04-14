@@ -68,158 +68,67 @@ defmodule FitTrackerzWeb.Admin.DashboardLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
-      <div class="space-y-8">
-        <%!-- Page Header --%>
-        <div>
-          <h1 class="text-2xl sm:text-3xl font-brand">Platform Admin</h1>
+      <.page_header title="Platform Admin" subtitle={"Welcome back, #{@current_user.name}. Here's your platform overview."}>
+        <:actions>
+          <.button variant="ghost" size="sm" icon="hero-chart-bar" navigate="/admin/dashboards">Dashboards</.button>
+          <.button variant="ghost" size="sm" icon="hero-document-text" navigate="/admin/reports">Reports</.button>
+        </:actions>
+      </.page_header>
 
-          <p class="text-base-content/50 mt-1">
-            Welcome back, {@current_user.name}. Here's your platform overview.
-          </p>
-        </div>
-        <%!-- Stats Grid --%>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div class="card bg-base-200/50 border border-base-300/50" id="stat-users">
-            <div class="card-body p-5">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
-                    Total Users
-                  </p>
+      <%!-- Stats Grid --%>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+        <.stat_card label="Total Users" value={@user_count} icon="hero-user-group-solid" color="primary" />
+        <.stat_card label="Verified Gyms" value={@gym_count} icon="hero-building-office-2-solid" color="secondary" />
+        <.stat_card label="Pending Gyms" value={@pending_count} icon="hero-clock-solid" color="warning" />
+        <.stat_card label="Subscriptions" value={@subscription_count} icon="hero-credit-card-solid" color="accent" />
+      </div>
 
-                  <p class="text-3xl font-black mt-1">{@user_count}</p>
-                </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <%!-- Quick Actions --%>
+        <.card title="Quick Actions">
+          <:header_actions>
+            <.icon name="hero-bolt-solid" class="size-5 text-primary" />
+          </:header_actions>
+          <div class="grid grid-cols-2 gap-3">
+            <.button variant="ghost" size="sm" icon="hero-user-group" navigate="/admin/users">Manage Users</.button>
+            <.button variant="ghost" size="sm" icon="hero-building-office-2" navigate="/admin/gyms">Manage Gyms</.button>
+            <.button variant="ghost" size="sm" icon="hero-chart-bar" navigate="/admin/dashboards">Dashboards</.button>
+            <.button variant="ghost" size="sm" icon="hero-document-text" navigate="/admin/reports">Reports</.button>
+          </div>
+        </.card>
 
-                <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <.icon name="hero-user-group-solid" class="size-6 text-primary" />
-                </div>
-              </div>
-
-              <.link
-                navigate="/admin/users"
-                class="text-xs text-primary mt-2 flex items-center gap-1 hover:underline"
+        <%!-- Pending Verifications --%>
+        <.card title="Pending Verifications">
+          <:header_actions>
+            <.badge :if={@pending_count > 0} variant="warning">{@pending_count}</.badge>
+          </:header_actions>
+          <%= if @pending_gyms == [] do %>
+            <.empty_state
+              icon="hero-check-circle"
+              title="All clear"
+              subtitle="All gyms are verified. No pending verifications."
+            />
+          <% else %>
+            <div class="space-y-2">
+              <div
+                :for={gym <- @pending_gyms}
+                class="flex items-center justify-between p-3 rounded-xl bg-base-200/50 border border-base-300/30"
+                id={"pending-gym-#{gym.id}"}
               >
-                View all users <.icon name="hero-arrow-right-mini" class="size-3" />
-              </.link>
-            </div>
-          </div>
-
-          <div class="card bg-base-200/50 border border-base-300/50" id="stat-gyms">
-            <div class="card-body p-5">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
-                    Verified Gyms
-                  </p>
-
-                  <p class="text-3xl font-black mt-1">{@gym_count}</p>
-                </div>
-
-                <div class="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center">
-                  <.icon name="hero-building-office-2-solid" class="size-6 text-secondary" />
-                </div>
-              </div>
-
-              <.link
-                navigate="/admin/gyms"
-                class="text-xs text-secondary mt-2 flex items-center gap-1 hover:underline"
-              >
-                Manage gyms <.icon name="hero-arrow-right-mini" class="size-3" />
-              </.link>
-            </div>
-          </div>
-
-          <div class="card bg-base-200/50 border border-base-300/50" id="stat-subscriptions">
-            <div class="card-body p-5">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
-                    Subscriptions
-                  </p>
-
-                  <p class="text-3xl font-black mt-1">{@subscription_count}</p>
-                </div>
-
-                <div class="w-12 h-12 rounded-xl bg-warning/10 flex items-center justify-center">
-                  <.icon name="hero-credit-card-solid" class="size-6 text-warning" />
-                </div>
-              </div>
-
-              <p class="text-xs text-base-content/40 mt-2">Active plans</p>
-            </div>
-          </div>
-        </div>
-        <%!-- Quick Actions & Pending --%>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div class="card bg-base-200/50 border border-base-300/50" id="quick-actions">
-            <div class="card-body p-5">
-              <h2 class="text-lg font-bold flex items-center gap-2">
-                <.icon name="hero-bolt-solid" class="size-5 text-primary" /> Quick Actions
-              </h2>
-
-              <div class="grid grid-cols-2 gap-3 mt-4">
-                <.link
-                  navigate="/admin/users"
-                  class="btn btn-ghost bg-base-300/30 btn-sm justify-start gap-2 font-medium"
-                >
-                  <.icon name="hero-user-group" class="size-4 text-primary" /> Manage Users
-                </.link>
-                <.link
-                  navigate="/admin/gyms"
-                  class="btn btn-ghost bg-base-300/30 btn-sm justify-start gap-2 font-medium"
-                >
-                  <.icon name="hero-building-office-2" class="size-4 text-secondary" /> Manage Gyms
-                </.link>
-              </div>
-            </div>
-          </div>
-
-          <div class="card bg-base-200/50 border border-base-300/50" id="pending-verifications">
-            <div class="card-body p-5">
-              <h2 class="text-lg font-bold flex items-center gap-2">
-                <.icon name="hero-clock-solid" class="size-5 text-warning" /> Pending Verifications
-                <%= if @pending_count > 0 do %>
-                  <span class="badge badge-warning badge-sm">{@pending_count}</span>
-                <% end %>
-              </h2>
-
-              <div class="mt-4 space-y-3">
-                <%= if @pending_gyms == [] do %>
-                  <div class="flex items-center gap-3 p-3 rounded-lg bg-base-300/20">
-                    <.icon name="hero-check-circle" class="size-5 text-success" />
-                    <p class="text-sm text-base-content/50">
-                      All gyms are verified. No pending verifications.
-                    </p>
+                <div class="flex items-center gap-3 min-w-0">
+                  <.avatar name={gym.name} size="sm" />
+                  <div class="min-w-0">
+                    <p class="text-sm font-semibold truncate">{gym.name}</p>
+                    <p class="text-xs text-base-content/50">by {gym.owner.name}</p>
                   </div>
-                <% else %>
-                  <%= for gym <- @pending_gyms do %>
-                    <div class="flex items-center justify-between p-3 rounded-lg bg-base-300/30">
-                      <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-warning/10 flex items-center justify-center">
-                          <.icon name="hero-building-office-2" class="size-4 text-warning" />
-                        </div>
-
-                        <div>
-                          <p class="text-sm font-semibold">{gym.name}</p>
-
-                          <p class="text-xs text-base-content/40">by {gym.owner.name}</p>
-                        </div>
-                      </div>
-
-                      <button
-                        phx-click="verify_gym"
-                        phx-value-id={gym.id}
-                        class="btn btn-success btn-xs"
-                      >
-                        Verify
-                      </button>
-                    </div>
-                  <% end %>
-                <% end %>
+                </div>
+                <.button variant="primary" size="sm" icon="hero-shield-check" phx-click="verify_gym" phx-value-id={gym.id}>
+                  Verify
+                </.button>
               </div>
             </div>
-          </div>
-        </div>
+          <% end %>
+        </.card>
       </div>
     </Layouts.app>
     """

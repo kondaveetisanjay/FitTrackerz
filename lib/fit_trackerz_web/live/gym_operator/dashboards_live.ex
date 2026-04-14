@@ -490,33 +490,31 @@ defmodule FitTrackerzWeb.GymOperator.DashboardsLive do
 
   defp chart_card(assigns) do
     ~H"""
-    <div class="card bg-base-200/50 border border-base-300/50">
-      <div class="card-body p-4">
-        <div class="flex items-center justify-between mb-3">
-          <h3 class="text-sm font-semibold text-base-content/60">{@title}</h3>
-          <form phx-change="change_viz" class="inline">
-            <input type="hidden" name="chart_id" value={@id} />
-            <select name="viz_type" class="select select-xs select-bordered">
-              <option :for={opt <- @viz_options} value={opt} selected={opt == @current_viz}>
-                {viz_label(opt)}
-              </option>
-            </select>
-          </form>
-        </div>
-        <%= if @chart_data[:type] == "table" do %>
-          <div class="overflow-x-auto" style="max-height: 250px;">
-            <table class="table table-sm table-zebra">
-              <thead><tr><th :for={h <- @chart_data.data.headers} class="text-xs">{h}</th></tr></thead>
-              <tbody><tr :for={row <- @chart_data.data.rows}><td :for={cell <- row} class="text-sm">{cell}</td></tr></tbody>
-            </table>
-          </div>
-        <% else %>
-          <div id={@id} phx-hook="ChartHook" data-chart={Jason.encode!(@chart_data)}>
-            <canvas class="w-full" style="height: 250px;"></canvas>
-          </div>
-        <% end %>
+    <.card>
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-semibold text-base-content/60">{@title}</h3>
+        <form phx-change="change_viz" class="inline">
+          <input type="hidden" name="chart_id" value={@id} />
+          <select name="viz_type" class="select select-xs select-bordered">
+            <option :for={opt <- @viz_options} value={opt} selected={opt == @current_viz}>
+              {viz_label(opt)}
+            </option>
+          </select>
+        </form>
       </div>
-    </div>
+      <%= if @chart_data[:type] == "table" do %>
+        <div class="overflow-x-auto" style="max-height: 250px;">
+          <table class="table table-sm table-zebra">
+            <thead><tr><th :for={h <- @chart_data.data.headers} class="text-xs">{h}</th></tr></thead>
+            <tbody><tr :for={row <- @chart_data.data.rows}><td :for={cell <- row} class="text-sm">{cell}</td></tr></tbody>
+          </table>
+        </div>
+      <% else %>
+        <div id={@id} phx-hook="ChartHook" data-chart={Jason.encode!(@chart_data)}>
+          <canvas class="w-full" style="height: 250px;"></canvas>
+        </div>
+      <% end %>
+    </.card>
     """
   end
 
@@ -526,102 +524,70 @@ defmodule FitTrackerzWeb.GymOperator.DashboardsLive do
     <Layouts.app flash={@flash} current_user={@current_user}>
       <div class="space-y-6">
         <%= if @gym do %>
-          <%!-- Header --%>
-          <div>
-            <div class="flex items-center gap-3 mb-1">
-              <.link navigate="/gym" class="btn btn-ghost btn-sm btn-circle">
-                <.icon name="hero-arrow-left-mini" class="size-4" />
-              </.link>
-              <h1 class="text-2xl sm:text-3xl font-brand">Dashboards</h1>
-            </div>
-            <p class="text-base-content/50 ml-12">Performance metrics for {@gym.name}</p>
-          </div>
+          <.page_header title="Dashboards" subtitle={"Performance metrics for #{@gym.name}"} back_path="/gym" />
 
           <%!-- Date Range Card --%>
-          <div class="card bg-base-200/50 border border-base-300/50">
-            <div class="card-body p-4">
-              <div class="flex flex-wrap items-center gap-3">
-                <div class="flex gap-1">
-                  <%= for preset <- ["7d", "30d", "90d", "year"] do %>
-                    <button
-                      phx-click="select_preset"
-                      phx-value-preset={preset}
-                      class={[
-                        "btn btn-sm",
-                        if(@preset == preset, do: "btn-primary", else: "btn-ghost")
-                      ]}
-                    >
-                      {preset_label(preset)}
-                    </button>
-                  <% end %>
-                </div>
-
-                <form phx-submit="apply_custom_range" phx-change="update_custom" class="flex items-center gap-2 ml-auto">
-                  <input
-                    type="date"
-                    name="custom_start"
-                    value={@custom_start}
-                    class="input input-sm input-bordered w-36"
-                  />
-                  <span class="text-base-content/40">to</span>
-                  <input
-                    type="date"
-                    name="custom_end"
-                    value={@custom_end}
-                    class="input input-sm input-bordered w-36"
-                  />
-                  <button type="submit" class="btn btn-sm btn-primary">
-                    Apply
-                  </button>
-                </form>
+          <.card>
+            <div class="flex flex-wrap items-center gap-3">
+              <div class="flex gap-1">
+                <%= for preset <- ["7d", "30d", "90d", "year"] do %>
+                  <.button
+                    variant={if(@preset == preset, do: "primary", else: "ghost")}
+                    size="sm"
+                    phx-click="select_preset"
+                    phx-value-preset={preset}
+                  >
+                    {preset_label(preset)}
+                  </.button>
+                <% end %>
               </div>
+
+              <form phx-submit="apply_custom_range" phx-change="update_custom" class="flex items-center gap-2 ml-auto">
+                <input
+                  type="date"
+                  name="custom_start"
+                  value={@custom_start}
+                  class="input input-sm input-bordered w-36"
+                />
+                <span class="text-base-content/40">to</span>
+                <input
+                  type="date"
+                  name="custom_end"
+                  value={@custom_end}
+                  class="input input-sm input-bordered w-36"
+                />
+                <.button variant="primary" size="sm" type="submit">Apply</.button>
+              </form>
             </div>
-          </div>
+          </.card>
 
           <%!-- Summary Cards --%>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <%!-- Active Members --%>
-            <div class="card bg-base-200/50 border border-base-300/50">
-              <div class="card-body p-4">
-                <p class="text-sm text-base-content/40">Active Members</p>
-                <div class="flex items-end gap-2">
-                  <span class="text-3xl font-bold">{@active_count}</span>
-                  <span class={[
-                    "badge badge-sm",
-                    if(@active_change >= 0, do: "text-success", else: "text-error")
-                  ]}>
-                    {if @active_change >= 0, do: "+", else: ""}{@active_change}%
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <%!-- New Members --%>
-            <div class="card bg-base-200/50 border border-base-300/50">
-              <div class="card-body p-4">
-                <p class="text-sm text-base-content/40">New Members</p>
-                <span class="text-3xl font-bold">{@new_members_total}</span>
-                <p class="text-xs text-base-content/60">in selected period</p>
-              </div>
-            </div>
-
-            <%!-- Revenue --%>
-            <div class="card bg-base-200/50 border border-base-300/50">
-              <div class="card-body p-4">
-                <p class="text-sm text-base-content/40">Revenue</p>
-                <span class="text-3xl font-bold">&#8377;{format_currency(@revenue_total)}</span>
-                <p class="text-xs text-base-content/60">paid subscriptions</p>
-              </div>
-            </div>
-
-            <%!-- Avg Daily Attendance --%>
-            <div class="card bg-base-200/50 border border-base-300/50">
-              <div class="card-body p-4">
-                <p class="text-sm text-base-content/40">Avg Daily Attendance</p>
-                <span class="text-3xl font-bold">{@avg_daily_attendance}</span>
-                <p class="text-xs text-base-content/60">check-ins per day</p>
-              </div>
-            </div>
+            <.stat_card
+              label="Active Members"
+              value={@active_count}
+              icon="hero-users-solid"
+              color="primary"
+              change={"#{if @active_change >= 0, do: "+", else: ""}#{@active_change}%"}
+            />
+            <.stat_card
+              label="New Members"
+              value={@new_members_total}
+              icon="hero-user-plus-solid"
+              color="secondary"
+            />
+            <.stat_card
+              label="Revenue"
+              value={"&#8377;#{format_currency(@revenue_total)}"}
+              icon="hero-currency-rupee-solid"
+              color="success"
+            />
+            <.stat_card
+              label="Avg Daily Attendance"
+              value={@avg_daily_attendance}
+              icon="hero-calendar-days-solid"
+              color="warning"
+            />
           </div>
 
           <%!-- Charts Grid --%>
@@ -657,12 +623,16 @@ defmodule FitTrackerzWeb.GymOperator.DashboardsLive do
             />
           </div>
         <% else %>
-          <div class="text-center py-16">
-            <p class="text-base-content/50">No gym found. Please set up your gym first.</p>
-            <.link navigate="/gym/setup" class="btn btn-primary btn-sm mt-4">
-              Set Up Gym
-            </.link>
-          </div>
+          <.page_header title="Dashboards" subtitle="Performance metrics" back_path="/gym" />
+          <.empty_state
+            icon="hero-building-office"
+            title="No Gym Found"
+            subtitle="Please set up your gym first to view dashboards."
+          >
+            <:action>
+              <.button variant="primary" size="sm" navigate="/gym/setup">Set Up Gym</.button>
+            </:action>
+          </.empty_state>
         <% end %>
       </div>
     </Layouts.app>

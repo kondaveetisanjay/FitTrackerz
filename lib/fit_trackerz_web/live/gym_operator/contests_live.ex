@@ -248,176 +248,106 @@ defmodule FitTrackerzWeb.GymOperator.ContestsLive do
     Calendar.strftime(dt, "%b %d, %Y")
   end
 
-  defp type_badge_class(:challenge), do: "badge-warning"
-  defp type_badge_class(:competition), do: "badge-error"
-  defp type_badge_class(:event), do: "badge-info"
-  defp type_badge_class(_), do: "badge-ghost"
+  defp type_badge_variant(:challenge), do: "warning"
+  defp type_badge_variant(:competition), do: "error"
+  defp type_badge_variant(:event), do: "info"
+  defp type_badge_variant(_), do: "neutral"
 
-  defp status_badge_class(:upcoming), do: "badge-info"
-  defp status_badge_class(:active), do: "badge-success"
-  defp status_badge_class(:completed), do: "badge-ghost"
-  defp status_badge_class(:cancelled), do: "badge-error"
-  defp status_badge_class(_), do: "badge-ghost"
+  defp status_badge_variant(:upcoming), do: "info"
+  defp status_badge_variant(:active), do: "success"
+  defp status_badge_variant(:completed), do: "neutral"
+  defp status_badge_variant(:cancelled), do: "error"
+  defp status_badge_variant(_), do: "neutral"
 
   @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
-      <div class="space-y-8">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div class="flex items-center gap-3">
-            <Layouts.back_button />
-            <div>
-              <h1 class="text-2xl sm:text-3xl font-brand">Contests</h1>
-              <p class="text-base-content/50 mt-1">
-                Create and manage fitness contests for your gym.
-              </p>
-            </div>
-          </div>
-        </div>
+      <div class="space-y-6">
+        <.page_header title="Contests" subtitle="Create and manage fitness contests for your gym." back_path="/gym">
+          <:actions>
+            <%= if @gym do %>
+              <.button variant="primary" size="sm" icon="hero-plus-mini" phx-click="toggle_form" id="toggle-contest-form">New Contest</.button>
+            <% end %>
+          </:actions>
+        </.page_header>
 
         <%= if @gym == nil do %>
-          <div class="card bg-base-200/50 border border-base-300/50" id="no-gym-card">
-            <div class="card-body p-6 text-center">
-              <.icon
-                name="hero-building-office-solid"
-                class="size-12 text-base-content/20 mx-auto"
-              />
-              <h2 class="text-lg font-bold mt-4">No Gym Found</h2>
-              <p class="text-base-content/50 mt-1">
-                You need to create a gym first before managing contests.
-              </p>
-              <a href="/gym/setup" class="btn btn-primary btn-sm mt-4 gap-2">
-                <.icon name="hero-plus-mini" class="size-4" /> Setup Gym
-              </a>
-            </div>
-          </div>
+          <.empty_state icon="hero-building-office-solid" title="No Gym Found" subtitle="You need to create a gym first before managing contests.">
+            <:action>
+              <.button variant="primary" size="sm" icon="hero-plus-mini" navigate="/gym/setup">Setup Gym</.button>
+            </:action>
+          </.empty_state>
         <% else %>
-          <%!-- Create Button --%>
-          <div class="flex justify-end">
-            <button
-              phx-click="toggle_form"
-              class="btn btn-primary btn-sm gap-2"
-              id="toggle-contest-form"
-            >
-              <.icon name="hero-plus-mini" class="size-4" /> New Contest
-            </button>
-          </div>
-
           <%!-- Create Form --%>
           <%= if @show_form do %>
-            <div class="card bg-base-200/50 border border-base-300/50" id="create-contest-card">
-              <div class="card-body p-6">
-                <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                  <.icon name="hero-trophy-solid" class="size-5 text-primary" /> New Contest
-                </h2>
-                <.form
-                  for={@form}
-                  id="create-contest-form"
-                  phx-change="validate"
-                  phx-submit="save_contest"
-                >
-                  {render_contest_fields(assigns)}
-                  <div class="flex gap-2 mt-4">
-                    <button type="submit" class="btn btn-primary btn-sm gap-2" id="save-contest-btn">
-                      <.icon name="hero-check-mini" class="size-4" /> Create Contest
-                    </button>
-                    <button
-                      type="button"
-                      phx-click="toggle_form"
-                      class="btn btn-ghost btn-sm"
-                      id="cancel-create-btn"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </.form>
-              </div>
-            </div>
+            <.card title="New Contest" id="create-contest-card">
+              <.form
+                for={@form}
+                id="create-contest-form"
+                phx-change="validate"
+                phx-submit="save_contest"
+              >
+                {render_contest_fields(assigns)}
+                <div class="flex gap-2 mt-4">
+                  <.button variant="primary" size="sm" icon="hero-check-mini" type="submit" id="save-contest-btn">Create Contest</.button>
+                  <.button variant="ghost" size="sm" type="button" phx-click="toggle_form" id="cancel-create-btn">Cancel</.button>
+                </div>
+              </.form>
+            </.card>
           <% end %>
 
           <%!-- Edit Form --%>
           <%= if @editing_contest_id do %>
-            <div class="card bg-base-200/50 border border-base-300/50" id="edit-contest-card">
-              <div class="card-body p-6">
-                <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                  <.icon name="hero-pencil-square-solid" class="size-5 text-info" /> Edit Contest
-                </h2>
-                <.form
-                  for={@form}
-                  id="edit-contest-form"
-                  phx-change="validate"
-                  phx-submit="update_contest"
-                >
-                  {render_contest_fields(assigns)}
-                  <div class="flex gap-2 mt-4">
-                    <button
-                      type="submit"
-                      class="btn btn-primary btn-sm gap-2"
-                      id="update-contest-btn"
-                    >
-                      <.icon name="hero-check-mini" class="size-4" /> Update
-                    </button>
-                    <button
-                      type="button"
-                      phx-click="cancel_edit"
-                      class="btn btn-ghost btn-sm"
-                      id="cancel-edit-btn"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </.form>
-              </div>
-            </div>
+            <.card title="Edit Contest" id="edit-contest-card">
+              <.form
+                for={@form}
+                id="edit-contest-form"
+                phx-change="validate"
+                phx-submit="update_contest"
+              >
+                {render_contest_fields(assigns)}
+                <div class="flex gap-2 mt-4">
+                  <.button variant="primary" size="sm" icon="hero-check-mini" type="submit" id="update-contest-btn">Update</.button>
+                  <.button variant="ghost" size="sm" type="button" phx-click="cancel_edit" id="cancel-edit-btn">Cancel</.button>
+                </div>
+              </.form>
+            </.card>
           <% end %>
 
           <%!-- Contest List --%>
           <%= if @contests == [] do %>
-            <div class="flex flex-col items-center justify-center py-20" id="no-contests">
-              <.icon name="hero-trophy-solid" class="size-16 text-base-content/15 mb-6" />
-              <h2 class="text-xl font-bold text-base-content/60 mb-2">No Contests Yet</h2>
-              <p class="text-base-content/40 mb-8 text-center max-w-md">
-                Create fitness contests to engage your members with challenges, competitions, and events.
-              </p>
-            </div>
+            <.empty_state icon="hero-trophy-solid" title="No Contests Yet" subtitle="Create fitness contests to engage your members with challenges, competitions, and events.">
+              <:action>
+                <.button variant="primary" icon="hero-plus-mini" phx-click="toggle_form">Create Contest</.button>
+              </:action>
+            </.empty_state>
           <% else %>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="contests-grid">
               <%= for contest <- @contests do %>
-                <div
-                  class="card bg-base-200/50 border border-base-300/50 overflow-hidden"
-                  id={"contest-#{contest.id}"}
-                >
-                  <div class="card-body p-4 gap-3">
+                <.card class="overflow-hidden" id={"contest-#{contest.id}"}>
+                  <div class="space-y-3">
                     <%!-- Badges --%>
                     <div class="flex flex-wrap gap-1.5">
-                      <span class={"badge badge-sm #{type_badge_class(contest.contest_type)}"}>
+                      <.badge variant={type_badge_variant(contest.contest_type)}>
                         {contest.contest_type |> to_string() |> String.capitalize()}
-                      </span>
-                      <span class={"badge badge-sm #{status_badge_class(contest.status)}"}>
+                      </.badge>
+                      <.badge variant={status_badge_variant(contest.status)}>
                         {contest.status |> to_string() |> String.capitalize()}
-                      </span>
+                      </.badge>
                     </div>
 
-                    <%!-- Title --%>
-                    <h3 class="card-title text-base leading-tight">{contest.title}</h3>
+                    <h3 class="font-bold text-base leading-tight">{contest.title}</h3>
 
-                    <%!-- Description --%>
                     <%= if contest.description do %>
-                      <p class="text-sm text-base-content/60 line-clamp-2">
-                        {contest.description}
-                      </p>
+                      <p class="text-sm text-base-content/60 line-clamp-2">{contest.description}</p>
                     <% end %>
 
-                    <%!-- Dates --%>
                     <div class="flex items-center gap-1.5 text-sm text-base-content/60">
                       <.icon name="hero-calendar-mini" class="size-3.5 shrink-0" />
-                      <span>
-                        {format_date(contest.starts_at)} — {format_date(contest.ends_at)}
-                      </span>
+                      <span>{format_date(contest.starts_at)} -- {format_date(contest.ends_at)}</span>
                     </div>
 
-                    <%!-- Participants --%>
                     <%= if contest.max_participants do %>
                       <div class="flex items-center gap-1.5 text-sm text-base-content/60">
                         <.icon name="hero-users-mini" class="size-3.5 shrink-0" />
@@ -425,7 +355,6 @@ defmodule FitTrackerzWeb.GymOperator.ContestsLive do
                       </div>
                     <% end %>
 
-                    <%!-- Prize --%>
                     <%= if contest.prize_description do %>
                       <div class="flex items-start gap-1.5 text-sm text-base-content/60">
                         <.icon name="hero-gift-mini" class="size-3.5 shrink-0 mt-0.5" />
@@ -433,28 +362,12 @@ defmodule FitTrackerzWeb.GymOperator.ContestsLive do
                       </div>
                     <% end %>
 
-                    <%!-- Actions --%>
-                    <div class="card-actions mt-auto pt-2 border-t border-base-300/30">
-                      <button
-                        phx-click="edit_contest"
-                        phx-value-id={contest.id}
-                        class="btn btn-ghost btn-xs text-info gap-1"
-                        id={"edit-#{contest.id}"}
-                      >
-                        <.icon name="hero-pencil-square" class="size-3.5" /> Edit
-                      </button>
-                      <button
-                        phx-click="delete_contest"
-                        phx-value-id={contest.id}
-                        data-confirm="Are you sure you want to delete this contest?"
-                        class="btn btn-ghost btn-xs text-error gap-1"
-                        id={"delete-#{contest.id}"}
-                      >
-                        <.icon name="hero-trash" class="size-3.5" /> Delete
-                      </button>
+                    <div class="flex gap-2 pt-2 border-t border-base-300/30">
+                      <.button variant="ghost" size="sm" icon="hero-pencil-square" phx-click="edit_contest" phx-value-id={contest.id} id={"edit-#{contest.id}"}>Edit</.button>
+                      <.button variant="ghost" size="sm" icon="hero-trash" phx-click="delete_contest" phx-value-id={contest.id} data-confirm="Are you sure you want to delete this contest?" id={"delete-#{contest.id}"} class="text-error">Delete</.button>
                     </div>
                   </div>
-                </div>
+                </.card>
               <% end %>
             </div>
           <% end %>

@@ -492,26 +492,20 @@ defmodule FitTrackerzWeb.Member.MessagesLive do
 
   defp is_image?(content_type), do: String.starts_with?(content_type || "", "image/")
 
-  defp role_badge(:trainer), do: "badge-warning"
-  defp role_badge(:gym_operator), do: "badge-accent"
-  defp role_badge(_), do: "badge-ghost"
+  defp role_badge_variant(:trainer), do: "warning"
+  defp role_badge_variant(:gym_operator), do: "secondary"
+  defp role_badge_variant(_), do: "neutral"
 
   @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
       <div class="flex flex-col h-[calc(100vh-8rem)]">
-        <div class="flex items-center gap-3 mb-4">
-          <Layouts.back_button />
-          <div>
-            <h1 class="text-2xl sm:text-3xl font-brand">Messages</h1>
-            <p class="text-base-content/50 mt-0.5 text-sm">Chat with your trainer and gym.</p>
-          </div>
-        </div>
+        <.page_header title="Messages" subtitle="Chat with your trainer and gym." back_path="/member" />
 
         <div class="flex flex-1 gap-4 min-h-0">
           <%!-- Left Panel: Conversation List --%>
-          <div class="w-80 shrink-0 flex flex-col bg-base-200/50 rounded-xl border border-base-300/50">
+          <div class="w-80 shrink-0 flex flex-col rounded-2xl border border-base-300/50 bg-base-100 overflow-hidden">
             <%!-- Tabs --%>
             <div class="p-3 border-b border-base-300/50">
               <div class="tabs tabs-boxed tabs-sm">
@@ -541,9 +535,9 @@ defmodule FitTrackerzWeb.Member.MessagesLive do
 
             <%!-- Action Buttons --%>
             <div class="p-3 border-b border-base-300/50">
-              <button phx-click="show_new_direct" class="btn btn-sm btn-primary w-full gap-1">
-                <.icon name="hero-chat-bubble-left-right-mini" class="size-4" /> New Message
-              </button>
+              <.button variant="primary" size="sm" icon="hero-chat-bubble-left-right" phx-click="show_new_direct" class="w-full">
+                New Message
+              </.button>
             </div>
 
             <%!-- Conversation List --%>
@@ -558,17 +552,12 @@ defmodule FitTrackerzWeb.Member.MessagesLive do
                   id={"conv-#{conv.id}"}
                   phx-click="select_conversation"
                   phx-value-id={conv.id}
-                  class={"flex items-center gap-3 p-3 cursor-pointer hover:bg-base-300/50 transition-colors border-b border-base-300/30 #{if @active_conversation && @active_conversation.id == conv.id, do: "bg-base-300/70"}"}
+                  class={"flex items-center gap-3 p-3 cursor-pointer hover:bg-base-200/50 transition-colors border-b border-base-300/30 #{if @active_conversation && @active_conversation.id == conv.id, do: "bg-base-200/70"}"}
                 >
-                  <div class={"w-10 h-10 rounded-full flex items-center justify-center shrink-0 #{if conv.type == :announcement, do: "bg-secondary/15", else: "bg-primary/15"}"}>
-                    <%= if conv.type == :announcement do %>
-                      <.icon name="hero-megaphone-solid" class="size-5 text-secondary" />
-                    <% else %>
-                      <span class="text-sm font-bold text-primary">
-                        {String.first(conversation_display_name(conv, @current_user.id))}
-                      </span>
-                    <% end %>
-                  </div>
+                  <.avatar
+                    name={conversation_display_name(conv, @current_user.id)}
+                    size="sm"
+                  />
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center justify-between">
                       <span class="font-semibold text-sm truncate">
@@ -584,7 +573,7 @@ defmodule FitTrackerzWeb.Member.MessagesLive do
                   </div>
                   <% count = unread_count(conv, @current_user.id) %>
                   <%= if count > 0 do %>
-                    <span class="badge badge-primary badge-xs">{count}</span>
+                    <.badge variant="primary" size="sm">{count}</.badge>
                   <% end %>
                 </div>
               <% end %>
@@ -592,39 +581,35 @@ defmodule FitTrackerzWeb.Member.MessagesLive do
           </div>
 
           <%!-- Right Panel: Active Conversation / New Forms --%>
-          <div class="flex-1 flex flex-col bg-base-200/30 rounded-xl border border-base-300/50">
+          <div class="flex-1 flex flex-col rounded-2xl border border-base-300/50 bg-base-100 overflow-hidden">
             <%= cond do %>
               <% @show_new_direct -> %>
                 <%!-- New Direct Message Form --%>
                 <div class="p-4 border-b border-base-300/50 flex items-center justify-between">
                   <h2 class="font-bold">New Conversation</h2>
-                  <button phx-click="cancel_new" class="btn btn-ghost btn-sm btn-circle">
-                    <.icon name="hero-x-mark-mini" class="size-5" />
-                  </button>
+                  <.button variant="ghost" size="sm" icon="hero-x-mark" phx-click="cancel_new"><span class="sr-only">Close</span></.button>
                 </div>
                 <div class="flex-1 overflow-y-auto p-4">
                   <p class="text-sm text-base-content/50 mb-3">Select a person to message:</p>
                   <%= if @contacts == [] do %>
-                    <p class="text-center text-base-content/40 text-sm py-8">
-                      No contacts found in your gym.
-                    </p>
+                    <.empty_state
+                      icon="hero-users"
+                      title="No Contacts"
+                      subtitle="No contacts found in your gym."
+                    />
                   <% else %>
                     <div class="space-y-2">
                       <div
                         :for={contact <- @contacts}
                         phx-click="start_direct"
                         phx-value-user_id={contact.id}
-                        class="flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-base-300/50 transition-colors"
+                        class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-base-200/50 transition-colors"
                       >
-                        <div class="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center">
-                          <span class="text-sm font-bold text-primary">
-                            {String.first(contact.name)}
-                          </span>
-                        </div>
+                        <.avatar name={contact.name} size="sm" />
                         <div class="flex-1">
                           <span class="font-medium text-sm">{contact.name}</span>
                         </div>
-                        <span class={"badge badge-sm #{role_badge(contact.role)}"}>{contact.role}</span>
+                        <.badge variant={role_badge_variant(contact.role)} size="sm">{contact.role}</.badge>
                       </div>
                     </div>
                   <% end %>
@@ -633,15 +618,10 @@ defmodule FitTrackerzWeb.Member.MessagesLive do
               <% @active_conversation != nil -> %>
                 <%!-- Active Conversation --%>
                 <div class="p-4 border-b border-base-300/50 flex items-center gap-3">
-                  <div class={"w-10 h-10 rounded-full flex items-center justify-center #{if @active_conversation.type == :announcement, do: "bg-secondary/15", else: "bg-primary/15"}"}>
-                    <%= if @active_conversation.type == :announcement do %>
-                      <.icon name="hero-megaphone-solid" class="size-5 text-secondary" />
-                    <% else %>
-                      <span class="text-sm font-bold text-primary">
-                        {String.first(conversation_display_name(@active_conversation, @current_user.id))}
-                      </span>
-                    <% end %>
-                  </div>
+                  <.avatar
+                    name={conversation_display_name(@active_conversation, @current_user.id)}
+                    size="sm"
+                  />
                   <div>
                     <h2 class="font-bold text-sm">
                       {conversation_display_name(@active_conversation, @current_user.id)}
@@ -668,7 +648,7 @@ defmodule FitTrackerzWeb.Member.MessagesLive do
                       id={"msg-#{msg.id}"}
                       class={"flex #{if msg.sender_id == @current_user.id, do: "justify-end", else: "justify-start"}"}
                     >
-                      <div class={"max-w-[70%] #{if msg.sender_id == @current_user.id, do: "bg-primary text-primary-content", else: "bg-base-300"} rounded-2xl px-4 py-2.5"}>
+                      <div class={"max-w-[70%] #{if msg.sender_id == @current_user.id, do: "bg-primary text-primary-content", else: "bg-base-200"} rounded-2xl px-4 py-2.5"}>
                         <%= if msg.sender_id != @current_user.id do %>
                           <p class="text-xs font-semibold opacity-70 mb-1">
                             {if msg.sender, do: msg.sender.name, else: "Unknown"}
@@ -714,7 +694,7 @@ defmodule FitTrackerzWeb.Member.MessagesLive do
                       <div class="flex flex-wrap gap-2 mb-2">
                         <div
                           :for={entry <- @uploads.attachments.entries}
-                          class="flex items-center gap-1 bg-base-300 rounded-lg px-2 py-1 text-xs"
+                          class="flex items-center gap-1 bg-base-200 rounded-lg px-2 py-1 text-xs"
                         >
                           <span class="truncate max-w-[120px]">{entry.client_name}</span>
                           <button
@@ -757,13 +737,11 @@ defmodule FitTrackerzWeb.Member.MessagesLive do
               <% true -> %>
                 <%!-- Empty State --%>
                 <div class="flex-1 flex items-center justify-center">
-                  <div class="text-center">
-                    <div class="w-16 h-16 rounded-2xl bg-base-300/30 flex items-center justify-center mx-auto mb-4">
-                      <.icon name="hero-chat-bubble-left-right" class="size-8 text-base-content/20" />
-                    </div>
-                    <h2 class="text-lg font-bold text-base-content/50">Select a conversation</h2>
-                    <p class="text-sm text-base-content/30 mt-1">Or start a new one</p>
-                  </div>
+                  <.empty_state
+                    icon="hero-chat-bubble-left-right"
+                    title="Select a conversation"
+                    subtitle="Or start a new one"
+                  />
                 </div>
             <% end %>
           </div>

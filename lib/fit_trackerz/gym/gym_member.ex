@@ -4,6 +4,8 @@ defmodule FitTrackerz.Gym.GymMember do
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer]
 
+  import Ecto.Query, only: [from: 2]
+
   postgres do
     table("gym_members")
     repo(FitTrackerz.Repo)
@@ -68,6 +70,43 @@ defmodule FitTrackerz.Gym.GymMember do
 
     create :create do
       accept([:user_id, :gym_id, :branch_id, :joined_at])
+
+      validate fn changeset, _context ->
+        gym_id = Ash.Changeset.get_attribute(changeset, :gym_id)
+
+        if gym_id do
+          gym_tier =
+            from(g in FitTrackerz.Gym.Gym, where: g.id == ^gym_id, select: g.tier)
+            |> FitTrackerz.Repo.one()
+
+          cond do
+            is_nil(gym_tier) ->
+              :ok
+
+            gym_tier == :free ->
+              count =
+                from(m in FitTrackerz.Gym.GymMember,
+                  where: m.gym_id == ^gym_id and m.is_active == true,
+                  select: count(m.id)
+                )
+                |> FitTrackerz.Repo.one()
+
+              if count >= 50 do
+                {:error,
+                 field: :gym_id,
+                 message:
+                   "This gym has reached its 50-member limit for the free tier. Upgrade to Premium to add more members."}
+              else
+                :ok
+              end
+
+            true ->
+              :ok
+          end
+        else
+          :ok
+        end
+      end
     end
 
     update :update do

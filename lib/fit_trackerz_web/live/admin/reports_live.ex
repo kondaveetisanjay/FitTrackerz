@@ -25,36 +25,26 @@ defmodule FitTrackerzWeb.Admin.ReportsLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
-      <div class="space-y-6">
-        <%!-- Header --%>
-        <div>
-          <div class="flex items-center gap-3 mb-1">
-            <.link navigate="/admin" class="btn btn-ghost btn-sm btn-circle">
-              <.icon name="hero-arrow-left-mini" class="size-4" />
-            </.link>
-            <h1 class="text-2xl sm:text-3xl font-brand">Reports</h1>
-          </div>
-          <p class="text-base-content/50 ml-12">Generate and export detailed reports</p>
-        </div>
+      <.page_header title="Reports" subtitle="Generate and export detailed reports" back_path="/admin/dashboard" />
 
-        <%!-- Reports --%>
-        <div>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <.link
-              :for={report <- @reports}
-              navigate={"/admin/reports/#{report.type}"}
-              class="card bg-base-200/50 border border-base-300/50 hover:border-primary/30 transition-colors cursor-pointer"
-            >
-              <div class="card-body p-5">
-                <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
-                  <.icon name={report.icon} class="size-5 text-primary" />
-                </div>
-                <h3 class="font-semibold">{report.name}</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <.link
+          :for={report <- @reports}
+          navigate={"/admin/reports/#{report.type}"}
+          class="group"
+        >
+          <.card class="h-full hover:border-primary/30 transition-colors cursor-pointer">
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <.icon name={report.icon} class="size-5 text-primary" />
+              </div>
+              <div class="min-w-0">
+                <h3 class="font-semibold group-hover:text-primary transition-colors">{report.name}</h3>
                 <p class="text-sm text-base-content/50 mt-1">{report.desc}</p>
               </div>
-            </.link>
-          </div>
-        </div>
+            </div>
+          </.card>
+        </.link>
       </div>
     </Layouts.app>
     """

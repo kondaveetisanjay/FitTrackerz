@@ -179,25 +179,18 @@ defmodule FitTrackerzWeb.Member.FoodLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
-      <div class="space-y-8">
-        <div class="flex items-center gap-3">
-          <Layouts.back_button />
-          <div>
-            <h1 class="text-2xl sm:text-3xl font-brand">Food Log</h1>
-            <p class="text-base-content/50 mt-1">Track your daily meals and calories.</p>
-          </div>
-        </div>
+      <.page_header title="Food Log" subtitle="Track your daily meals and calories." back_path="/member" />
 
-        <%= if @no_gym do %>
-          <div class="card bg-base-200/50 border border-base-300/50" id="no-gym-card">
-            <div class="card-body items-center text-center p-8">
-              <.icon name="hero-building-office-2" class="size-8 text-warning" />
-              <h2 class="text-lg font-bold mt-4">No Gym Membership</h2>
-            </div>
-          </div>
-        <% else %>
+      <%= if @no_gym do %>
+        <.empty_state
+          icon="hero-building-office-2"
+          title="No Gym Membership"
+          subtitle="You need a gym membership to track your food intake."
+        />
+      <% else %>
+        <div class="space-y-8">
           <%!-- Date Picker + Summary --%>
-          <div class="flex flex-col sm:flex-row gap-4">
+          <div class="flex flex-col sm:flex-row gap-4 sm:gap-6">
             <div>
               <input
                 type="date"
@@ -209,8 +202,8 @@ defmodule FitTrackerzWeb.Member.FoodLive do
               />
             </div>
 
-            <div class="flex-1 card bg-base-200/50 border border-base-300/50">
-              <div class="card-body p-4">
+            <div class="flex-1">
+              <.card>
                 <div class="flex items-center gap-6 flex-wrap">
                   <div>
                     <div class="text-xs text-base-content/40 uppercase font-medium">Calories</div>
@@ -223,8 +216,8 @@ defmodule FitTrackerzWeb.Member.FoodLive do
                       <% end %>
                     </div>
                     <%= if @calorie_target do %>
-                      <div class="w-48 bg-base-300/30 h-2 rounded-full mt-2">
-                        <div class="bg-warning h-2 rounded-full transition-all" style={"width: #{calorie_pct(@entries, @calorie_target)}%"}></div>
+                      <div class="mt-2">
+                        <.progress_bar value={calorie_pct(@entries, @calorie_target)} color="warning" show_percentage={false} />
                       </div>
                     <% end %>
                   </div>
@@ -243,63 +236,61 @@ defmodule FitTrackerzWeb.Member.FoodLive do
                     </div>
                   </div>
                 </div>
-              </div>
+              </.card>
             </div>
           </div>
 
           <%!-- Add Food Form --%>
-          <div class="card bg-base-200/50 border border-base-300/50" id="food-form-card">
-            <div class="card-body p-6">
-              <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                <.icon name="hero-plus-circle-solid" class="size-5 text-warning" /> Add Food
-              </h2>
-              <.form for={@form} id="food-form" phx-change="validate" phx-submit="save">
-                <div class="flex flex-wrap gap-3 items-end">
-                  <div>
-                    <.input field={@form[:meal_type]} type="select" label="Meal" options={Enum.map(@meal_types, fn {v, l} -> {l, to_string(v)} end)} required />
-                  </div>
-                  <div class="flex-1 min-w-[150px]">
-                    <.input field={@form[:food_name]} type="text" label="Food Name" placeholder="e.g., Chicken Biryani" required />
-                  </div>
-                  <div>
-                    <.input field={@form[:calories]} type="number" label="Calories" required />
-                  </div>
-                  <div>
-                    <.input field={@form[:protein_g]} type="number" label="Protein (g)" step="0.1" />
-                  </div>
-                  <div>
-                    <.input field={@form[:carbs_g]} type="number" label="Carbs (g)" step="0.1" />
-                  </div>
-                  <div>
-                    <.input field={@form[:fat_g]} type="number" label="Fat (g)" step="0.1" />
-                  </div>
-                  <div class="mb-2">
-                    <button type="submit" class="btn btn-warning btn-sm gap-2" id="add-food-btn">
-                      <.icon name="hero-plus-mini" class="size-4" /> Add
-                    </button>
-                  </div>
+          <.card title="Add Food" id="food-form-card">
+            <.form for={@form} id="food-form" phx-change="validate" phx-submit="save">
+              <div class="flex flex-wrap gap-3 items-end">
+                <div>
+                  <.input field={@form[:meal_type]} type="select" label="Meal" options={Enum.map(@meal_types, fn {v, l} -> {l, to_string(v)} end)} required />
                 </div>
-              </.form>
-            </div>
-          </div>
+                <div class="flex-1 min-w-[150px]">
+                  <.input field={@form[:food_name]} type="text" label="Food Name" placeholder="e.g., Chicken Biryani" required />
+                </div>
+                <div>
+                  <.input field={@form[:calories]} type="number" label="Calories" required />
+                </div>
+                <div>
+                  <.input field={@form[:protein_g]} type="number" label="Protein (g)" step="0.1" />
+                </div>
+                <div>
+                  <.input field={@form[:carbs_g]} type="number" label="Carbs (g)" step="0.1" />
+                </div>
+                <div>
+                  <.input field={@form[:fat_g]} type="number" label="Fat (g)" step="0.1" />
+                </div>
+                <div class="mb-2">
+                  <.button variant="primary" size="sm" icon="hero-plus" type="submit" id="add-food-btn">
+                    Add
+                  </.button>
+                </div>
+              </div>
+            </.form>
+          </.card>
 
           <%!-- Today's Entries --%>
-          <div class="card bg-base-200/50 border border-base-300/50" id="food-entries-card">
-            <div class="card-body p-6">
+          <.card id="food-entries-card">
+            <:header_actions>
+              <.badge variant="neutral">{length(@entries)} items</.badge>
+            </:header_actions>
+            <div>
               <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                <.icon name="hero-queue-list-solid" class="size-5 text-primary" />
                 {Calendar.strftime(@selected_date, "%b %d, %Y")}
-                <span class="badge badge-neutral badge-sm">{length(@entries)} items</span>
               </h2>
               <%= if @entries == [] do %>
-                <div class="flex items-center gap-3 p-4 rounded-lg bg-base-300/20">
-                  <p class="text-sm text-base-content/50">No food logged for this day.</p>
-                </div>
+                <.empty_state
+                  icon="hero-queue-list"
+                  title="No Food Logged"
+                  subtitle="No food logged for this day."
+                />
               <% else %>
                 <div class="space-y-2">
                   <%= for entry <- @entries do %>
                     <div
-                      class="flex items-center justify-between p-3 rounded-lg bg-base-300/20"
+                      class="flex items-center justify-between p-3 rounded-xl bg-base-200/50"
                       id={"food-#{entry.id}"}
                     >
                       <div class="flex items-center gap-3">
@@ -310,24 +301,26 @@ defmodule FitTrackerzWeb.Member.FoodLive do
                       </div>
                       <div class="flex items-center gap-4">
                         <span class="text-sm text-base-content/60">{entry.calories} kcal</span>
-                        <button
+                        <.button
+                          variant="ghost"
+                          size="sm"
+                          icon="hero-trash"
                           phx-click="delete"
                           phx-value-id={entry.id}
                           data-confirm="Delete this entry?"
-                          class="btn btn-ghost btn-xs text-error"
+                          class="text-error"
                           id={"delete-food-#{entry.id}"}
                         >
-                          <.icon name="hero-trash-mini" class="size-3.5" />
-                        </button>
+                        </.button>
                       </div>
                     </div>
                   <% end %>
                 </div>
               <% end %>
             </div>
-          </div>
-        <% end %>
-      </div>
+          </.card>
+        </div>
+      <% end %>
     </Layouts.app>
     """
   end

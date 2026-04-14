@@ -142,139 +142,136 @@ defmodule FitTrackerzWeb.Explore.ContestListLive do
     Calendar.strftime(datetime, "%b %d, %Y")
   end
 
-  defp type_badge_class(:challenge), do: "badge-warning"
-  defp type_badge_class(:competition), do: "badge-error"
-  defp type_badge_class(:event), do: "badge-info"
-  defp type_badge_class(_), do: "badge-ghost"
+  defp type_badge_variant(:challenge), do: "warning"
+  defp type_badge_variant(:competition), do: "error"
+  defp type_badge_variant(:event), do: "info"
+  defp type_badge_variant(_), do: "neutral"
 
-  defp status_badge_class(:upcoming), do: "badge-info"
-  defp status_badge_class(:active), do: "badge-success"
-  defp status_badge_class(:completed), do: "badge-ghost"
-  defp status_badge_class(:cancelled), do: "badge-error"
-  defp status_badge_class(_), do: "badge-ghost"
+  defp status_badge_variant(:upcoming), do: "info"
+  defp status_badge_variant(:active), do: "success"
+  defp status_badge_variant(:completed), do: "neutral"
+  defp status_badge_variant(:cancelled), do: "error"
+  defp status_badge_variant(_), do: "neutral"
 
   @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
       <div class="space-y-6">
-        <%!-- Page Header --%>
-        <div>
-          <div class="flex items-center gap-2 mb-1">
-            <a href="/explore" class="text-base-content/50 hover:text-primary text-base">Explore</a>
-            <span class="text-base-content/30">/</span>
-            <span class="text-base font-medium">Contests</span>
-          </div>
-          <div class="flex items-center justify-between">
-            <div>
-              <h1 class="text-3xl sm:text-4xl font-brand">Fitness Contests</h1>
-              <p class="text-base text-base-content/50 mt-1">
-                Discover challenges, competitions & events at gyms near you.
-              </p>
-            </div>
-            <%= if @current_user && to_string(@current_user.role) == "gym_operator" do %>
-              <a href="/gym/contests" class="btn btn-primary btn-sm gap-2">
-                <.icon name="hero-plus-mini" class="size-4" /> Manage Contests
-              </a>
-            <% end %>
-          </div>
+        <%!-- Breadcrumb --%>
+        <div class="flex items-center gap-2 mb-1">
+          <a href="/explore" class="text-base-content/50 hover:text-primary text-sm">Explore</a>
+          <span class="text-base-content/30">/</span>
+          <span class="text-sm font-medium">Contests</span>
         </div>
+
+        <.page_header title="Fitness Contests" subtitle="Discover challenges, competitions & events at gyms near you.">
+          <:actions>
+            <%= if @current_user && to_string(@current_user.role) == "gym_operator" do %>
+              <.button variant="primary" size="sm" icon="hero-plus-mini" navigate="/gym/contests">
+                Manage Contests
+              </.button>
+            <% end %>
+          </:actions>
+        </.page_header>
 
         <%!-- Search & Filters --%>
-        <div class="card bg-base-200/50 border border-base-300/50">
-          <div class="card-body p-4">
-            <div class="flex flex-col sm:flex-row gap-3">
-              <%!-- Search --%>
-              <div class="flex-1">
-                <form phx-change="search" phx-submit="search">
-                  <label class="input input-bordered flex items-center gap-2 w-full">
-                    <.icon name="hero-magnifying-glass-mini" class="size-4 opacity-50" />
-                    <input
-                      type="text"
-                      name="query"
-                      value={@search_query}
-                      placeholder="Search contests or gym names..."
-                      class="grow"
-                      phx-debounce="300"
-                    />
-                  </label>
-                </form>
-              </div>
-
-              <%!-- City Filter --%>
-              <div class="w-full sm:w-40">
-                <form phx-change="filter_city">
-                  <select name="city" class="select select-bordered w-full">
-                    <option value="">All Cities</option>
-                    <%= for city <- @cities do %>
-                      <option value={city} selected={@city_filter == city}>{city}</option>
-                    <% end %>
-                  </select>
-                </form>
-              </div>
-
-              <%!-- Type Filter --%>
-              <div class="w-full sm:w-40">
-                <form phx-change="filter_type">
-                  <select name="type" class="select select-bordered w-full">
-                    <option value="">All Types</option>
-                    <%= for type <- @contest_types do %>
-                      <option value={type} selected={@type_filter == to_string(type)}>
-                        {type |> to_string() |> String.capitalize()}
-                      </option>
-                    <% end %>
-                  </select>
-                </form>
-              </div>
-
-              <%!-- Status Filter --%>
-              <div class="w-full sm:w-40">
-                <form phx-change="filter_status">
-                  <select name="status" class="select select-bordered w-full">
-                    <option value="">All Statuses</option>
-                    <option value="upcoming" selected={@status_filter == "upcoming"}>Upcoming</option>
-                    <option value="active" selected={@status_filter == "active"}>Active</option>
-                  </select>
-                </form>
-              </div>
-
-              <%!-- Clear --%>
-              <%= if @search_query != "" or @city_filter != "" or @type_filter != "" or @status_filter != "" do %>
-                <button phx-click="clear_filters" class="btn btn-ghost btn-sm gap-1">
-                  <.icon name="hero-x-mark-mini" class="size-4" /> Clear
-                </button>
-              <% end %>
+        <.card>
+          <div class="flex flex-col sm:flex-row gap-3">
+            <%!-- Search --%>
+            <div class="flex-1">
+              <form phx-change="search" phx-submit="search">
+                <label class="input input-bordered flex items-center gap-2 w-full">
+                  <.icon name="hero-magnifying-glass-mini" class="size-4 opacity-50" />
+                  <input
+                    type="text"
+                    name="query"
+                    value={@search_query}
+                    placeholder="Search contests or gym names..."
+                    class="grow"
+                    phx-debounce="300"
+                  />
+                </label>
+              </form>
             </div>
+
+            <%!-- City Filter --%>
+            <div class="w-full sm:w-40">
+              <form phx-change="filter_city">
+                <select name="city" class="select select-bordered w-full">
+                  <option value="">All Cities</option>
+                  <%= for city <- @cities do %>
+                    <option value={city} selected={@city_filter == city}>{city}</option>
+                  <% end %>
+                </select>
+              </form>
+            </div>
+
+            <%!-- Type Filter --%>
+            <div class="w-full sm:w-40">
+              <form phx-change="filter_type">
+                <select name="type" class="select select-bordered w-full">
+                  <option value="">All Types</option>
+                  <%= for type <- @contest_types do %>
+                    <option value={type} selected={@type_filter == to_string(type)}>
+                      {type |> to_string() |> String.capitalize()}
+                    </option>
+                  <% end %>
+                </select>
+              </form>
+            </div>
+
+            <%!-- Status Filter --%>
+            <div class="w-full sm:w-40">
+              <form phx-change="filter_status">
+                <select name="status" class="select select-bordered w-full">
+                  <option value="">All Statuses</option>
+                  <option value="upcoming" selected={@status_filter == "upcoming"}>Upcoming</option>
+                  <option value="active" selected={@status_filter == "active"}>Active</option>
+                </select>
+              </form>
+            </div>
+
+            <%!-- Clear --%>
+            <%= if @search_query != "" or @city_filter != "" or @type_filter != "" or @status_filter != "" do %>
+              <.button variant="ghost" size="sm" icon="hero-x-mark-mini" phx-click="clear_filters">
+                Clear
+              </.button>
+            <% end %>
           </div>
-        </div>
+        </.card>
 
         <%!-- Results Count --%>
-        <p class="text-base text-base-content/50">
+        <p class="text-sm text-base-content/50">
           {length(@filtered_contests)} contest(s) found
         </p>
 
         <%!-- Contest Cards --%>
         <%= if @filtered_contests == [] do %>
-          <div class="card bg-base-200/50 border border-base-300/50">
-            <div class="card-body p-8 text-center">
-              <.icon name="hero-trophy-solid" class="size-16 text-base-content/20 mx-auto" />
-              <h2 class="text-lg font-bold mt-4">No Contests Found</h2>
-              <p class="text-base-content/50 mt-1">
-                <%= if @search_query != "" or @city_filter != "" or @type_filter != "" do %>
-                  Try adjusting your search or filters.
-                <% else %>
-                  No contests are currently available. Check back soon!
+          <.card>
+            <.empty_state
+              icon="hero-trophy"
+              title="No Contests Found"
+              subtitle={
+                if @search_query != "" or @city_filter != "" or @type_filter != "",
+                  do: "Try adjusting your search or filters.",
+                  else: "No contests are currently available. Check back soon!"
+              }
+            >
+              <:action>
+                <%= if @search_query != "" or @city_filter != "" or @type_filter != "" or @status_filter != "" do %>
+                  <.button variant="ghost" size="sm" icon="hero-x-mark-mini" phx-click="clear_filters">
+                    Clear Filters
+                  </.button>
                 <% end %>
-              </p>
-            </div>
-          </div>
+              </:action>
+            </.empty_state>
+          </.card>
         <% else %>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <%= for entry <- @filtered_contests do %>
-              <div
-                class="card bg-base-200/50 border border-base-300/50 hover:border-primary/30 hover:shadow-xl hover:-translate-y-0.5 transition-all overflow-hidden"
-                id={"contest-card-#{entry.contest.id}"}
-              >
+              <div id={"contest-card-#{entry.contest.id}"}>
+              <.card padded={false} class="hover:shadow-lg hover:-translate-y-0.5 transition-all">
                 <%!-- Banner --%>
                 <figure class="h-36 bg-base-300/30 overflow-hidden">
                   <%= if entry.contest.banner_url do %>
@@ -290,27 +287,27 @@ defmodule FitTrackerzWeb.Explore.ContestListLive do
                   <% end %>
                 </figure>
 
-                <div class="card-body p-4 gap-3">
+                <div class="p-4 space-y-3">
                   <%!-- Badges --%>
                   <div class="flex flex-wrap gap-1.5">
-                    <span class={"badge badge-sm #{type_badge_class(entry.contest.contest_type)}"}>
+                    <.badge variant={type_badge_variant(entry.contest.contest_type)} size="sm">
                       {entry.contest.contest_type |> to_string() |> String.capitalize()}
-                    </span>
-                    <span class={"badge badge-sm #{status_badge_class(entry.contest.status)}"}>
+                    </.badge>
+                    <.badge variant={status_badge_variant(entry.contest.status)} size="sm">
                       {entry.contest.status |> to_string() |> String.capitalize()}
-                    </span>
+                    </.badge>
                   </div>
 
                   <%!-- Title --%>
-                  <h2 class="card-title text-lg leading-tight">{entry.contest.title}</h2>
+                  <h2 class="text-lg font-semibold leading-tight">{entry.contest.title}</h2>
 
                   <%!-- Description --%>
                   <%= if entry.contest.description do %>
-                    <p class="text-base text-base-content/60 line-clamp-2">{entry.contest.description}</p>
+                    <p class="text-sm text-base-content/60 line-clamp-2">{entry.contest.description}</p>
                   <% end %>
 
                   <%!-- Gym & Location --%>
-                  <div class="flex flex-col gap-1 text-base text-base-content/60">
+                  <div class="flex flex-col gap-1 text-sm text-base-content/60">
                     <div class="flex items-center gap-1.5">
                       <.icon name="hero-building-office-2-mini" class="size-3.5 shrink-0" />
                       <a href={"/explore/#{entry.gym_slug}"} class="hover:text-primary truncate">
@@ -326,14 +323,14 @@ defmodule FitTrackerzWeb.Explore.ContestListLive do
                   </div>
 
                   <%!-- Dates --%>
-                  <div class="flex items-center gap-1.5 text-base text-base-content/60">
+                  <div class="flex items-center gap-1.5 text-sm text-base-content/60">
                     <.icon name="hero-calendar-mini" class="size-3.5 shrink-0" />
                     <span>{format_date(entry.contest.starts_at)} — {format_date(entry.contest.ends_at)}</span>
                   </div>
 
                   <%!-- Participants --%>
                   <%= if entry.contest.max_participants do %>
-                    <div class="flex items-center gap-1.5 text-base text-base-content/60">
+                    <div class="flex items-center gap-1.5 text-sm text-base-content/60">
                       <.icon name="hero-users-mini" class="size-3.5 shrink-0" />
                       <span>{entry.contest.max_participants} max participants</span>
                     </div>
@@ -341,12 +338,13 @@ defmodule FitTrackerzWeb.Explore.ContestListLive do
 
                   <%!-- Prize --%>
                   <%= if entry.contest.prize_description do %>
-                    <div class="flex items-start gap-1.5 text-base text-base-content/60">
+                    <div class="flex items-start gap-1.5 text-sm text-base-content/60">
                       <.icon name="hero-gift-mini" class="size-3.5 shrink-0 mt-0.5" />
                       <span class="line-clamp-2">{entry.contest.prize_description}</span>
                     </div>
                   <% end %>
                 </div>
+              </.card>
               </div>
             <% end %>
           </div>
@@ -354,17 +352,17 @@ defmodule FitTrackerzWeb.Explore.ContestListLive do
 
         <%!-- CTA for unauthenticated --%>
         <%= unless @current_user do %>
-          <div class="card bg-primary/5 border border-primary/20">
-            <div class="card-body p-6 text-center">
+          <.card>
+            <div class="text-center">
               <h3 class="font-bold text-lg">Want to compete?</h3>
-              <p class="text-base-content/60 text-base mt-1">
+              <p class="text-base-content/60 text-sm mt-1">
                 Create an account to register for contests and track your fitness journey.
               </p>
               <div class="mt-3">
-                <a href="/register" class="btn btn-primary btn-sm">Create an Account</a>
+                <.button variant="primary" size="sm" navigate="/register">Create an Account</.button>
               </div>
             </div>
-          </div>
+          </.card>
         <% end %>
       </div>
     </Layouts.app>

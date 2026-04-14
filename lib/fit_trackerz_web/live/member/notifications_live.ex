@@ -88,46 +88,30 @@ defmodule FitTrackerzWeb.Member.NotificationsLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
-      <div class="space-y-6">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div class="flex items-center gap-3">
-            <Layouts.back_button />
-            <div>
-              <h1 class="text-2xl sm:text-3xl font-brand">Notifications</h1>
-              <p class="text-base-content/50 mt-1">Stay updated on your subscriptions and gym activity.</p>
-            </div>
-          </div>
+      <.page_header title="Notifications" subtitle="Stay updated on your subscriptions and gym activity." back_path="/member">
+        <:actions>
           <%= if Enum.any?(@notifications, &(!&1.is_read)) do %>
-            <button
-              phx-click="mark_all_read"
-              class="btn btn-ghost btn-sm gap-2"
-              id="mark-all-read-btn"
-            >
-              <.icon name="hero-check-mini" class="size-4" /> Mark all as read
-            </button>
+            <.button variant="ghost" size="sm" icon="hero-check" phx-click="mark_all_read" id="mark-all-read-btn">
+              Mark all as read
+            </.button>
           <% end %>
-        </div>
+        </:actions>
+      </.page_header>
 
-        <%= if @notifications == [] do %>
-          <div class="card bg-base-200/50 border border-base-300/50" id="no-notifications">
-            <div class="card-body items-center text-center p-8">
-              <div class="w-16 h-16 rounded-2xl bg-base-300/30 flex items-center justify-center mb-4">
-                <.icon name="hero-bell-slash" class="size-8 text-base-content/20" />
-              </div>
-              <h2 class="text-lg font-bold">No Notifications</h2>
-              <p class="text-sm text-base-content/50 max-w-md mt-2">
-                You're all caught up! We'll notify you about subscription updates and gym activity.
-              </p>
-            </div>
-          </div>
-        <% else %>
-          <div class="space-y-3" id="notifications-list">
-            <div
-              :for={notification <- @notifications}
-              id={"notification-#{notification.id}"}
-              class={"card border transition-all #{if notification.is_read, do: "bg-base-200/30 border-base-300/30", else: "bg-base-200/70 border-primary/20 shadow-sm"}"}
-            >
-              <div class="card-body p-4 flex-row items-start gap-3">
+      <%= if @notifications == [] do %>
+        <.empty_state
+          icon="hero-bell-slash"
+          title="No Notifications"
+          subtitle="You're all caught up! We'll notify you about subscription updates and gym activity."
+        />
+      <% else %>
+        <div class="space-y-3" id="notifications-list">
+          <div
+            :for={notification <- @notifications}
+            id={"notification-#{notification.id}"}
+          >
+            <.card class={if notification.is_read, do: "opacity-60", else: "border-primary/20"}>
+              <div class="flex items-start gap-4">
                 <div class={"w-10 h-10 rounded-xl flex items-center justify-center shrink-0 #{if notification.is_read, do: "bg-base-300/30", else: "bg-primary/10"}"}>
                   <.icon
                     name={notification_icon(notification.type)}
@@ -144,22 +128,22 @@ defmodule FitTrackerzWeb.Member.NotificationsLive do
                       <p class="text-xs text-base-content/40 mt-1">{format_time(notification.inserted_at)}</p>
                     </div>
                     <%= unless notification.is_read do %>
-                      <button
+                      <.button
+                        variant="ghost"
+                        size="sm"
+                        icon="hero-check"
                         phx-click="mark_read"
                         phx-value-id={notification.id}
-                        class="btn btn-ghost btn-xs shrink-0"
-                        title="Mark as read"
                       >
-                        <.icon name="hero-check-mini" class="size-4" />
-                      </button>
+                      </.button>
                     <% end %>
                   </div>
                 </div>
               </div>
-            </div>
+            </.card>
           </div>
-        <% end %>
-      </div>
+        </div>
+      <% end %>
     </Layouts.app>
     """
   end

@@ -58,7 +58,7 @@ defmodule FitTrackerzWeb.GymOperator.MembersLive do
     end
   end
 
-  # ── Event Handlers ──
+  # -- Event Handlers --
 
   @impl true
   def handle_event("search", %{"search" => search}, socket) do
@@ -303,7 +303,7 @@ defmodule FitTrackerzWeb.GymOperator.MembersLive do
     end
   end
 
-  # ── Helpers ──
+  # -- Helpers --
 
   defp apply_member_filters(socket) do
     members =
@@ -465,378 +465,325 @@ defmodule FitTrackerzWeb.GymOperator.MembersLive do
   defp format_duration(:two_year), do: "24 Months"
   defp format_duration(other), do: other |> to_string() |> String.replace("_", " ") |> String.capitalize()
 
-  # ── Render ──
+  # -- Render --
 
   @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
-      <div class="space-y-8">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div class="flex items-center gap-3">
-            <Layouts.back_button />
-            <div>
-              <h1 class="text-2xl sm:text-3xl font-brand">Members</h1>
-              <p class="text-base-content/50 mt-1">Manage gym memberships, plans, and payments.</p>
-            </div>
-          </div>
-          <%= if @gym do %>
-            <button
-              phx-click="toggle_invite"
-              class="btn btn-primary btn-sm gap-2 font-semibold"
-              id="toggle-invite-btn"
-            >
-              <.icon name="hero-user-plus-mini" class="size-4" /> Invite Member
-            </button>
-          <% end %>
-        </div>
+      <div class="space-y-6">
+        <.page_header title="Members" subtitle="Manage gym memberships, plans, and payments." back_path="/gym">
+          <:actions>
+            <%= if @gym do %>
+              <.button variant="primary" size="sm" icon="hero-user-plus-mini" phx-click="toggle_invite" id="toggle-invite-btn">Invite Member</.button>
+            <% end %>
+          </:actions>
+        </.page_header>
 
         <%= if @gym == nil do %>
-          <div class="card bg-base-200/50 border border-base-300/50" id="no-gym-card">
-            <div class="card-body p-6 text-center">
-              <.icon name="hero-building-office-solid" class="size-12 text-base-content/20 mx-auto" />
-              <h2 class="text-lg font-bold mt-4">No Gym Found</h2>
-              <p class="text-base-content/50 mt-1">
-                You need to create a gym first before managing members.
-              </p>
-              <a href="/gym/setup" class="btn btn-primary btn-sm mt-4 gap-2">
-                <.icon name="hero-plus-mini" class="size-4" /> Setup Gym
-              </a>
-            </div>
-          </div>
+          <.empty_state icon="hero-building-office-solid" title="No Gym Found" subtitle="You need to create a gym first before managing members.">
+            <:action>
+              <.button variant="primary" size="sm" icon="hero-plus-mini" navigate="/gym/setup">Setup Gym</.button>
+            </:action>
+          </.empty_state>
         <% else %>
           <%!-- Invite Form --%>
           <%= if @show_invite do %>
-            <div class="card bg-base-200/50 border border-base-300/50" id="invite-member-card">
-              <div class="card-body p-6">
-                <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                  <.icon name="hero-envelope-solid" class="size-5 text-primary" /> Invite New Member
-                </h2>
-                <.form
-                  for={@invite_form}
-                  id="invite-member-form"
-                  phx-change="validate_invite"
-                  phx-submit="invite"
-                >
-                  <div class="flex flex-col sm:flex-row gap-4 items-end">
-                    <div class="flex-1">
-                      <.input
-                        field={@invite_form[:email]}
-                        type="email"
-                        label="Email Address"
-                        placeholder="member@example.com"
-                        required
-                      />
-                    </div>
-
-                    <div class="mb-2">
-                      <button type="submit" class="btn btn-primary btn-sm gap-2" id="send-invite-btn">
-                        <.icon name="hero-paper-airplane" class="size-4" /> Send Invite
-                      </button>
-                    </div>
+            <.card title="Invite New Member" id="invite-member-card">
+              <.form
+                for={@invite_form}
+                id="invite-member-form"
+                phx-change="validate_invite"
+                phx-submit="invite"
+              >
+                <div class="flex flex-col sm:flex-row gap-4 items-end">
+                  <div class="flex-1">
+                    <.input
+                      field={@invite_form[:email]}
+                      type="email"
+                      label="Email Address"
+                      placeholder="member@example.com"
+                      required
+                    />
                   </div>
-                </.form>
-              </div>
-            </div>
+                  <div class="mb-2">
+                    <.button variant="primary" size="sm" icon="hero-paper-airplane" type="submit" id="send-invite-btn">Send Invite</.button>
+                  </div>
+                </div>
+              </.form>
+            </.card>
           <% end %>
 
           <%!-- Search & Filter --%>
-          <div class="flex flex-col sm:flex-row gap-3" id="members-search-filter">
-            <div class="flex-1">
-              <div class="relative">
-                <.icon name="hero-magnifying-glass-mini" class="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40" />
-                <input
-                  type="text"
-                  placeholder="Search by name or email..."
-                  value={@search}
-                  phx-keyup="search"
-                  phx-key="Enter"
-                  phx-debounce="300"
-                  name="search"
-                  class="input input-bordered input-sm w-full pl-9"
-                  id="member-search-input"
-                />
+          <.filter_bar search_placeholder="Search by name or email..." search_value={@search} on_search="search">
+            <:filter>
+              <div class="flex flex-wrap gap-2 items-center">
+                <.button
+                  variant={if(@filter_status == "all", do: "primary", else: "ghost")}
+                  size="sm"
+                  phx-click="filter_status"
+                  phx-value-status="all"
+                >
+                  All <.badge variant="neutral" size="sm">{length(@all_members)}</.badge>
+                </.button>
+                <.button
+                  variant={if(@filter_status == "active", do: "primary", else: "ghost")}
+                  size="sm"
+                  phx-click="filter_status"
+                  phx-value-status="active"
+                >
+                  Active
+                </.button>
+                <.button
+                  variant={if(@filter_status == "inactive", do: "primary", else: "ghost")}
+                  size="sm"
+                  phx-click="filter_status"
+                  phx-value-status="inactive"
+                >
+                  Inactive
+                </.button>
+                <select
+                  phx-change="filter_trainer"
+                  name="trainer"
+                  class="select select-bordered select-sm w-44"
+                  id="filter-trainer-select"
+                >
+                  <option value="all" selected={@filter_trainer == "all"}>All Trainers</option>
+                  <option value="unassigned" selected={@filter_trainer == "unassigned"}>Unassigned</option>
+                  <%= for trainer <- @trainers do %>
+                    <option value={trainer.id} selected={@filter_trainer == trainer.id}>
+                      {trainer.user.name}
+                    </option>
+                  <% end %>
+                </select>
               </div>
-            </div>
-            <div class="flex flex-wrap gap-2 items-center">
-              <button
-                phx-click="filter_status"
-                phx-value-status="all"
-                class={"btn btn-sm #{if @filter_status == "all", do: "btn-primary", else: "btn-ghost"}"}
-              >
-                All <span class="badge badge-sm ml-1">{length(@all_members)}</span>
-              </button>
-              <button
-                phx-click="filter_status"
-                phx-value-status="active"
-                class={"btn btn-sm #{if @filter_status == "active", do: "btn-success", else: "btn-ghost"}"}
-              >
-                Active
-              </button>
-              <button
-                phx-click="filter_status"
-                phx-value-status="inactive"
-                class={"btn btn-sm #{if @filter_status == "inactive", do: "btn-error", else: "btn-ghost"}"}
-              >
-                Inactive
-              </button>
-              <div class="divider divider-horizontal mx-0"></div>
-              <select
-                phx-change="filter_trainer"
-                name="trainer"
-                class="select select-bordered select-sm w-44"
-                id="filter-trainer-select"
-              >
-                <option value="all" selected={@filter_trainer == "all"}>All Trainers</option>
-                <option value="unassigned" selected={@filter_trainer == "unassigned"}>Unassigned</option>
-                <%= for trainer <- @trainers do %>
-                  <option value={trainer.id} selected={@filter_trainer == trainer.id}>
-                    {trainer.user.name}
-                  </option>
-                <% end %>
-              </select>
-            </div>
-          </div>
+            </:filter>
+          </.filter_bar>
 
           <%!-- Members Table --%>
-          <div class="card bg-base-200/50 border border-base-300/50" id="members-table-card">
-            <div class="card-body p-6">
-              <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                <.icon name="hero-user-group-solid" class="size-5 text-primary" /> All Members
-                <span class="badge badge-neutral badge-sm">{length(@members)}</span>
-              </h2>
-              <%= if @members == [] do %>
-                <div class="flex items-center gap-3 p-4 rounded-lg bg-base-300/20">
-                  <div class="w-2 h-2 rounded-full bg-base-content/20 shrink-0"></div>
-                  <p class="text-sm text-base-content/50">
-                    <%= if @search != "" or @filter_status != "all" do %>
-                      No members match your filters.
-                    <% else %>
-                      No members yet. Send invitations to grow your gym!
-                    <% end %>
-                  </p>
-                </div>
-              <% else %>
-                <div class="overflow-x-auto">
-                  <table class="table table-sm" id="members-table">
-                    <thead>
-                      <tr class="text-base-content/40">
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Joined</th>
-                        <th>Status</th>
-                        <th>Trainer</th>
-                        <th>Plan</th>
-                        <th>Payment</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <%= for member <- @members do %>
-                        <% sub = Map.get(@sub_map, member.id) %>
-                        <tr id={"member-#{member.id}"}>
-                          <td class="font-medium">{member.user.name}</td>
-                          <td class="text-base-content/60">{member.user.email}</td>
-                          <td class="text-sm text-base-content/60">
-                            <%= if member.joined_at do %>
-                              {Calendar.strftime(member.joined_at, "%b %d, %Y")}
-                            <% else %>
-                              <span class="text-base-content/30">--</span>
-                            <% end %>
-                          </td>
-                          <td>
-                            <%= if member.is_active do %>
-                              <span class="badge badge-success badge-sm">Active</span>
-                            <% else %>
-                              <span class="badge badge-error badge-sm">Inactive</span>
-                            <% end %>
-                          </td>
-                          <td>
-                            <%= if member.assigned_trainer && member.assigned_trainer.user do %>
-                              <div class="flex items-center gap-2">
-                                <div class="w-6 h-6 rounded-full bg-info/15 flex items-center justify-center">
-                                  <span class="text-xs font-bold text-info">
-                                    {String.first(member.assigned_trainer.user.name || "T")}
-                                  </span>
-                                </div>
-                                <span class="text-sm">{member.assigned_trainer.user.name}</span>
-                              </div>
-                            <% else %>
-                              <%= if @assigning_trainer_member_id == member.id do %>
-                                <form phx-submit="assign_trainer" class="flex items-center gap-1" id={"trainer-form-#{member.id}"}>
-                                  <input type="hidden" name="member_id" value={member.id} />
-                                  <select
-                                    class="select select-bordered select-xs w-32"
-                                    name="trainer_id"
-                                    id={"trainer-select-#{member.id}"}
-                                    required
-                                  >
-                                    <option value="">Pick trainer</option>
-                                    <%= for trainer <- @trainers do %>
-                                      <option value={trainer.id}>{trainer.user.name}</option>
-                                    <% end %>
-                                  </select>
-                                  <button type="submit" class="btn btn-info btn-xs" id={"submit-trainer-#{member.id}"}>
-                                    <.icon name="hero-check-mini" class="size-3" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    phx-click="cancel_assign_trainer"
-                                    class="btn btn-ghost btn-xs"
-                                    id={"cancel-trainer-#{member.id}"}
-                                  >
-                                    <.icon name="hero-x-mark-mini" class="size-3" />
-                                  </button>
-                                </form>
-                              <% else %>
-                                <button
-                                  phx-click="show_assign_trainer"
-                                  phx-value-member-id={member.id}
-                                  class="btn btn-ghost btn-xs gap-1 text-info"
-                                  id={"assign-trainer-#{member.id}"}
-                                >
-                                  <.icon name="hero-plus-mini" class="size-3.5" /> Assign
-                                </button>
-                              <% end %>
-                            <% end %>
-                          </td>
-                          <td>
-                            <%= if sub do %>
-                              <div class="flex flex-col">
-                                <span class="text-sm font-medium">{sub.subscription_plan.name}</span>
-                                <span class="text-xs text-base-content/40">
-                                  {format_duration(sub.subscription_plan.duration)} &middot; {format_price(sub.subscription_plan.price_in_paise)}
-                                </span>
-                                <%= if subscription_expired?(sub) do %>
-                                  <span class="badge badge-error badge-xs mt-1 gap-1">
-                                    <.icon name="hero-exclamation-triangle-mini" class="size-3" /> Expired
-                                  </span>
-                                <% else %>
-                                  <%= if subscription_expiring?(sub) do %>
-                                    <span class="badge badge-warning badge-xs mt-1 gap-1">
-                                      <.icon name="hero-clock-mini" class="size-3" /> {days_remaining(sub)} days left
-                                    </span>
-                                  <% else %>
-                                    <span class="text-xs text-base-content/40">
-                                      Ends: {Calendar.strftime(sub.ends_at, "%b %d, %Y")}
-                                    </span>
-                                  <% end %>
-                                <% end %>
-                                <%= if subscription_expiring?(sub) or subscription_expired?(sub) do %>
-                                  <button
-                                    phx-click="renew_subscription"
-                                    phx-value-id={sub.id}
-                                    class="btn btn-success btn-xs mt-1 gap-1"
-                                    id={"renew-#{sub.id}"}
-                                  >
-                                    <.icon name="hero-arrow-path-mini" class="size-3" /> Renew
-                                  </button>
-                                <% end %>
-                              </div>
-                            <% else %>
-                              <%= if @assigning_member_id == member.id do %>
-                                <form phx-submit="assign_plan" class="flex flex-col gap-2" id={"assign-form-#{member.id}"}>
-                                  <input type="hidden" name="member_id" value={member.id} />
-                                  <%= if @plans == [] do %>
-                                    <span class="text-xs text-base-content/40">No plans created yet</span>
-                                  <% else %>
-                                    <div class="flex items-center gap-2">
-                                      <select
-                                        class="select select-bordered select-xs w-40"
-                                        id={"plan-select-#{member.id}"}
-                                        name="plan_id"
-                                        required
-                                      >
-                                        <option value="">Pick a plan</option>
-                                        <%= for plan <- @plans do %>
-                                          <option value={plan.id}>
-                                            {plan.name}
-                                          </option>
-                                        <% end %>
-                                      </select>
-                                      <button
-                                        type="button"
-                                        phx-click="cancel_assign_plan"
-                                        class="btn btn-ghost btn-xs"
-                                        id={"cancel-assign-#{member.id}"}
-                                      >
-                                        <.icon name="hero-x-mark-mini" class="size-3.5" />
-                                      </button>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                      <input
-                                        type="date"
-                                        name="starts_at"
-                                        class="input input-bordered input-xs w-36"
-                                        id={"start-date-#{member.id}"}
-                                        value={Date.to_iso8601(Date.utc_today())}
-                                        title="Joining / Start date"
-                                      />
-                                      <button
-                                        type="submit"
-                                        class="btn btn-primary btn-xs gap-1"
-                                        id={"submit-plan-#{member.id}"}
-                                      >
-                                        <.icon name="hero-check-mini" class="size-3" /> Assign
-                                      </button>
-                                    </div>
-                                  <% end %>
-                                </form>
-                              <% else %>
-                                <button
-                                  phx-click="show_assign_plan"
-                                  phx-value-member-id={member.id}
-                                  class="btn btn-ghost btn-xs gap-1 text-primary"
-                                  id={"assign-plan-#{member.id}"}
-                                >
-                                  <.icon name="hero-plus-mini" class="size-3.5" /> Assign Plan
-                                </button>
-                              <% end %>
-                            <% end %>
-                          </td>
-                          <td>
-                            <%= if sub do %>
-                              <label class="flex items-center gap-2 cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  class="checkbox checkbox-sm checkbox-success"
-                                  checked={sub.payment_status == :paid}
-                                  phx-click="toggle_payment"
-                                  phx-value-id={sub.id}
-                                  id={"payment-toggle-#{sub.id}"}
-                                />
-                                <span class={"text-xs font-medium #{if sub.payment_status == :paid, do: "text-success", else: "text-warning"}"}>
-                                  {sub.payment_status |> to_string() |> String.capitalize()}
-                                </span>
-                              </label>
-                            <% else %>
-                              <span class="text-xs text-base-content/30">--</span>
-                            <% end %>
-                          </td>
-                          <td>
-                            <div class="flex items-center gap-1">
-                              <button
-                                phx-click="toggle_active"
-                                phx-value-id={member.id}
-                                class="btn btn-ghost btn-xs"
-                                id={"toggle-member-#{member.id}"}
-                              >
-                                <%= if member.is_active do %>
-                                  <.icon name="hero-pause" class="size-4 text-warning" />
-                                <% else %>
-                                  <.icon name="hero-play" class="size-4 text-success" />
-                                <% end %>
-                              </button>
+          <.card title="All Members" subtitle={"#{length(@members)} members"}>
+            <%= if @members == [] do %>
+              <.empty_state
+                icon="hero-user-group"
+                title={if @search != "" or @filter_status != "all", do: "No members match your filters", else: "No members yet"}
+                subtitle={if @search != "" or @filter_status != "all", do: "Try adjusting your search or filters.", else: "Send invitations to grow your gym!"}
+              />
+            <% else %>
+              <div class="overflow-x-auto">
+                <table class="table table-sm" id="members-table">
+                  <thead>
+                    <tr class="text-base-content/40">
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Joined</th>
+                      <th>Status</th>
+                      <th>Trainer</th>
+                      <th>Plan</th>
+                      <th>Payment</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <%= for member <- @members do %>
+                      <% sub = Map.get(@sub_map, member.id) %>
+                      <tr id={"member-#{member.id}"}>
+                        <td>
+                          <div class="flex items-center gap-2">
+                            <.avatar name={member.user.name || "U"} size="sm" />
+                            <span class="font-medium">{member.user.name}</span>
+                          </div>
+                        </td>
+                        <td class="text-base-content/60">{member.user.email}</td>
+                        <td class="text-sm text-base-content/60">
+                          <%= if member.joined_at do %>
+                            {Calendar.strftime(member.joined_at, "%b %d, %Y")}
+                          <% else %>
+                            <span class="text-base-content/30">--</span>
+                          <% end %>
+                        </td>
+                        <td>
+                          <%= if member.is_active do %>
+                            <.badge variant="success" size="sm">Active</.badge>
+                          <% else %>
+                            <.badge variant="error" size="sm">Inactive</.badge>
+                          <% end %>
+                        </td>
+                        <td>
+                          <%= if member.assigned_trainer && member.assigned_trainer.user do %>
+                            <div class="flex items-center gap-2">
+                              <.avatar name={member.assigned_trainer.user.name || "T"} size="sm" />
+                              <span class="text-sm">{member.assigned_trainer.user.name}</span>
                             </div>
-                          </td>
-                        </tr>
-                      <% end %>
-                    </tbody>
-                  </table>
-                </div>
-              <% end %>
-            </div>
-          </div>
+                          <% else %>
+                            <%= if @assigning_trainer_member_id == member.id do %>
+                              <form phx-submit="assign_trainer" class="flex items-center gap-1" id={"trainer-form-#{member.id}"}>
+                                <input type="hidden" name="member_id" value={member.id} />
+                                <select
+                                  class="select select-bordered select-xs w-32"
+                                  name="trainer_id"
+                                  id={"trainer-select-#{member.id}"}
+                                  required
+                                >
+                                  <option value="">Pick trainer</option>
+                                  <%= for trainer <- @trainers do %>
+                                    <option value={trainer.id}>{trainer.user.name}</option>
+                                  <% end %>
+                                </select>
+                                <button type="submit" class="btn btn-info btn-xs" id={"submit-trainer-#{member.id}"}>
+                                  <.icon name="hero-check-mini" class="size-3" />
+                                </button>
+                                <button
+                                  type="button"
+                                  phx-click="cancel_assign_trainer"
+                                  class="btn btn-ghost btn-xs"
+                                  id={"cancel-trainer-#{member.id}"}
+                                >
+                                  <.icon name="hero-x-mark-mini" class="size-3" />
+                                </button>
+                              </form>
+                            <% else %>
+                              <.button
+                                variant="ghost"
+                                size="sm"
+                                icon="hero-plus-mini"
+                                phx-click="show_assign_trainer"
+                                phx-value-member-id={member.id}
+                                id={"assign-trainer-#{member.id}"}
+                              >
+                                Assign
+                              </.button>
+                            <% end %>
+                          <% end %>
+                        </td>
+                        <td>
+                          <%= if sub do %>
+                            <div class="flex flex-col">
+                              <span class="text-sm font-medium">{sub.subscription_plan.name}</span>
+                              <span class="text-xs text-base-content/40">
+                                {format_duration(sub.subscription_plan.duration)} &middot; {format_price(sub.subscription_plan.price_in_paise)}
+                              </span>
+                              <%= if subscription_expired?(sub) do %>
+                                <.badge variant="error" size="sm" class="mt-1 w-fit">Expired</.badge>
+                              <% else %>
+                                <%= if subscription_expiring?(sub) do %>
+                                  <.badge variant="warning" size="sm" class="mt-1 w-fit">{days_remaining(sub)} days left</.badge>
+                                <% else %>
+                                  <span class="text-xs text-base-content/40">
+                                    Ends: {Calendar.strftime(sub.ends_at, "%b %d, %Y")}
+                                  </span>
+                                <% end %>
+                              <% end %>
+                              <%= if subscription_expiring?(sub) or subscription_expired?(sub) do %>
+                                <button
+                                  phx-click="renew_subscription"
+                                  phx-value-id={sub.id}
+                                  class="btn btn-success btn-xs mt-1 gap-1"
+                                  id={"renew-#{sub.id}"}
+                                >
+                                  <.icon name="hero-arrow-path-mini" class="size-3" /> Renew
+                                </button>
+                              <% end %>
+                            </div>
+                          <% else %>
+                            <%= if @assigning_member_id == member.id do %>
+                              <form phx-submit="assign_plan" class="flex flex-col gap-2" id={"assign-form-#{member.id}"}>
+                                <input type="hidden" name="member_id" value={member.id} />
+                                <%= if @plans == [] do %>
+                                  <span class="text-xs text-base-content/40">No plans created yet</span>
+                                <% else %>
+                                  <div class="flex items-center gap-2">
+                                    <select
+                                      class="select select-bordered select-xs w-40"
+                                      id={"plan-select-#{member.id}"}
+                                      name="plan_id"
+                                      required
+                                    >
+                                      <option value="">Pick a plan</option>
+                                      <%= for plan <- @plans do %>
+                                        <option value={plan.id}>
+                                          {plan.name}
+                                        </option>
+                                      <% end %>
+                                    </select>
+                                    <button
+                                      type="button"
+                                      phx-click="cancel_assign_plan"
+                                      class="btn btn-ghost btn-xs"
+                                      id={"cancel-assign-#{member.id}"}
+                                    >
+                                      <.icon name="hero-x-mark-mini" class="size-3.5" />
+                                    </button>
+                                  </div>
+                                  <div class="flex items-center gap-2">
+                                    <input
+                                      type="date"
+                                      name="starts_at"
+                                      class="input input-bordered input-xs w-36"
+                                      id={"start-date-#{member.id}"}
+                                      value={Date.to_iso8601(Date.utc_today())}
+                                      title="Joining / Start date"
+                                    />
+                                    <.button variant="primary" size="sm" icon="hero-check-mini" type="submit" id={"submit-plan-#{member.id}"}>Assign</.button>
+                                  </div>
+                                <% end %>
+                              </form>
+                            <% else %>
+                              <.button
+                                variant="ghost"
+                                size="sm"
+                                icon="hero-plus-mini"
+                                phx-click="show_assign_plan"
+                                phx-value-member-id={member.id}
+                                id={"assign-plan-#{member.id}"}
+                              >
+                                Assign Plan
+                              </.button>
+                            <% end %>
+                          <% end %>
+                        </td>
+                        <td>
+                          <%= if sub do %>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                class="checkbox checkbox-sm checkbox-success"
+                                checked={sub.payment_status == :paid}
+                                phx-click="toggle_payment"
+                                phx-value-id={sub.id}
+                                id={"payment-toggle-#{sub.id}"}
+                              />
+                              <.badge variant={if(sub.payment_status == :paid, do: "success", else: "warning")} size="sm">
+                                {sub.payment_status |> to_string() |> String.capitalize()}
+                              </.badge>
+                            </label>
+                          <% else %>
+                            <span class="text-xs text-base-content/30">--</span>
+                          <% end %>
+                        </td>
+                        <td>
+                          <div class="flex items-center gap-1">
+                            <.button
+                              variant="ghost"
+                              size="sm"
+                              phx-click="toggle_active"
+                              phx-value-id={member.id}
+                              id={"toggle-member-#{member.id}"}
+                            >
+                              <%= if member.is_active do %>
+                                <.icon name="hero-pause" class="size-4 text-warning" />
+                              <% else %>
+                                <.icon name="hero-play" class="size-4 text-success" />
+                              <% end %>
+                            </.button>
+                          </div>
+                        </td>
+                      </tr>
+                    <% end %>
+                  </tbody>
+                </table>
+              </div>
+            <% end %>
+          </.card>
         <% end %>
       </div>
     </Layouts.app>

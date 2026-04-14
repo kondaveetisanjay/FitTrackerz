@@ -329,15 +329,134 @@ const PasswordVisibilityToggle = {
   }
 }
 
+// Command Palette hook – Cmd+K / Ctrl+K to open, fuzzy filter, keyboard navigation
+const CommandPalette = {
+  mounted() {
+    this.items = JSON.parse(this.el.dataset.items || "[]")
+    this.searchInput = document.getElementById(`${this.el.id}-search`)
+    this.resultsContainer = document.getElementById(`${this.el.id}-results`)
+    this.selectedIndex = 0
+
+    // Global keyboard shortcut
+    this._keydownHandler = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault()
+        this.toggle()
+      }
+      if (e.key === "Escape" && !this.el.classList.contains("hidden")) {
+        this.close()
+      }
+    }
+    document.addEventListener("keydown", this._keydownHandler)
+
+    // Search filtering
+    if (this.searchInput) {
+      this.searchInput.addEventListener("input", () => this.filterItems())
+      this.searchInput.addEventListener("keydown", (e) => {
+        const visible = this.getVisibleItems()
+        if (e.key === "ArrowDown") {
+          e.preventDefault()
+          this.selectedIndex = Math.min(this.selectedIndex + 1, visible.length - 1)
+          this.highlightItem(visible)
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault()
+          this.selectedIndex = Math.max(this.selectedIndex - 1, 0)
+          this.highlightItem(visible)
+        } else if (e.key === "Enter" && visible[this.selectedIndex]) {
+          e.preventDefault()
+          visible[this.selectedIndex].click()
+        }
+      })
+    }
+  },
+  destroyed() {
+    document.removeEventListener("keydown", this._keydownHandler)
+  },
+  toggle() {
+    if (this.el.classList.contains("hidden")) {
+      this.el.classList.remove("hidden")
+      this.searchInput && this.searchInput.focus()
+      this.selectedIndex = 0
+      if (this.searchInput) this.searchInput.value = ""
+      this.filterItems()
+    } else {
+      this.close()
+    }
+  },
+  close() {
+    this.el.classList.add("hidden")
+  },
+  filterItems() {
+    const query = (this.searchInput?.value || "").toLowerCase()
+    const items = this.resultsContainer?.querySelectorAll(".command-palette-item") || []
+    items.forEach(item => {
+      const label = item.dataset.label || ""
+      item.style.display = label.includes(query) ? "" : "none"
+    })
+    this.selectedIndex = 0
+    this.highlightItem(this.getVisibleItems())
+  },
+  getVisibleItems() {
+    return [...(this.resultsContainer?.querySelectorAll(".command-palette-item") || [])].filter(i => i.style.display !== "none")
+  },
+  highlightItem(visible) {
+    visible.forEach((item, idx) => {
+      item.classList.toggle("bg-base-200", idx === this.selectedIndex)
+    })
+  }
+}
+
+// Sidebar collapse hook – persists collapsed state in localStorage
+const SidebarCollapse = {
+  mounted() {
+    const saved = localStorage.getItem("sidebar-collapsed")
+    if (saved === "true") {
+      this.el.classList.add("sidebar-collapsed")
+    }
+    this.el.addEventListener("toggle-sidebar", () => {
+      this.el.classList.toggle("sidebar-collapsed")
+      localStorage.setItem("sidebar-collapsed", this.el.classList.contains("sidebar-collapsed"))
+    })
+  }
+}
+
+// QR Code hook – renders QR codes from URL data attribute
+const QrCode = {
+  mounted() {
+    this.renderQR()
+  },
+  updated() {
+    this.renderQR()
+  },
+  async renderQR() {
+    const url = this.el.dataset.url
+    if (url) {
+      try {
+        const QRCode = await import("qrcode")
+        const canvas = document.createElement("canvas")
+        await QRCode.toCanvas(canvas, url, {
+          width: 256,
+          margin: 2,
+          color: { dark: "#1e293b", light: "#ffffff" }
+        })
+        this.el.innerHTML = ""
+        this.el.appendChild(canvas)
+      } catch (e) {
+        this.el.innerHTML = '<p class="text-error text-sm">Failed to render QR code</p>'
+      }
+    }
+  }
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {Geolocation, BranchGeolocation, PlacesAutocomplete, ExplorePlacesAutocomplete, PasswordVisibilityToggle, ChartHook, NotificationBadge, ScrollToBottom, AutoResize, CsvDownload},
+  hooks: {Geolocation, BranchGeolocation, PlacesAutocomplete, ExplorePlacesAutocomplete, PasswordVisibilityToggle, ChartHook, NotificationBadge, ScrollToBottom, AutoResize, CsvDownload, CommandPalette, SidebarCollapse, QrCode},
 })
 
-// Show progress bar on live navigation and form submits
-topbar.config({barColors: {0: "#C62828"}, shadowColor: "rgba(0, 0, 0, .15)"})
+// Show progress bar on live navigation and form submits – use new primary blue
+topbar.config({barColors: {0: "#3B82F6"}, shadowColor: "rgba(0, 0, 0, .15)"})
 window.addEventListener("phx:page-loading-start", _info => topbar.show(300))
 window.addEventListener("phx:page-loading-stop", _info => topbar.hide())
 

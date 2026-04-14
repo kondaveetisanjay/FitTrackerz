@@ -122,195 +122,134 @@ defmodule FitTrackerzWeb.Trainer.AttendanceLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
-      <div class="space-y-8">
-        <%!-- Page Header --%>
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div class="flex items-center gap-3">
-            <Layouts.back_button />
-            <div>
-              <h1 class="text-2xl sm:text-3xl font-black tracking-tight">Attendance</h1>
-              <p class="text-base-content/50 mt-1">Track and manage client attendance records.</p>
-            </div>
-          </div>
+      <.page_header title="Attendance" subtitle="Track and manage client attendance records." back_path="/trainer">
+        <:actions>
           <%= unless @no_gym do %>
-            <button
-              class="btn btn-primary btn-sm gap-2 font-semibold"
-              phx-click="toggle_form"
-              id="toggle-attendance-form-btn"
-            >
-              <.icon name="hero-plus-mini" class="size-4" /> Mark Attendance
-            </button>
+            <.button variant="primary" size="sm" icon="hero-plus" phx-click="toggle_form" id="toggle-attendance-form-btn">
+              Mark Attendance
+            </.button>
           <% end %>
+        </:actions>
+      </.page_header>
+
+      <%= if @no_gym do %>
+        <.empty_state
+          icon="hero-exclamation-triangle"
+          title="No Gym Association"
+          subtitle="You haven't been added to any gym yet. Ask a gym operator to invite you."
+        />
+      <% else %>
+        <%!-- Stats --%>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+          <.stat_card label="Total Records" value={length(@records)} icon="hero-clipboard-document-check-solid" color="primary" />
+          <.stat_card label="Clients Tracked" value={length(@clients)} icon="hero-user-group-solid" color="info" />
         </div>
 
-        <%= if @no_gym do %>
-          <div class="card bg-base-200/50 border border-base-300/50" id="no-gym-notice">
-            <div class="card-body p-8 items-center text-center">
-              <div class="w-16 h-16 rounded-full bg-warning/10 flex items-center justify-center mb-4">
-                <.icon name="hero-exclamation-triangle-solid" class="size-8 text-warning" />
-              </div>
-              <h2 class="text-lg font-bold">No Gym Association</h2>
-              <p class="text-base-content/50 mt-2 max-w-md">
-                You haven't been added to any gym yet. Ask a gym operator to invite you.
-              </p>
-            </div>
-          </div>
-        <% else %>
-          <%!-- Stats --%>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="card bg-base-200/50 border border-base-300/50" id="stat-total-records">
-              <div class="card-body p-5">
-                <div class="flex items-center justify-between">
+        <%!-- Mark Attendance Form --%>
+        <%= if @show_form do %>
+          <div class="mb-8">
+            <.card title="Mark Attendance">
+              <.form
+                for={@form}
+                id="attendance-form"
+                phx-change="validate"
+                phx-submit="save_attendance"
+                class="space-y-4"
+              >
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
-                    <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
-                      Total Records
-                    </p>
-                    <p class="text-3xl font-black mt-1">{length(@records)}</p>
+                    <label class="label"><span class="label-text font-medium">Client</span></label>
+                    <select
+                      name="attendance[member_id]"
+                      class="select select-bordered w-full"
+                      id="attendance-member-select"
+                      required
+                    >
+                      <option value="">Select a client...</option>
+                      <option :for={client <- @clients} value={client.id}>
+                        {if client.user, do: client.user.name, else: "Unknown"} ({if client.gym,
+                          do: client.gym.name,
+                          else: "N/A"})
+                      </option>
+                    </select>
                   </div>
-                  <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <.icon name="hero-clipboard-document-check-solid" class="size-6 text-primary" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="card bg-base-200/50 border border-base-300/50" id="stat-clients-tracked">
-              <div class="card-body p-5">
-                <div class="flex items-center justify-between">
                   <div>
-                    <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
-                      Clients Tracked
-                    </p>
-                    <p class="text-3xl font-black mt-1">{length(@clients)}</p>
+                    <label class="label">
+                      <span class="label-text font-medium">Attended At</span>
+                    </label>
+                    <input
+                      type="datetime-local"
+                      name="attendance[attended_at]"
+                      value={@form[:attended_at].value}
+                      class="input input-bordered w-full"
+                      id="attendance-datetime-input"
+                      required
+                    />
                   </div>
-                  <div class="w-12 h-12 rounded-xl bg-info/10 flex items-center justify-center">
-                    <.icon name="hero-user-group-solid" class="size-6 text-info" />
-                  </div>
+                  <.input field={@form[:notes]} label="Notes" placeholder="Optional notes..." />
                 </div>
-              </div>
-            </div>
-          </div>
-
-          <%!-- Mark Attendance Form --%>
-          <%= if @show_form do %>
-            <div class="card bg-base-200/50 border border-base-300/50" id="attendance-form-card">
-              <div class="card-body p-5">
-                <h2 class="text-lg font-bold flex items-center gap-2">
-                  <.icon name="hero-clipboard-document-check-solid" class="size-5 text-primary" />
-                  Mark Attendance
-                </h2>
-                <.form
-                  for={@form}
-                  id="attendance-form"
-                  phx-change="validate"
-                  phx-submit="save_attendance"
-                  class="mt-4 space-y-4"
-                >
-                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
-                      <label class="label"><span class="label-text font-medium">Client</span></label>
-                      <select
-                        name="attendance[member_id]"
-                        class="select select-bordered w-full"
-                        id="attendance-member-select"
-                        required
-                      >
-                        <option value="">Select a client...</option>
-                        <option :for={client <- @clients} value={client.id}>
-                          {if client.user, do: client.user.name, else: "Unknown"} ({if client.gym,
-                            do: client.gym.name,
-                            else: "N/A"})
-                        </option>
-                      </select>
-                    </div>
-                    <div>
-                      <label class="label">
-                        <span class="label-text font-medium">Attended At</span>
-                      </label>
-                      <input
-                        type="datetime-local"
-                        name="attendance[attended_at]"
-                        value={@form[:attended_at].value}
-                        class="input input-bordered w-full"
-                        id="attendance-datetime-input"
-                        required
-                      />
-                    </div>
-                    <.input field={@form[:notes]} label="Notes" placeholder="Optional notes..." />
-                  </div>
-                  <div class="flex justify-end gap-2 pt-2">
-                    <button
-                      type="button"
-                      class="btn btn-ghost btn-sm"
-                      phx-click="toggle_form"
-                      id="cancel-attendance-btn"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      class="btn btn-primary btn-sm gap-2"
-                      id="submit-attendance-btn"
-                    >
-                      <.icon name="hero-check-mini" class="size-4" /> Mark Present
-                    </button>
-                  </div>
-                </.form>
-              </div>
-            </div>
-          <% end %>
-
-          <%!-- Attendance Records Table --%>
-          <div class="card bg-base-200/50 border border-base-300/50" id="attendance-table-card">
-            <div class="card-body p-5">
-              <h2 class="text-lg font-bold flex items-center gap-2">
-                <.icon name="hero-clipboard-document-list-solid" class="size-5 text-accent" />
-                Attendance Records
-              </h2>
-              <div class="mt-4 overflow-x-auto">
-                <table class="table table-sm" id="attendance-table">
-                  <thead>
-                    <tr class="text-base-content/40">
-                      <th>Member</th>
-                      <th>Gym</th>
-                      <th>Attended At</th>
-                      <th>Notes</th>
-                      <th>Recorded</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <%= if @records == [] do %>
-                      <tr id="attendance-empty-row">
-                        <td colspan="5" class="text-center text-base-content/40 py-8">
-                          No attendance records yet. Use the form above to start marking attendance.
-                        </td>
-                      </tr>
-                    <% else %>
-                      <tr :for={record <- @records} id={"attendance-row-#{record.id}"}>
-                        <td class="font-medium">
-                          {if record.member && record.member.user, do: record.member.user.name, else: "Unknown"}
-                        </td>
-                        <td class="text-base-content/60">
-                          {if record.gym, do: record.gym.name, else: "N/A"}
-                        </td>
-                        <td class="text-base-content/60">
-                          {format_datetime(record.attended_at)}
-                        </td>
-                        <td class="text-base-content/60 max-w-xs truncate">
-                          {record.notes || "-"}
-                        </td>
-                        <td class="text-base-content/40 text-xs">
-                          {format_datetime(record.inserted_at)}
-                        </td>
-                      </tr>
-                    <% end %>
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                <div class="flex justify-end gap-2 pt-2">
+                  <.button type="button" variant="ghost" size="sm" phx-click="toggle_form" id="cancel-attendance-btn">
+                    Cancel
+                  </.button>
+                  <.button type="submit" variant="primary" size="sm" icon="hero-check" id="submit-attendance-btn">
+                    Mark Present
+                  </.button>
+                </div>
+              </.form>
+            </.card>
           </div>
         <% end %>
-      </div>
+
+        <%!-- Attendance Records --%>
+        <.card title="Attendance Records">
+          <%= if @records == [] do %>
+            <.empty_state
+              icon="hero-clipboard-document-list"
+              title="No attendance records yet"
+              subtitle="Use the Mark Attendance button to start tracking client attendance."
+            />
+          <% else %>
+            <.data_table id="attendance-table" rows={@records} row_id={fn r -> "att-#{r.id}" end}>
+              <:col :let={record} label="Member">
+                <div class="flex items-center gap-2">
+                  <%= if record.member && record.member.user do %>
+                    <.avatar name={record.member.user.name} size="sm" />
+                    <span class="font-medium">{record.member.user.name}</span>
+                  <% else %>
+                    <span class="text-base-content/40">Unknown</span>
+                  <% end %>
+                </div>
+              </:col>
+              <:col :let={record} label="Gym">
+                {if record.gym, do: record.gym.name, else: "N/A"}
+              </:col>
+              <:col :let={record} label="Attended At">
+                {format_datetime(record.attended_at)}
+              </:col>
+              <:col :let={record} label="Notes">
+                <span class="max-w-xs truncate block">{record.notes || "-"}</span>
+              </:col>
+              <:col :let={record} label="Recorded">
+                <span class="text-xs text-base-content/40">{format_datetime(record.inserted_at)}</span>
+              </:col>
+              <:mobile_card :let={record}>
+                <div>
+                  <p class="font-semibold">
+                    {if record.member && record.member.user, do: record.member.user.name, else: "Unknown"}
+                  </p>
+                  <p class="text-xs text-base-content/50 mt-1">
+                    {format_datetime(record.attended_at)}
+                    <%= if record.notes do %>
+                      &middot; {record.notes}
+                    <% end %>
+                  </p>
+                </div>
+              </:mobile_card>
+            </.data_table>
+          <% end %>
+        </.card>
+      <% end %>
     </Layouts.app>
     """
   end

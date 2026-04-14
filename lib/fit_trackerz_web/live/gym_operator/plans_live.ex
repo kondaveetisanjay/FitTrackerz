@@ -506,59 +506,38 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
       <div class="space-y-8">
-        <%!-- Page Header --%>
-        <div class="flex items-center gap-3">
-          <%= if @view == :detail do %>
-            <button
-              phx-click="back_to_categories"
-              class="btn btn-ghost btn-sm btn-circle"
-              id="back-to-cats"
-            >
-              <.icon name="hero-arrow-left" class="size-5" />
-            </button>
-          <% else %>
-            <Layouts.back_button />
-          <% end %>
-          <div>
-            <h1 class="text-2xl sm:text-3xl font-brand">
-              <%= case @view do %>
-                <% :detail -> %>
-                  {@selected_category}
-                <% :wizard -> %>
-                  Create Plans
-                <% _ -> %>
-                  Plans & Billing
-              <% end %>
-            </h1>
-            <p class="text-base-content/50 mt-1">
-              <%= case @view do %>
-                <% :detail -> %>
-                  View and manage plans in this category.
-                <% :wizard -> %>
-                  Step {@wizard_step} of 3
-                <% _ -> %>
-                  Manage subscription plans for your gym.
-              <% end %>
-            </p>
-          </div>
-        </div>
+        <.page_header
+          title={case @view do
+            :detail -> @selected_category
+            :wizard -> "Create Plans"
+            _ -> "Plans & Billing"
+          end}
+          subtitle={case @view do
+            :detail -> "View and manage plans in this category."
+            :wizard -> "Step #{@wizard_step} of 3"
+            _ -> "Manage subscription plans for your gym."
+          end}
+          back_path={if @view == :detail, do: nil, else: "/gym"}
+        >
+          <:actions>
+            <%= if @view == :detail do %>
+              <.button variant="ghost" size="sm" icon="hero-arrow-left" phx-click="back_to_categories" id="back-to-cats">
+                All Categories
+              </.button>
+            <% end %>
+          </:actions>
+        </.page_header>
 
         <%= if @gym == nil do %>
-          <div class="card bg-base-200/50 border border-base-300/50" id="no-gym-card">
-            <div class="card-body p-6 text-center">
-              <.icon
-                name="hero-building-office-solid"
-                class="size-12 text-base-content/20 mx-auto"
-              />
-              <h2 class="text-lg font-bold mt-4">No Gym Found</h2>
-              <p class="text-base-content/50 mt-1">
-                You need to create a gym first before managing plans.
-              </p>
-              <a href="/gym/setup" class="btn btn-primary btn-sm mt-4 gap-2">
-                <.icon name="hero-plus-mini" class="size-4" /> Setup Gym
-              </a>
-            </div>
-          </div>
+          <.empty_state
+            icon="hero-building-office"
+            title="No Gym Found"
+            subtitle="You need to create a gym first before managing plans."
+          >
+            <:action>
+              <.button variant="primary" size="sm" icon="hero-plus" navigate="/gym/setup">Setup Gym</.button>
+            </:action>
+          </.empty_state>
         <% else %>
           <%= case @view do %>
             <% :categories -> %>
@@ -582,35 +561,32 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
 
     ~H"""
     <%= if @plans == [] do %>
-      <div class="flex flex-col items-center justify-center py-20" id="no-plans">
-        <.icon name="hero-credit-card-solid" class="size-16 text-base-content/15 mb-6" />
-        <h2 class="text-xl font-bold text-base-content/60 mb-2">No Plans Yet</h2>
-        <p class="text-base-content/40 mb-8 text-center max-w-md">
-          Create subscription plans so members can sign up for your gym.
-        </p>
-        <button phx-click="create_plans" class="btn btn-primary gap-2" id="create-plans-btn">
-          <.icon name="hero-plus-mini" class="size-5" /> Create Plans
-        </button>
-      </div>
+      <.empty_state
+        icon="hero-credit-card"
+        title="No Plans Yet"
+        subtitle="Create subscription plans so members can sign up for your gym."
+      >
+        <:action>
+          <.button variant="primary" icon="hero-plus" phx-click="create_plans" id="create-plans-btn">
+            Create Plans
+          </.button>
+        </:action>
+      </.empty_state>
     <% else %>
       <div class="flex justify-end mb-2">
-        <button
-          phx-click="create_plans"
-          class="btn btn-primary btn-sm gap-2"
-          id="create-plans-btn"
-        >
-          <.icon name="hero-plus-mini" class="size-4" /> Create Plans
-        </button>
+        <.button variant="primary" size="sm" icon="hero-plus" phx-click="create_plans" id="create-plans-btn">
+          Create Plans
+        </.button>
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="category-grid">
         <div
           :for={{category, cat_plans} <- @grouped}
-          class="card bg-base-200/50 border border-base-300/50 hover:border-primary/30 hover:shadow-lg cursor-pointer transition-all"
+          class="cursor-pointer"
           phx-click="view_category"
           phx-value-category={category}
           id={"cat-#{category}"}
         >
-          <div class="card-body p-5">
+          <.card class="hover:border-primary/30 hover:shadow-lg transition-all">
             <div class="flex items-center gap-3">
               <div class={"size-10 rounded-lg flex items-center justify-center #{category_icon_bg(category)}"}>
                 <.icon name="hero-tag-solid" class="size-5" />
@@ -623,7 +599,7 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
               </div>
               <.icon name="hero-chevron-right" class="size-5 text-base-content/30 shrink-0" />
             </div>
-          </div>
+          </.card>
         </div>
       </div>
     <% end %>
@@ -634,25 +610,23 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
 
   defp render_wizard(assigns) do
     ~H"""
-    <div class="card bg-base-200/50 border border-base-300/50" id="wizard-card">
-      <div class="card-body p-6">
-        <%!-- Progress Steps --%>
-        <ul class="steps steps-horizontal w-full mb-8">
-          <li class={"step #{if @wizard_step >= 1, do: "step-primary"}"}>Categories</li>
-          <li class={"step #{if @wizard_step >= 2, do: "step-primary"}"}>Plan Types</li>
-          <li class={"step #{if @wizard_step >= 3, do: "step-primary"}"}>Pricing</li>
-        </ul>
+    <.card id="wizard-card">
+      <%!-- Progress Steps --%>
+      <.step_indicator
+        steps={["Categories", "Plan Types", "Pricing"]}
+        current={@wizard_step - 1}
+      />
 
-        <%!-- Errors --%>
-        <%= if @wizard_errors != [] do %>
-          <div class="alert alert-error mb-6" id="wizard-errors">
-            <.icon name="hero-exclamation-circle" class="size-5 shrink-0" />
-            <div>
-              <p :for={err <- @wizard_errors} class="text-sm">{err}</p>
-            </div>
+      <%!-- Errors --%>
+      <%= if @wizard_errors != [] do %>
+        <.alert variant="error" id="wizard-errors">
+          <div>
+            <p :for={err <- @wizard_errors} class="text-sm">{err}</p>
           </div>
-        <% end %>
+        </.alert>
+      <% end %>
 
+      <div class="mt-6">
         <%= case @wizard_step do %>
           <% 1 -> %>
             {render_wizard_step1(assigns)}
@@ -662,7 +636,7 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
             {render_wizard_step3(assigns)}
         <% end %>
       </div>
-    </div>
+    </.card>
     """
   end
 
@@ -692,33 +666,20 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
             id={"wiz-cat-input-#{index}"}
           />
           <%= if length(@wizard_categories) > 1 do %>
-            <button
-              phx-click="remove_category_input"
-              phx-value-index={index}
-              class="btn btn-ghost btn-sm btn-circle text-error"
-              id={"wiz-cat-remove-#{index}"}
-            >
+            <.button variant="ghost" size="sm" phx-click="remove_category_input" phx-value-index={index} id={"wiz-cat-remove-#{index}"} class="text-error">
               <.icon name="hero-x-mark-mini" class="size-4" />
-            </button>
+            </.button>
           <% end %>
         </div>
       </div>
 
-      <button
-        phx-click="add_category_input"
-        class="btn btn-ghost btn-sm gap-1 mt-3 text-primary"
-        id="wiz-add-category"
-      >
-        <.icon name="hero-plus-mini" class="size-4" /> Add another category
-      </button>
+      <.button variant="ghost" size="sm" icon="hero-plus" phx-click="add_category_input" id="wiz-add-category" class="mt-3 text-primary">
+        Add another category
+      </.button>
 
       <div class="flex justify-between mt-8">
-        <button phx-click="wizard_back" class="btn btn-ghost btn-sm" id="wiz-back-1">
-          Cancel
-        </button>
-        <button phx-click="wizard_next" class="btn btn-primary btn-sm gap-1" id="wiz-next-1">
-          Next <.icon name="hero-arrow-right-mini" class="size-4" />
-        </button>
+        <.button variant="ghost" size="sm" phx-click="wizard_back" id="wiz-back-1">Cancel</.button>
+        <.button variant="primary" size="sm" icon="hero-arrow-right" phx-click="wizard_next" id="wiz-next-1">Next</.button>
       </div>
     </div>
     """
@@ -759,12 +720,8 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
       </div>
 
       <div class="flex justify-between mt-8">
-        <button phx-click="wizard_back" class="btn btn-ghost btn-sm gap-1" id="wiz-back-2">
-          <.icon name="hero-arrow-left-mini" class="size-4" /> Back
-        </button>
-        <button phx-click="wizard_next" class="btn btn-primary btn-sm gap-1" id="wiz-next-2">
-          Next <.icon name="hero-arrow-right-mini" class="size-4" />
-        </button>
+        <.button variant="ghost" size="sm" icon="hero-arrow-left" phx-click="wizard_back" id="wiz-back-2">Back</.button>
+        <.button variant="primary" size="sm" icon="hero-arrow-right" phx-click="wizard_next" id="wiz-next-2">Next</.button>
       </div>
     </div>
     """
@@ -840,12 +797,10 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
       </div>
 
       <div class="flex justify-between mt-8">
-        <button phx-click="wizard_back" class="btn btn-ghost btn-sm gap-1" id="wiz-back-3">
-          <.icon name="hero-arrow-left-mini" class="size-4" /> Back
-        </button>
-        <button phx-click="wizard_done" class="btn btn-primary btn-sm gap-2" id="wiz-done">
-          <.icon name="hero-check-mini" class="size-4" /> Create {@wiz_total_plans} Plan(s)
-        </button>
+        <.button variant="ghost" size="sm" icon="hero-arrow-left" phx-click="wizard_back" id="wiz-back-3">Back</.button>
+        <.button variant="primary" size="sm" icon="hero-check" phx-click="wizard_done" id="wiz-done">
+          Create {@wiz_total_plans} Plan(s)
+        </.button>
       </div>
     </div>
     """
@@ -871,69 +826,55 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
     ~H"""
     <%!-- Edit Form --%>
     <%= if @editing_plan_id do %>
-      <div class="card bg-base-200/50 border border-base-300/50 mb-6" id="edit-plan-card">
-        <div class="card-body p-6">
-          <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-            <.icon name="hero-pencil-square-solid" class="size-5 text-info" /> Edit Plan
-          </h2>
-          <.form
-            for={@edit_form}
-            id="edit-plan-form"
-            phx-change="validate"
-            phx-submit="update_plan"
-          >
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <.input field={@edit_form[:name]} label="Plan Name" required />
-              <.input field={@edit_form[:category]} label="Category" />
-              <.input
-                field={@edit_form[:plan_type]}
-                type="select"
-                label="Plan Type"
-                prompt="Select plan type"
-                options={[
-                  {"General", "general"},
-                  {"Personal Training", "personal_training"}
-                ]}
-                required
-              />
-              <.input
-                field={@edit_form[:duration]}
-                type="select"
-                label="Duration"
-                prompt="Select duration"
-                options={[
-                  {"1 Day Pass", "day_pass"},
-                  {"1 Month", "monthly"},
-                  {"3 Months", "quarterly"},
-                  {"6 Months", "half_yearly"},
-                  {"12 Months", "annual"},
-                  {"24 Months", "two_year"}
-                ]}
-                required
-              />
-              <.input
-                field={@edit_form[:price_in_rupees]}
-                type="number"
-                label="Price (in Rupees)"
-                required
-              />
-            </div>
-            <div class="flex gap-2 mt-4">
-              <button type="submit" class="btn btn-primary btn-sm gap-2" id="update-plan-btn">
-                <.icon name="hero-check-mini" class="size-4" /> Update
-              </button>
-              <button
-                type="button"
-                phx-click="cancel_edit"
-                class="btn btn-ghost btn-sm"
-                id="cancel-edit-btn"
-              >
-                Cancel
-              </button>
-            </div>
-          </.form>
-        </div>
-      </div>
+      <.card title="Edit Plan" id="edit-plan-card">
+        <.form
+          for={@edit_form}
+          id="edit-plan-form"
+          phx-change="validate"
+          phx-submit="update_plan"
+        >
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <.input field={@edit_form[:name]} label="Plan Name" required />
+            <.input field={@edit_form[:category]} label="Category" />
+            <.input
+              field={@edit_form[:plan_type]}
+              type="select"
+              label="Plan Type"
+              prompt="Select plan type"
+              options={[
+                {"General", "general"},
+                {"Personal Training", "personal_training"}
+              ]}
+              required
+            />
+            <.input
+              field={@edit_form[:duration]}
+              type="select"
+              label="Duration"
+              prompt="Select duration"
+              options={[
+                {"1 Day Pass", "day_pass"},
+                {"1 Month", "monthly"},
+                {"3 Months", "quarterly"},
+                {"6 Months", "half_yearly"},
+                {"12 Months", "annual"},
+                {"24 Months", "two_year"}
+              ]}
+              required
+            />
+            <.input
+              field={@edit_form[:price_in_rupees]}
+              type="number"
+              label="Price (in Rupees)"
+              required
+            />
+          </div>
+          <div class="flex gap-2 mt-4">
+            <.button variant="primary" size="sm" icon="hero-check" type="submit" id="update-plan-btn">Update</.button>
+            <.button variant="ghost" size="sm" type="button" phx-click="cancel_edit" id="cancel-edit-btn">Cancel</.button>
+          </div>
+        </.form>
+      </.card>
     <% end %>
 
     <%!-- Side-by-side Plan Types --%>
@@ -943,90 +884,64 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
     >
       <%!-- General Plans --%>
       <%= if @has_general do %>
-        <div class="card bg-base-200/50 border border-base-300/50" id="general-plans">
-          <div class="card-body p-5">
-            <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-              <span class="badge badge-primary badge-sm">General</span>
-            </h2>
-            <div class="space-y-3">
-              <div
-                :for={plan <- @general_plans}
-                class="flex items-center justify-between p-3 rounded-lg bg-base-300/20"
-                id={"detail-plan-#{plan.id}"}
-              >
-                <p class="font-semibold text-sm">{format_duration(plan.duration)}</p>
-                <div class="flex items-center gap-2">
-                  <span class="font-black text-primary text-lg">
-                    &#8377;{format_price(plan.price_in_paise)}
-                  </span>
-                  <div class="flex gap-0.5">
-                    <button
-                      phx-click="edit_plan"
-                      phx-value-id={plan.id}
-                      class="btn btn-ghost btn-xs text-info"
-                      id={"edit-#{plan.id}"}
-                    >
-                      <.icon name="hero-pencil-square" class="size-3.5" />
-                    </button>
-                    <button
-                      phx-click="delete_plan"
-                      phx-value-id={plan.id}
-                      data-confirm="Delete this plan?"
-                      class="btn btn-ghost btn-xs text-error"
-                      id={"delete-#{plan.id}"}
-                    >
-                      <.icon name="hero-trash" class="size-3.5" />
-                    </button>
-                  </div>
+        <.card id="general-plans">
+          <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
+            <.badge variant="primary">General</.badge>
+          </h2>
+          <div class="space-y-3">
+            <div
+              :for={plan <- @general_plans}
+              class="flex items-center justify-between p-3 rounded-lg bg-base-300/20"
+              id={"detail-plan-#{plan.id}"}
+            >
+              <p class="font-semibold text-sm">{format_duration(plan.duration)}</p>
+              <div class="flex items-center gap-2">
+                <span class="font-black text-primary text-lg">
+                  &#8377;{format_price(plan.price_in_paise)}
+                </span>
+                <div class="flex gap-0.5">
+                  <.button variant="ghost" size="sm" phx-click="edit_plan" phx-value-id={plan.id} id={"edit-#{plan.id}"} class="text-info">
+                    <.icon name="hero-pencil-square" class="size-3.5" />
+                  </.button>
+                  <.button variant="ghost" size="sm" phx-click="delete_plan" phx-value-id={plan.id} data-confirm="Delete this plan?" id={"delete-#{plan.id}"} class="text-error">
+                    <.icon name="hero-trash" class="size-3.5" />
+                  </.button>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </.card>
       <% end %>
 
       <%!-- Personal Training Plans --%>
       <%= if @has_pt do %>
-        <div class="card bg-base-200/50 border border-base-300/50" id="pt-plans">
-          <div class="card-body p-5">
-            <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-              <span class="badge badge-secondary badge-sm">Personal Training</span>
-            </h2>
-            <div class="space-y-3">
-              <div
-                :for={plan <- @pt_plans}
-                class="flex items-center justify-between p-3 rounded-lg bg-base-300/20"
-                id={"detail-plan-#{plan.id}"}
-              >
-                <p class="font-semibold text-sm">{format_duration(plan.duration)}</p>
-                <div class="flex items-center gap-2">
-                  <span class="font-black text-primary text-lg">
-                    &#8377;{format_price(plan.price_in_paise)}
-                  </span>
-                  <div class="flex gap-0.5">
-                    <button
-                      phx-click="edit_plan"
-                      phx-value-id={plan.id}
-                      class="btn btn-ghost btn-xs text-info"
-                      id={"edit-#{plan.id}"}
-                    >
-                      <.icon name="hero-pencil-square" class="size-3.5" />
-                    </button>
-                    <button
-                      phx-click="delete_plan"
-                      phx-value-id={plan.id}
-                      data-confirm="Delete this plan?"
-                      class="btn btn-ghost btn-xs text-error"
-                      id={"delete-#{plan.id}"}
-                    >
-                      <.icon name="hero-trash" class="size-3.5" />
-                    </button>
-                  </div>
+        <.card id="pt-plans">
+          <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
+            <.badge variant="secondary">Personal Training</.badge>
+          </h2>
+          <div class="space-y-3">
+            <div
+              :for={plan <- @pt_plans}
+              class="flex items-center justify-between p-3 rounded-lg bg-base-300/20"
+              id={"detail-plan-#{plan.id}"}
+            >
+              <p class="font-semibold text-sm">{format_duration(plan.duration)}</p>
+              <div class="flex items-center gap-2">
+                <span class="font-black text-primary text-lg">
+                  &#8377;{format_price(plan.price_in_paise)}
+                </span>
+                <div class="flex gap-0.5">
+                  <.button variant="ghost" size="sm" phx-click="edit_plan" phx-value-id={plan.id} id={"edit-#{plan.id}"} class="text-info">
+                    <.icon name="hero-pencil-square" class="size-3.5" />
+                  </.button>
+                  <.button variant="ghost" size="sm" phx-click="delete_plan" phx-value-id={plan.id} data-confirm="Delete this plan?" id={"delete-#{plan.id}"} class="text-error">
+                    <.icon name="hero-trash" class="size-3.5" />
+                  </.button>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </.card>
       <% end %>
     </div>
     """

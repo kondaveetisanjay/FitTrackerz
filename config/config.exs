@@ -18,7 +18,8 @@ config :fit_trackerz,
     FitTrackerz.Scheduling,
     FitTrackerz.Health,
     FitTrackerz.Notifications,
-    FitTrackerz.Messaging
+    FitTrackerz.Messaging,
+    FitTrackerz.Gamification
   ]
 
 # Configure the endpoint
@@ -75,7 +76,10 @@ config :fit_trackerz, Oban,
     {Oban.Plugins.Pruner, max_age: 60 * 60 * 24 * 7},
     {Oban.Plugins.Cron,
      crontab: [
-       {"0 8 * * *", FitTrackerz.Workers.SubscriptionExpiryWorker}
+       {"0 8 * * *", FitTrackerz.Workers.SubscriptionExpiryWorker},
+       {"0 9 * * *", FitTrackerz.Workers.PaymentReminderWorker},
+       {"0 10 * * *", FitTrackerz.Workers.InactivityReminderWorker},
+       {"0 0 * * *", FitTrackerz.Workers.StreakCalculationWorker}
      ]}
   ]
 

@@ -18,10 +18,8 @@ defmodule FitTrackerzWeb.Auth.SignInLive do
         </div>
         <div class="relative z-10 flex flex-col items-center justify-center w-full p-12">
           <div class="text-center max-w-lg">
-            <div class="flex items-center justify-center gap-3 mb-6">
-              <div class="w-14 h-14 rounded-xl bg-primary flex items-center justify-center">
-                <.icon name="hero-bolt-solid" class="size-8 text-primary-content" />
-              </div>
+            <div class="w-14 h-14 rounded-xl bg-primary flex items-center justify-center mx-auto mb-6">
+              <.icon name="hero-bolt-solid" class="size-8 text-primary-content" />
             </div>
             <.brand_logo class="h-20 w-auto mx-auto" />
             <p class="mt-4 text-lg text-base-content/60 leading-relaxed">
@@ -48,7 +46,6 @@ defmodule FitTrackerzWeb.Auth.SignInLive do
       <%!-- Right: Sign In Form --%>
       <div class="flex-1 flex items-center justify-center p-6 sm:p-12 bg-base-100">
         <div class="w-full max-w-md">
-          <%!-- Mobile Logo --%>
           <div class="lg:hidden flex items-center justify-center mb-8">
             <.brand_logo class="h-14 w-auto" />
           </div>
@@ -58,69 +55,50 @@ defmodule FitTrackerzWeb.Auth.SignInLive do
             <p class="text-base-content/50 mt-2">Sign in to your account to continue</p>
           </div>
 
-          <%!-- Flash Messages --%>
-          <%= if Phoenix.Flash.get(@flash, :error) do %>
-            <div class="alert alert-error text-sm mb-4">
-              <.icon name="hero-exclamation-circle-mini" class="size-5" />
-              <span>{Phoenix.Flash.get(@flash, :error)}</span>
-            </div>
-          <% end %>
-          <%= if Phoenix.Flash.get(@flash, :info) do %>
-            <div class="alert alert-success text-sm mb-4">
-              <.icon name="hero-check-circle-mini" class="size-5" />
-              <span>{Phoenix.Flash.get(@flash, :info)}</span>
-            </div>
-          <% end %>
+          <.alert :if={Phoenix.Flash.get(@flash, :error)} variant="error">
+            {Phoenix.Flash.get(@flash, :error)}
+          </.alert>
+          <.alert :if={Phoenix.Flash.get(@flash, :info)} variant="success">
+            {Phoenix.Flash.get(@flash, :info)}
+          </.alert>
 
-          <form action="/auth/user/password/sign_in" method="post" class="space-y-5">
+          <form action="/auth/user/password/sign_in" method="post" class="space-y-5 mt-4">
             <input type="hidden" name="_csrf_token" value={Plug.CSRFProtection.get_csrf_token()} />
 
-            <div>
-              <label for="user_email" class="block text-sm font-semibold mb-2">Email</label>
-              <label class="input input-bordered flex items-center gap-3 w-full">
-                <.icon name="hero-envelope-mini" class="size-4 opacity-40" />
-                <input
-                  type="email"
-                  name="user[email]"
-                  id="user_email"
-                  placeholder="you@example.com"
-                  required
-                  class="grow"
-                  autocomplete="email"
-                />
-              </label>
-            </div>
+            <.input
+              type="email"
+              name="user[email]"
+              id="user_email"
+              label="Email"
+              icon="hero-envelope-mini"
+              placeholder="you@example.com"
+              required
+              autocomplete="email"
+            />
 
-            <div>
-              <label for="user_password" class="block text-sm font-semibold mb-2">Password</label>
-              <label class="input input-bordered flex items-center gap-3 w-full">
-                <.icon name="hero-lock-closed-mini" class="size-4 opacity-40" />
-                <input
-                  type="password"
-                  name="user[password]"
-                  id="user_password"
-                  placeholder="Enter your password"
-                  required
-                  class="grow"
-                  autocomplete="current-password"
-                />
-              </label>
-            </div>
+            <.input
+              type="password"
+              name="user[password]"
+              id="user_password"
+              label="Password"
+              icon="hero-lock-closed-mini"
+              placeholder="Enter your password"
+              required
+              autocomplete="current-password"
+            />
 
-            <button type="submit" class="btn btn-primary w-full gap-2 font-semibold text-base">
+            <.button type="submit" variant="primary" class="btn btn-primary w-full gap-2 font-semibold text-base rounded-xl">
               <.icon name="hero-arrow-right-end-on-rectangle-mini" class="size-5" />
               Sign In
-            </button>
+            </.button>
           </form>
 
           <div class="divider text-base-content/30 my-6 text-xs">NEW HERE?</div>
 
-          <div class="text-center">
-            <a href="/register" class="btn btn-outline w-full gap-2 font-semibold">
-              <.icon name="hero-user-plus-mini" class="size-5" />
-              Create an Account
-            </a>
-          </div>
+          <.button navigate="/register" variant="outline" class="btn btn-outline btn-primary w-full gap-2 font-semibold rounded-xl">
+            <.icon name="hero-user-plus-mini" class="size-5" />
+            Create an Account
+          </.button>
 
           <p class="text-center mt-6 text-sm text-base-content/40">
             <a href="/" class="hover:text-primary transition-colors">

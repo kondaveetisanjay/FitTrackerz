@@ -69,128 +69,92 @@ defmodule FitTrackerzWeb.Member.SubscriptionLive do
   defp format_plan_type(:personal_training), do: "Personal Training"
   defp format_plan_type(other), do: other |> to_string() |> String.capitalize()
 
-  defp subscription_status_class(:active), do: "badge-success"
-  defp subscription_status_class(:cancelled), do: "badge-error"
-  defp subscription_status_class(:expired), do: "badge-ghost"
-  defp subscription_status_class(_), do: "badge-ghost"
+  defp subscription_badge_variant(:active), do: "success"
+  defp subscription_badge_variant(:cancelled), do: "error"
+  defp subscription_badge_variant(:expired), do: "neutral"
+  defp subscription_badge_variant(_), do: "neutral"
 
-  defp payment_status_class(:pending), do: "badge-warning"
-  defp payment_status_class(:paid), do: "badge-success"
-  defp payment_status_class(:failed), do: "badge-error"
-  defp payment_status_class(:refunded), do: "badge-info"
-  defp payment_status_class(_), do: "badge-ghost"
+  defp payment_badge_variant(:pending), do: "warning"
+  defp payment_badge_variant(:paid), do: "success"
+  defp payment_badge_variant(:failed), do: "error"
+  defp payment_badge_variant(:refunded), do: "info"
+  defp payment_badge_variant(_), do: "neutral"
 
   defp format_status(status), do: status |> to_string() |> String.capitalize()
+
+  defp time_remaining_pct(sub) do
+    starts = sub.starts_at
+    ends = sub.ends_at
+    now = DateTime.utc_now()
+    total = DateTime.diff(ends, starts, :second)
+    elapsed = DateTime.diff(now, starts, :second)
+    if total > 0, do: min(100, max(0, round(elapsed / total * 100))), else: 0
+  end
 
   @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
-      <div class="space-y-8">
-        <%!-- Page Header --%>
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div class="flex items-center gap-3">
-            <Layouts.back_button />
-            <div>
-              <h1 class="text-2xl sm:text-3xl font-brand">My Subscriptions</h1>
-              <p class="text-base-content/50 mt-1">Manage your gym subscriptions and billing.</p>
-            </div>
-          </div>
-        </div>
+      <.page_header title="My Subscriptions" subtitle="Manage your gym subscriptions and billing." back_path="/member" />
 
-        <%= if @no_gym do %>
-          <%!-- No Gym Membership --%>
-          <div class="card bg-base-200/50 border border-base-300/50" id="no-gym-card">
-            <div class="card-body items-center text-center p-8">
-              <div class="w-16 h-16 rounded-2xl bg-warning/10 flex items-center justify-center mb-4">
-                <.icon name="hero-building-office-2" class="size-8 text-warning" />
-              </div>
-              <h2 class="text-lg font-bold">No Gym Membership</h2>
-              <p class="text-sm text-base-content/50 max-w-md mt-2">
-                You haven't joined any gym yet. Ask a gym operator to invite you.
-              </p>
-            </div>
-          </div>
+      <%= if @no_gym do %>
+        <.empty_state
+          icon="hero-building-office-2"
+          title="No Gym Membership"
+          subtitle="You haven't joined any gym yet. Ask a gym operator to invite you."
+        />
+      <% else %>
+        <%= if @subscriptions == [] do %>
+          <.empty_state
+            icon="hero-credit-card"
+            title="No Active Subscription"
+            subtitle="You don't have any subscriptions yet. Contact your gym to subscribe to a plan."
+          />
         <% else %>
-          <%= if @subscriptions == [] do %>
-            <%!-- Empty State --%>
-            <div class="card bg-base-200/50 border border-base-300/50" id="no-subscriptions">
-              <div class="card-body items-center text-center p-8">
-                <div class="w-16 h-16 rounded-2xl bg-warning/10 flex items-center justify-center mb-4">
-                  <.icon name="hero-credit-card" class="size-8 text-warning" />
-                </div>
-                <h2 class="text-lg font-bold">No Active Subscription</h2>
-                <p class="text-sm text-base-content/50 max-w-md mt-2">
-                  You don't have any subscriptions yet. Contact your gym to subscribe to a plan.
-                </p>
-              </div>
-            </div>
-          <% else %>
-            <%!-- Subscription Cards --%>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div
-                :for={sub <- @subscriptions}
-                class="card bg-base-200/50 border border-base-300/50"
-                id={"subscription-#{sub.id}"}
-              >
-                <div class="card-body p-5">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div
+              :for={sub <- @subscriptions}
+              id={"subscription-#{sub.id}"}
+            >
+              <.card>
+                <div class="space-y-5">
                   <%!-- Header --%>
                   <div class="flex items-start justify-between gap-3">
                     <div>
-                      <h2 class="text-lg font-bold flex items-center gap-2">
-                        <.icon name="hero-credit-card-solid" class="size-5 text-warning" />
-                        {sub.subscription_plan.name}
-                      </h2>
+                      <h2 class="text-xl font-bold">{sub.subscription_plan.name}</h2>
                       <%= if sub.gym do %>
-                        <p class="text-xs text-base-content/50 mt-1 flex items-center gap-1">
+                        <p class="text-sm text-base-content/50 mt-1 flex items-center gap-1">
                           <.icon name="hero-building-office-2-mini" class="size-3" />
                           {sub.gym.name}
                         </p>
                       <% end %>
                     </div>
-                    <span class={"badge badge-sm #{subscription_status_class(sub.status)}"}>
+                    <.badge variant={subscription_badge_variant(sub.status)}>
                       {format_status(sub.status)}
-                    </span>
+                    </.badge>
                   </div>
+
+                  <%!-- Time remaining progress --%>
+                  <.progress_bar
+                    value={time_remaining_pct(sub)}
+                    color="primary"
+                    label="Time Elapsed"
+                  />
 
                   <%!-- Plan Details --%>
-                  <div class="mt-4 grid grid-cols-2 gap-3">
-                    <div class="p-3 rounded-lg bg-base-300/20">
-                      <p class="text-xs text-base-content/40 font-medium uppercase tracking-wider">
-                        Plan Type
-                      </p>
-                      <p class="text-sm font-semibold mt-1">
-                        {format_plan_type(sub.subscription_plan.plan_type)}
-                      </p>
-                    </div>
-                    <div class="p-3 rounded-lg bg-base-300/20">
-                      <p class="text-xs text-base-content/40 font-medium uppercase tracking-wider">
-                        Duration
-                      </p>
-                      <p class="text-sm font-semibold mt-1">
-                        {format_duration(sub.subscription_plan.duration)}
-                      </p>
-                    </div>
-                    <div class="p-3 rounded-lg bg-base-300/20">
-                      <p class="text-xs text-base-content/40 font-medium uppercase tracking-wider">
-                        Price
-                      </p>
-                      <p class="text-sm font-semibold mt-1">
-                        {format_price(sub.subscription_plan.price_in_paise)}
-                      </p>
-                    </div>
-                    <div class="p-3 rounded-lg bg-base-300/20">
-                      <p class="text-xs text-base-content/40 font-medium uppercase tracking-wider">
-                        Payment
-                      </p>
-                      <span class={"badge badge-sm mt-1 #{payment_status_class(sub.payment_status)}"}>
+                  <.detail_grid>
+                    <:item label="Plan Type">{format_plan_type(sub.subscription_plan.plan_type)}</:item>
+                    <:item label="Duration">{format_duration(sub.subscription_plan.duration)}</:item>
+                    <:item label="Price">{format_price(sub.subscription_plan.price_in_paise)}</:item>
+                    <:item label="Payment">
+                      <.badge variant={payment_badge_variant(sub.payment_status)} size="sm">
                         {format_status(sub.payment_status)}
-                      </span>
-                    </div>
-                  </div>
+                      </.badge>
+                    </:item>
+                  </.detail_grid>
 
                   <%!-- Dates --%>
-                  <div class="mt-4 flex items-center gap-4 text-sm text-base-content/60">
+                  <div class="flex items-center gap-4 text-sm text-base-content/60 pt-3 border-t border-base-300/30">
                     <div class="flex items-center gap-1.5">
                       <.icon name="hero-calendar-mini" class="size-4 text-base-content/40" />
                       <span>Starts: {format_datetime(sub.starts_at)}</span>
@@ -201,11 +165,11 @@ defmodule FitTrackerzWeb.Member.SubscriptionLive do
                     </div>
                   </div>
                 </div>
-              </div>
+              </.card>
             </div>
-          <% end %>
+          </div>
         <% end %>
-      </div>
+      <% end %>
     </Layouts.app>
     """
   end

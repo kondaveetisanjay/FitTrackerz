@@ -35,7 +35,11 @@ defmodule FitTrackerzWeb.Member.DashboardLive do
         upcoming_bookings: [],
         streak_count: 0,
         today_calories: 0,
-        calorie_target: nil
+        calorie_target: nil,
+        workout_streak: 0,
+        attendance_streak: 0,
+        milestones: [],
+        gym_tier: :free
       )
     else
       member_ids = Enum.map(memberships, & &1.id)
@@ -99,6 +103,35 @@ defmodule FitTrackerzWeb.Member.DashboardLive do
         plan -> plan.calorie_target
       end
 
+      membership = List.first(memberships)
+
+      # Load streaks
+      streaks =
+        case FitTrackerz.Gamification.list_streaks_by_member(membership.id, actor: actor) do
+          {:ok, s} -> s
+          _ -> []
+        end
+
+      workout_streak_val =
+        case Enum.find(streaks, &(&1.streak_type == :workout)) do
+          %{current_streak: s} -> s
+          _ -> 0
+        end
+
+      attendance_streak_val =
+        case Enum.find(streaks, &(&1.streak_type == :attendance)) do
+          %{current_streak: s} -> s
+          _ -> 0
+        end
+
+      milestones =
+        case FitTrackerz.Gamification.list_milestones_by_member(membership.id, actor: actor) do
+          {:ok, m} -> m
+          _ -> []
+        end
+
+      gym_tier = membership.gym.tier
+
       socket
       |> assign(
         page_title: "Member Dashboard",
@@ -112,7 +145,11 @@ defmodule FitTrackerzWeb.Member.DashboardLive do
         upcoming_bookings: Enum.take(bookings, 5),
         streak_count: streak_count,
         today_calories: today_calories,
-        calorie_target: calorie_target
+        calorie_target: calorie_target,
+        workout_streak: workout_streak_val,
+        attendance_streak: attendance_streak_val,
+        milestones: milestones,
+        gym_tier: gym_tier
       )
     end
   end
@@ -187,396 +224,227 @@ defmodule FitTrackerzWeb.Member.DashboardLive do
     <Layouts.app flash={@flash} current_user={@current_user}>
       <div class="space-y-8">
         <%!-- Welcome Header --%>
-        <div class="card bg-gradient-to-r from-primary/10 via-base-200/50 to-secondary/10 border border-base-300/50">
-          <div class="card-body p-6">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <p class="text-sm text-base-content/50 font-medium">Good to see you</p>
-
-                <h1 class="text-2xl sm:text-3xl font-brand mt-1">
-                  {@current_user.name}
-                </h1>
-
-                <p class="text-base-content/50 mt-1">Keep pushing towards your fitness goals!</p>
-              </div>
-
-              <div class="flex gap-2 flex-wrap">
-                <.link navigate="/member/classes" class="btn btn-primary btn-sm gap-2 font-semibold">
-                  <.icon name="hero-calendar-days-mini" class="size-4" /> Book a Class
-                </.link>
-                <.link navigate="/member/health" class="btn btn-ghost btn-sm gap-2">
-                  <.icon name="hero-chart-bar-mini" class="size-4" /> Health Log
-                </.link>
-                <.link navigate="/member/progress" class="btn btn-ghost btn-sm gap-2">
-                  <.icon name="hero-arrow-trending-up-mini" class="size-4" /> Progress
-                </.link>
-              </div>
+        <.card>
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+            <div>
+              <p class="text-sm text-base-content/50 font-medium">Good to see you</p>
+              <h1 class="text-2xl sm:text-3xl font-brand mt-1">{@current_user.name}</h1>
+              <p class="text-base-content/50 mt-1">Keep pushing towards your fitness goals!</p>
+            </div>
+            <div class="flex gap-2 flex-wrap">
+              <.button variant="primary" size="sm" icon="hero-calendar-days" navigate="/member/classes">
+                Book a Class
+              </.button>
+              <.button variant="ghost" size="sm" icon="hero-chart-bar" navigate="/member/health">
+                Health Log
+              </.button>
+              <.button variant="ghost" size="sm" icon="hero-arrow-trending-up" navigate="/member/progress">
+                Progress
+              </.button>
+              <.button variant="ghost" size="sm" icon="hero-qr-code" navigate="/member/qr-code">
+                My QR Code
+              </.button>
+              <%= if @gym_tier == :premium do %>
+                <.button variant="ghost" size="sm" icon="hero-trophy" navigate="/member/leaderboard">
+                  Leaderboard
+                </.button>
+              <% end %>
             </div>
           </div>
-        </div>
+        </.card>
 
         <%!-- Pending Invitations --%>
         <%= if @pending_invitations != [] do %>
-          <div class="card bg-base-200/50 border border-primary/30" id="pending-invitations">
-            <div class="card-body p-6">
-              <h2 class="text-lg font-bold flex items-center gap-2">
-                <.icon name="hero-envelope-solid" class="size-5 text-primary" />
-                Pending Invitations
-                <span class="badge badge-primary badge-sm">{length(@pending_invitations)}</span>
-              </h2>
-
-              <div class="space-y-3 mt-4">
-                <%= for inv <- @pending_invitations do %>
-                  <div
-                    class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-base-300/30 border border-base-300/50"
-                    id={"invitation-#{inv.id}"}
-                  >
-                    <div class="flex items-center gap-4">
-                      <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                        <.icon name="hero-building-office-2-solid" class="size-5 text-primary" />
-                      </div>
-
-                      <div>
-                        <p class="font-semibold">{inv.gym.name}</p>
-
-                        <%= if inv.branch do %>
-                          <p class="text-sm text-base-content/60">
-                            <.icon name="hero-map-pin-mini" class="size-3 inline" />
-                            {inv.branch.city}, {inv.branch.state} — {inv.branch.address}
-                          </p>
-                        <% end %>
-
-                        <p class="text-sm text-base-content/50">
-                          Invited by {inv.invited_by.name} &bull; {Calendar.strftime(inv.inserted_at, "%b %d, %Y")}
+          <.card title="Pending Invitations">
+            <:header_actions>
+              <.badge variant="primary">{length(@pending_invitations)}</.badge>
+            </:header_actions>
+            <div class="space-y-3" id="pending-invitations">
+              <%= for inv <- @pending_invitations do %>
+                <div
+                  class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-base-200/50 border border-base-300/30"
+                  id={"invitation-#{inv.id}"}
+                >
+                  <div class="flex items-center gap-4">
+                    <.avatar name={inv.gym.name} size="md" />
+                    <div>
+                      <p class="font-semibold">{inv.gym.name}</p>
+                      <%= if inv.branch do %>
+                        <p class="text-sm text-base-content/60">
+                          <.icon name="hero-map-pin-mini" class="size-3 inline" />
+                          {inv.branch.city}, {inv.branch.state} -- {inv.branch.address}
                         </p>
-                      </div>
-                    </div>
-
-                    <div class="flex gap-2 sm:shrink-0">
-                      <button
-                        phx-click="accept-invitation"
-                        phx-value-id={inv.id}
-                        class="btn btn-success btn-sm gap-1 font-semibold"
-                      >
-                        <.icon name="hero-check-mini" class="size-4" /> Accept
-                      </button>
-
-                      <button
-                        phx-click="reject-invitation"
-                        phx-value-id={inv.id}
-                        class="btn btn-ghost btn-sm gap-1"
-                      >
-                        <.icon name="hero-x-mark-mini" class="size-4" /> Decline
-                      </button>
+                      <% end %>
+                      <p class="text-sm text-base-content/50">
+                        Invited by {inv.invited_by.name} &bull; {Calendar.strftime(inv.inserted_at, "%b %d, %Y")}
+                      </p>
                     </div>
                   </div>
-                <% end %>
-              </div>
+                  <div class="flex gap-2 sm:shrink-0">
+                    <.button variant="primary" size="sm" icon="hero-check" phx-click="accept-invitation" phx-value-id={inv.id}>
+                      Accept
+                    </.button>
+                    <.button variant="ghost" size="sm" icon="hero-x-mark" phx-click="reject-invitation" phx-value-id={inv.id}>
+                      Decline
+                    </.button>
+                  </div>
+                </div>
+              <% end %>
             </div>
-          </div>
+          </.card>
         <% end %>
 
         <%= if @no_gym do %>
           <%= if @pending_invitations == [] do %>
-            <div class="min-h-[40vh] flex items-center justify-center">
-              <div class="text-center max-w-md">
-                <div class="w-20 h-20 rounded-3xl bg-warning/10 flex items-center justify-center mx-auto mb-6">
-                  <.icon name="hero-building-office-2-solid" class="size-10 text-warning" />
-                </div>
-
-                <h2 class="text-xl font-brand">No Gym Membership</h2>
-
-                <p class="text-base-content/50 mt-3">
-                  You haven't joined any gym yet. Ask a gym operator to invite you as a member.
-                </p>
-              </div>
-            </div>
+            <.empty_state
+              icon="hero-building-office-2"
+              title="No Gym Membership"
+              subtitle="You haven't joined any gym yet. Ask a gym operator to invite you as a member."
+            />
           <% end %>
         <% else %>
           <%!-- Stats Grid --%>
-          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <.link
-              navigate="/member/bookings"
-              class="card bg-base-200/50 border border-base-300/50 hover:shadow-md"
-              id="stat-bookings"
-            >
-              <div class="card-body p-4 sm:p-5">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
-                      Bookings
-                    </p>
-
-                    <p class="text-2xl sm:text-3xl font-black mt-1">{@booking_count}</p>
-                  </div>
-
-                  <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-info/10 flex items-center justify-center">
-                    <.icon name="hero-ticket-solid" class="size-5 sm:size-6 text-info" />
-                  </div>
-                </div>
-
-                <p class="text-xs text-base-content/40 mt-2">Active bookings</p>
-              </div>
-            </.link>
-            <.link
-              navigate="/member/attendance"
-              class="card bg-base-200/50 border border-base-300/50 hover:shadow-md"
-              id="stat-attendance"
-            >
-              <div class="card-body p-4 sm:p-5">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
-                      Attendance
-                    </p>
-
-                    <p class="text-2xl sm:text-3xl font-black mt-1">{@attendance_count}</p>
-                  </div>
-
-                  <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-success/10 flex items-center justify-center">
-                    <.icon name="hero-check-badge-solid" class="size-5 sm:size-6 text-success" />
-                  </div>
-                </div>
-
-                <p class="text-xs text-base-content/40 mt-2">This month</p>
-              </div>
-            </.link>
-            <.link
-              navigate="/member/workout"
-              class="card bg-base-200/50 border border-base-300/50 hover:shadow-md"
-              id="stat-streak"
-            >
-              <div class="card-body p-4 sm:p-5">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
-                      Streak
-                    </p>
-
-                    <p class="text-2xl sm:text-3xl font-black mt-1">
-                      {@streak_count}
-                    </p>
-                  </div>
-
-                  <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-accent/10 flex items-center justify-center">
-                    <.icon name="hero-fire-solid" class="size-5 sm:size-6 text-accent" />
-                  </div>
-                </div>
-
-                <p class="text-xs text-base-content/40 mt-2">days</p>
-              </div>
-            </.link>
-            <.link
-              navigate="/member/food"
-              class="card bg-base-200/50 border border-base-300/50 hover:shadow-md"
-              id="stat-calories"
-            >
-              <div class="card-body p-4 sm:p-5">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
-                      Today's Calories
-                    </p>
-
-                    <p class="text-2xl sm:text-3xl font-black mt-1">
-                      {@today_calories}
-                    </p>
-                  </div>
-
-                  <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-warning/10 flex items-center justify-center">
-                    <.icon name="hero-heart-solid" class="size-5 sm:size-6 text-warning" />
-                  </div>
-                </div>
-
-                <p class="text-xs text-base-content/40 mt-2">
-                  {if @calorie_target, do: "/ #{@calorie_target} target", else: "no target"}
-                </p>
-              </div>
-            </.link>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+            <.stat_card label="Workout Streak" value={"#{@workout_streak} days"} icon="hero-fire" color="warning" />
+            <.stat_card label="Attendance Streak" value={"#{@attendance_streak} days"} icon="hero-calendar-days" color="accent" />
+            <.stat_card
+              label="Active Bookings"
+              value={@booking_count}
+              icon="hero-ticket"
+              color="info"
+            />
+            <.stat_card
+              label="Today's Calories"
+              value={@today_calories}
+              icon="hero-heart"
+              color="warning"
+              change={if @calorie_target, do: "/ #{@calorie_target} target", else: nil}
+            />
           </div>
+
+          <%!-- Streak Milestones --%>
+          <%= if @milestones != [] do %>
+            <div class="flex flex-wrap gap-2">
+              <%= for m <- @milestones do %>
+                <.badge variant="warning" size="sm">
+                  <.icon name="hero-star-solid" class="size-3 mr-1" />
+                  {m.milestone_days}-day {m.streak_type} streak
+                </.badge>
+              <% end %>
+            </div>
+          <% end %>
+
           <%!-- Main Content Grid --%>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <%!-- My Workout Plan --%>
-            <div class="card bg-base-200/50 border border-base-300/50" id="my-workout">
-              <div class="card-body p-5">
-                <div class="flex items-center justify-between">
-                  <h2 class="text-lg font-bold flex items-center gap-2">
-                    <.icon name="hero-fire-solid" class="size-5 text-accent" /> My Workout Plan
-                  </h2>
-
-                  <.link navigate="/member/workout" class="btn btn-ghost btn-xs gap-1">
-                    View Full Plan <.icon name="hero-arrow-right-mini" class="size-3" />
-                  </.link>
+            <.card title="My Workout Plan" id="my-workout">
+              <:header_actions>
+                <.button variant="ghost" size="sm" icon="hero-arrow-right" navigate="/member/workout">
+                  View Full Plan
+                </.button>
+              </:header_actions>
+              <%= if @workout_plan do %>
+                <div class="space-y-2">
+                  <p class="font-semibold text-lg">{@workout_plan.name}</p>
+                  <p class="text-sm text-base-content/50">
+                    {length(@workout_plan.exercises || [])} exercises
+                  </p>
                 </div>
+              <% else %>
+                <.empty_state
+                  icon="hero-fire"
+                  title="No Workout Plan Yet"
+                  subtitle="Your gym operator will assign a workout plan tailored for you."
+                />
+              <% end %>
+            </.card>
 
-                <div class="mt-4">
-                  <%= if @workout_plan do %>
-                    <div class="space-y-2">
-                      <p class="font-semibold">{@workout_plan.name}</p>
-
-                      <p class="text-sm text-base-content/50">
-                        {length(@workout_plan.exercises || [])} exercises
-                      </p>
-                    </div>
-                  <% else %>
-                    <div class="p-4 rounded-xl bg-base-300/30 text-center">
-                      <div class="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-3">
-                        <.icon name="hero-fire" class="size-7 text-accent" />
-                      </div>
-
-                      <p class="text-sm font-semibold">No Workout Plan Yet</p>
-
-                      <p class="text-xs text-base-content/40 mt-1">
-                        Your gym operator will assign a workout plan tailored for you.
-                      </p>
-                    </div>
-                  <% end %>
-                </div>
-              </div>
-            </div>
             <%!-- My Diet Plan --%>
-            <div class="card bg-base-200/50 border border-base-300/50" id="my-diet">
-              <div class="card-body p-5">
-                <div class="flex items-center justify-between">
-                  <h2 class="text-lg font-bold flex items-center gap-2">
-                    <.icon name="hero-heart-solid" class="size-5 text-success" /> My Diet Plan
-                  </h2>
-
-                  <.link navigate="/member/diet" class="btn btn-ghost btn-xs gap-1">
-                    View Full Plan <.icon name="hero-arrow-right-mini" class="size-3" />
-                  </.link>
-                </div>
-
-                <div class="mt-4">
-                  <%= if @diet_plan do %>
-                    <div class="space-y-2">
-                      <p class="font-semibold">{@diet_plan.name}</p>
-
-                      <%= if @diet_plan.calorie_target do %>
-                        <p class="text-sm text-base-content/50">
-                          {@diet_plan.calorie_target} kcal/day target
-                        </p>
-                      <% end %>
-                    </div>
-                  <% else %>
-                    <div class="p-4 rounded-xl bg-base-300/30 text-center">
-                      <div class="w-14 h-14 rounded-2xl bg-success/10 flex items-center justify-center mx-auto mb-3">
-                        <.icon name="hero-heart" class="size-7 text-success" />
-                      </div>
-
-                      <p class="text-sm font-semibold">No Diet Plan Yet</p>
-
-                      <p class="text-xs text-base-content/40 mt-1">
-                        Your gym operator will create a nutrition plan based on your goals.
-                      </p>
-                    </div>
+            <.card title="My Diet Plan" id="my-diet">
+              <:header_actions>
+                <.button variant="ghost" size="sm" icon="hero-arrow-right" navigate="/member/diet">
+                  View Full Plan
+                </.button>
+              </:header_actions>
+              <%= if @diet_plan do %>
+                <div class="space-y-2">
+                  <p class="font-semibold text-lg">{@diet_plan.name}</p>
+                  <%= if @diet_plan.calorie_target do %>
+                    <p class="text-sm text-base-content/50">
+                      {@diet_plan.calorie_target} kcal/day target
+                    </p>
                   <% end %>
                 </div>
-              </div>
-            </div>
+              <% else %>
+                <.empty_state
+                  icon="hero-heart"
+                  title="No Diet Plan Yet"
+                  subtitle="Your gym operator will create a nutrition plan based on your goals."
+                />
+              <% end %>
+            </.card>
           </div>
+
           <%!-- Upcoming Bookings & Subscription --%>
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <%!-- Upcoming Bookings --%>
-            <div
-              class="lg:col-span-2 card bg-base-200/50 border border-base-300/50"
-              id="upcoming-bookings"
-            >
-              <div class="card-body p-5">
-                <div class="flex items-center justify-between">
-                  <h2 class="text-lg font-bold flex items-center gap-2">
-                    <.icon name="hero-calendar-days-solid" class="size-5 text-info" />
-                    Upcoming Bookings
-                  </h2>
-
-                  <.link navigate="/member/classes" class="btn btn-ghost btn-xs gap-1">
-                    Browse Classes <.icon name="hero-arrow-right-mini" class="size-3" />
-                  </.link>
-                </div>
-
-                <div class="mt-4">
-                  <%= if @upcoming_bookings == [] do %>
-                    <div class="flex items-center gap-3 p-3 rounded-lg bg-base-300/20">
-                      <.icon name="hero-calendar" class="size-5 text-base-content/30" />
-                      <p class="text-sm text-base-content/50">
-                        No upcoming bookings.
-                        <.link navigate="/member/classes" class="text-primary hover:underline">
-                          Browse available classes
-                        </.link>
-                      </p>
-                    </div>
-                  <% else %>
-                    <div class="overflow-x-auto">
-                      <table class="table table-sm">
-                        <thead>
-                          <tr class="text-base-content/40">
-                            <th>Class</th>
-
-                            <th>Date & Time</th>
-                          </tr>
-                        </thead>
-
-                        <tbody>
-                          <%= for booking <- @upcoming_bookings do %>
-                            <tr>
-                              <td class="font-medium">
-                                {booking.scheduled_class.class_definition.name}
-                              </td>
-
-                              <td class="text-base-content/60">
-                                {Calendar.strftime(
-                                  booking.scheduled_class.scheduled_at,
-                                  "%b %d, %H:%M"
-                                )}
-                              </td>
-                            </tr>
-                          <% end %>
-                        </tbody>
-                      </table>
-                    </div>
-                  <% end %>
-                </div>
-              </div>
-            </div>
-            <%!-- Subscription Status --%>
-            <div class="card bg-base-200/50 border border-base-300/50" id="subscription-status">
-              <div class="card-body p-5">
-                <h2 class="text-lg font-bold flex items-center gap-2">
-                  <.icon name="hero-credit-card-solid" class="size-5 text-warning" /> Subscription
-                </h2>
-
-                <div class="mt-4">
-                  <%= if @subscription do %>
-                    <div class="space-y-3">
-                      <div class="p-3 rounded-lg bg-success/10 border border-success/20">
-                        <div class="flex items-center gap-2">
-                          <.icon name="hero-check-circle-solid" class="size-4 text-success" />
-                          <span class="text-sm font-semibold text-success">Active</span>
+            <div class="lg:col-span-2">
+              <.card title="Upcoming Bookings" id="upcoming-bookings">
+                <:header_actions>
+                  <.button variant="ghost" size="sm" icon="hero-arrow-right" navigate="/member/classes">
+                    Browse Classes
+                  </.button>
+                </:header_actions>
+                <%= if @upcoming_bookings == [] do %>
+                  <div class="flex items-center gap-3 p-3 rounded-lg bg-base-200/50">
+                    <.icon name="hero-calendar" class="size-5 text-base-content/30" />
+                    <p class="text-sm text-base-content/50">
+                      No upcoming bookings.
+                      <.link navigate="/member/classes" class="text-primary hover:underline">
+                        Browse available classes
+                      </.link>
+                    </p>
+                  </div>
+                <% else %>
+                  <div class="space-y-2">
+                    <%= for booking <- @upcoming_bookings do %>
+                      <div class="flex items-center justify-between p-3 rounded-lg bg-base-200/50">
+                        <div class="flex items-center gap-3">
+                          <div class="w-8 h-8 rounded-lg bg-info/10 flex items-center justify-center shrink-0">
+                            <.icon name="hero-calendar-days-solid" class="size-4 text-info" />
+                          </div>
+                          <span class="font-medium text-sm">
+                            {booking.scheduled_class.class_definition.name}
+                          </span>
                         </div>
+                        <span class="text-sm text-base-content/60">
+                          {Calendar.strftime(booking.scheduled_class.scheduled_at, "%b %d, %H:%M")}
+                        </span>
                       </div>
-
-                      <p class="font-semibold">{@subscription.subscription_plan.name}</p>
-
-                      <p class="text-xs text-base-content/50">
-                        Expires: {Calendar.strftime(@subscription.ends_at, "%b %d, %Y")}
-                      </p>
-                    </div>
-                  <% else %>
-                    <div class="p-4 rounded-xl bg-base-300/30 text-center">
-                      <div class="w-14 h-14 rounded-2xl bg-warning/10 flex items-center justify-center mx-auto mb-3">
-                        <.icon name="hero-credit-card" class="size-7 text-warning" />
-                      </div>
-
-                      <p class="text-sm font-semibold">No Active Subscription</p>
-
-                      <p class="text-xs text-base-content/40 mt-1">
-                        Contact your gym to subscribe to a plan.
-                      </p>
-                    </div>
-                  <% end %>
-                </div>
-              </div>
+                    <% end %>
+                  </div>
+                <% end %>
+              </.card>
             </div>
+
+            <%!-- Subscription Status --%>
+            <.card title="Subscription" id="subscription-status">
+              <%= if @subscription do %>
+                <div class="space-y-4">
+                  <.badge variant="success">Active</.badge>
+                  <p class="font-semibold text-lg">{@subscription.subscription_plan.name}</p>
+                  <p class="text-sm text-base-content/50">
+                    Expires: {Calendar.strftime(@subscription.ends_at, "%b %d, %Y")}
+                  </p>
+                </div>
+              <% else %>
+                <.empty_state
+                  icon="hero-credit-card"
+                  title="No Active Subscription"
+                  subtitle="Contact your gym to subscribe to a plan."
+                />
+              <% end %>
+            </.card>
           </div>
         <% end %>
       </div>

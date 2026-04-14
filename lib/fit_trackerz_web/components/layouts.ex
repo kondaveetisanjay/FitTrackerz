@@ -1,30 +1,15 @@
 defmodule FitTrackerzWeb.Layouts do
   @moduledoc """
-  This module holds layouts and related functionality
-  used by your application.
+  Application layouts — authenticated sidebar layout and public layout.
   """
   use FitTrackerzWeb, :html
 
-  # Embed all files in layouts/* within this module.
-  # The default root.html.heex file contains the HTML
-  # skeleton of your application, namely HTML headers
-  # and other static content.
   embed_templates "layouts/*"
 
-  @doc """
-  Renders your app layout.
+  # ────────────────────────────────────────────────────────
+  # App Layout
+  # ────────────────────────────────────────────────────────
 
-  This function is typically invoked from every template,
-  and it often contains your application menu, sidebar,
-  or similar.
-
-  ## Examples
-
-      <Layouts.app flash={@flash}>
-        <h1>Content</h1>
-      </Layouts.app>
-
-  """
   attr :flash, :map, required: true, doc: "the map of flash messages"
 
   attr :current_scope, :map,
@@ -36,7 +21,10 @@ defmodule FitTrackerzWeb.Layouts do
   slot :inner_block, required: true
 
   def app(assigns) do
-    assigns = assign(assigns, :user_role, get_user_role(assigns[:current_user]))
+    assigns =
+      assigns
+      |> assign(:user_role, get_user_role(assigns[:current_user]))
+      |> assign(:nav_items, nav_items_for_role(get_user_role(assigns[:current_user])))
 
     ~H"""
     <%= if @current_user do %>
@@ -45,48 +33,30 @@ defmodule FitTrackerzWeb.Layouts do
 
         <%!-- Main Content Area --%>
         <div class="drawer-content flex flex-col min-h-screen bg-base-100">
-          <%!-- Top Navbar (mobile + desktop) --%>
+          <%!-- Top Navbar --%>
           <header class="navbar bg-base-100 border-b border-base-300/50 px-4 lg:px-6 sticky top-0 z-30">
             <div class="flex-none lg:hidden">
-              <label
-                for="sidebar-toggle"
-                class="btn btn-ghost btn-sm btn-square"
-                aria-label="Open menu"
-              >
+              <label for="sidebar-toggle" class="btn btn-ghost btn-sm btn-square" aria-label="Open menu">
                 <.icon name="hero-bars-3" class="size-5" />
               </label>
             </div>
             <div class="flex-1 lg:flex-none lg:hidden">
               <.brand_logo class="h-10 w-auto" />
             </div>
-            <div class="flex-1 hidden lg:block"></div>
+            <div class="flex-1 hidden lg:flex items-center">
+              <button
+                class="flex items-center gap-2 px-3 py-1.5 text-sm text-base-content/40 bg-base-200/50 rounded-lg hover:bg-base-200 transition-colors cursor-pointer"
+                phx-click={JS.show(to: "#command-palette")}
+              >
+                <.icon name="hero-magnifying-glass" class="size-4" />
+                <span class="hidden sm:inline">Search...</span>
+                <kbd class="kbd kbd-xs">Ctrl+K</kbd>
+              </button>
+            </div>
             <div class="flex-none flex items-center gap-3">
               <.notification_bell current_user={@current_user} />
               <.theme_toggle />
-              <div class="dropdown dropdown-end">
-                <div tabindex="0" role="button" class="btn btn-ghost btn-sm gap-2">
-                  <div class="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center">
-                    <span class="text-xs font-bold text-primary">
-                      {String.first(@current_user.name || "U")}
-                    </span>
-                  </div>
-                  <span class="hidden sm:inline text-sm font-medium">{@current_user.name}</span>
-                  <.icon name="hero-chevron-down-mini" class="size-3 opacity-50" />
-                </div>
-                <ul
-                  tabindex="0"
-                  class="dropdown-content menu bg-base-200 rounded-box z-50 w-52 p-2 shadow-lg border border-base-300"
-                >
-                  <li class="menu-title text-xs">
-                    {format_role(@user_role)}
-                  </li>
-                  <li>
-                    <a href="/sign-out" class="text-error">
-                      <.icon name="hero-arrow-right-on-rectangle" class="size-4" /> Sign Out
-                    </a>
-                  </li>
-                </ul>
-              </div>
+              <.user_menu current_user={@current_user} user_role={@user_role} />
             </div>
           </header>
 
@@ -110,19 +80,19 @@ defmodule FitTrackerzWeb.Layouts do
               <p class="text-xs text-base-content/40 mt-1">{format_role(@user_role)} Portal</p>
             </div>
 
-            <%!-- Navigation Links --%>
-            <nav class="flex-1 p-4 space-y-1">
-              <.sidebar_nav role={@user_role} />
+            <%!-- Navigation --%>
+            <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
+              <.nav_group
+                :for={group <- @nav_items}
+                label={group.label}
+                items={group.items}
+              />
             </nav>
 
             <%!-- Sidebar Footer --%>
             <div class="p-4 border-t border-base-300/50">
               <div class="flex items-center gap-3 px-3 py-2">
-                <div class="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
-                  <span class="text-sm font-bold text-primary">
-                    {String.first(@current_user.name || "U")}
-                  </span>
-                </div>
+                <.avatar name={@current_user.name || "User"} size="sm" />
                 <div class="min-w-0">
                   <p class="text-sm font-semibold truncate">{@current_user.name}</p>
                   <p class="text-xs text-base-content/50 truncate">{@current_user.email}</p>
@@ -132,34 +102,42 @@ defmodule FitTrackerzWeb.Layouts do
           </aside>
         </div>
       </div>
+
+      <%!-- Command Palette --%>
+      <.command_palette
+        id="command-palette"
+        items={Enum.flat_map(@nav_items, fn group ->
+          Enum.map(group.items, fn item -> %{label: item.label, path: item.href, icon: item.icon} end)
+        end)}
+      />
     <% else %>
-      <%!-- Public layout (no sidebar) --%>
-      <header class="navbar px-4 sm:px-6 lg:px-8">
+      <%!-- Public layout --%>
+      <header class="navbar bg-base-100/80 backdrop-blur-lg border-b border-base-300/30 sticky top-0 z-30 px-4 sm:px-6 lg:px-8">
         <div class="flex-1">
-          <a href="/" class="flex-1 flex w-fit items-center gap-2">
+          <a href="/" class="flex items-center gap-2">
             <.brand_logo class="h-10 w-auto" />
           </a>
         </div>
         <div class="flex-none">
-          <ul class="flex flex-column px-1 space-x-4 items-center">
+          <ul class="flex items-center gap-1 sm:gap-2">
             <li>
-              <a href="/explore" class="btn btn-ghost btn-sm font-semibold">Explore Gyms</a>
+              <a href="/explore" class="btn btn-ghost btn-sm font-medium">Explore Gyms</a>
             </li>
-            <li>
-              <a href="/explore/contests" class="btn btn-ghost btn-sm font-semibold">Contests</a>
+            <li class="hidden sm:block">
+              <a href="/explore/contests" class="btn btn-ghost btn-sm font-medium">Contests</a>
             </li>
             <li>
               <.theme_toggle />
             </li>
             <li>
-              <a href="/sign-in" class="btn btn-primary btn-sm">Sign In</a>
+              <a href="/sign-in" class="btn btn-primary btn-sm rounded-xl">Sign In</a>
             </li>
           </ul>
         </div>
       </header>
 
-      <main class="px-4 py-20 sm:px-6 lg:px-8">
-        <div class="mx-auto max-w-4xl space-y-4">
+      <main class="px-4 py-10 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-5xl">
           {render_slot(@inner_block)}
         </div>
       </main>
@@ -169,152 +147,27 @@ defmodule FitTrackerzWeb.Layouts do
     """
   end
 
-  @doc """
-  Renders role-specific sidebar navigation links.
-  """
-  attr :role, :atom, required: true
+  # ────────────────────────────────────────────────────────
+  # Nav Group
+  # ────────────────────────────────────────────────────────
 
-  def sidebar_nav(%{role: :platform_admin} = assigns) do
+  attr :label, :string, required: true
+  attr :items, :list, required: true
+
+  defp nav_group(assigns) do
     ~H"""
-    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
-      Overview
-    </p>
-    <.nav_link href="/admin/dashboard" icon="hero-squares-2x2-solid" label="Dashboard" />
-
-    <div class="divider my-3"></div>
-    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
-      Management
-    </p>
-    <.nav_link href="/admin/users" icon="hero-user-group-solid" label="Users" />
-    <.nav_link href="/admin/gyms" icon="hero-building-office-2-solid" label="Gyms" />
-
-    <div class="divider my-3"></div>
-    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
-      Analytics
-    </p>
-    <.nav_link href="/admin/dashboards" icon="hero-chart-bar-square-solid" label="Dashboards" />
-    <.nav_link href="/admin/reports" icon="hero-document-chart-bar-solid" label="Reports" />
+    <div class="mb-2">
+      <p class="px-3 py-1.5 text-xs font-semibold text-base-content/40 uppercase tracking-wider">
+        {@label}
+      </p>
+      <.nav_link :for={item <- @items} href={item.href} icon={item.icon} label={item.label} />
+    </div>
     """
   end
 
-  def sidebar_nav(%{role: :gym_operator} = assigns) do
-    ~H"""
-    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
-      Overview
-    </p>
-    <.nav_link href="/gym/dashboard" icon="hero-squares-2x2-solid" label="Dashboard" />
-
-    <div class="divider my-3"></div>
-    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
-      Gym Management
-    </p>
-    <.nav_link href="/gym/setup" icon="hero-building-office-solid" label="My Gym" />
-    <.nav_link href="/gym/members" icon="hero-user-group-solid" label="Members" />
-    <.nav_link href="/gym/trainers" icon="hero-academic-cap-solid" label="Trainers" />
-
-    <div class="divider my-3"></div>
-    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
-      Operations
-    </p>
-    <.nav_link href="/gym/classes" icon="hero-calendar-days-solid" label="Classes" />
-    <.nav_link href="/gym/plans" icon="hero-credit-card-solid" label="Plans & Billing" />
-    <.nav_link href="/gym/invitations" icon="hero-envelope-solid" label="Invitations" />
-    <.nav_link href="/gym/attendance" icon="hero-clipboard-document-check-solid" label="Attendance" />
-    <.nav_link href="/gym/contests" icon="hero-trophy-solid" label="Contests" />
-    <.nav_link href="/gym/notifications" icon="hero-bell-solid" label="Notifications" />
-    <.nav_link href="/gym/messages" icon="hero-chat-bubble-left-right-solid" label="Messages" />
-    <.nav_link href="/gym/dashboards" icon="hero-chart-bar-square-solid" label="Dashboards" />
-    <.nav_link href="/gym/reports" icon="hero-document-chart-bar-solid" label="Reports" />
-    """
-  end
-
-  def sidebar_nav(%{role: :trainer} = assigns) do
-    ~H"""
-    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
-      Overview
-    </p>
-    <.nav_link href="/trainer/dashboard" icon="hero-squares-2x2-solid" label="Dashboard" />
-    <.nav_link href="/trainer/gyms" icon="hero-building-office-2-solid" label="My Gyms" />
-
-    <div class="divider my-3"></div>
-    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
-      Clients
-    </p>
-    <.nav_link href="/trainer/clients" icon="hero-user-group-solid" label="My Clients" />
-    <.nav_link
-      href="/trainer/attendance"
-      icon="hero-clipboard-document-check-solid"
-      label="Attendance"
-    />
-
-    <div class="divider my-3"></div>
-    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
-      Programs
-    </p>
-    <.nav_link href="/trainer/workouts" icon="hero-fire-solid" label="Workout Plans" />
-    <.nav_link href="/trainer/diets" icon="hero-heart-solid" label="Diet Plans" />
-    <.nav_link href="/trainer/templates" icon="hero-document-duplicate-solid" label="Templates" />
-
-    <div class="divider my-3"></div>
-    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
-      Communication
-    </p>
-    <.nav_link href="/trainer/messages" icon="hero-chat-bubble-left-right-solid" label="Messages" />
-    <.nav_link href="/trainer/reports" icon="hero-document-chart-bar-solid" label="Reports" />
-
-    <div class="divider my-3"></div>
-    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
-      Schedule
-    </p>
-    <.nav_link href="/trainer/classes" icon="hero-calendar-days-solid" label="My Classes" />
-    """
-  end
-
-  def sidebar_nav(assigns) do
-    ~H"""
-    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
-      Overview
-    </p>
-    <.nav_link href="/member/dashboard" icon="hero-squares-2x2-solid" label="Dashboard" />
-    <.nav_link href="/member/gym" icon="hero-building-office-2-solid" label="My Gyms" />
-    <.nav_link href="/member/trainer" icon="hero-academic-cap-solid" label="My Trainer" />
-
-    <div class="divider my-3"></div>
-    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
-      Fitness
-    </p>
-    <.nav_link href="/member/workout" icon="hero-fire-solid" label="My Workout" />
-    <.nav_link href="/member/diet" icon="hero-heart-solid" label="My Diet Plan" />
-    <.nav_link
-      href="/member/attendance"
-      icon="hero-clipboard-document-check-solid"
-      label="Attendance"
-    />
-
-    <div class="divider my-3"></div>
-    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
-      Classes
-    </p>
-    <.nav_link href="/member/classes" icon="hero-calendar-days-solid" label="Browse Classes" />
-    <.nav_link href="/member/bookings" icon="hero-ticket-solid" label="My Bookings" />
-
-    <div class="divider my-3"></div>
-    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
-      Account
-    </p>
-    <.nav_link href="/member/subscription" icon="hero-credit-card-solid" label="Subscription" />
-    <.nav_link href="/member/notifications" icon="hero-bell-solid" label="Notifications" />
-    <.nav_link href="/member/messages" icon="hero-chat-bubble-left-right-solid" label="Messages" />
-
-    <div class="divider my-3"></div>
-    <p class="px-3 text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-2">
-      Health
-    </p>
-    <.nav_link href="/member/health" icon="hero-chart-bar-solid" label="Health Metrics" />
-    <.nav_link href="/member/food" icon="hero-cake-solid" label="Food Log" />
-    <.nav_link href="/member/progress" icon="hero-arrow-trending-up-solid" label="Progress" />
-    """
-  end
+  # ────────────────────────────────────────────────────────
+  # Nav Link (with active state)
+  # ────────────────────────────────────────────────────────
 
   attr :href, :string, required: true
   attr :icon, :string, required: true
@@ -324,7 +177,7 @@ defmodule FitTrackerzWeb.Layouts do
     ~H"""
     <a
       href={@href}
-      class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-base-content/70 hover:text-base-content hover:bg-base-300/50"
+      class="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-colors text-base-content/70 hover:text-base-content hover:bg-base-300/50"
     >
       <.icon name={@icon} class="size-5 shrink-0" />
       <span>{@label}</span>
@@ -332,15 +185,66 @@ defmodule FitTrackerzWeb.Layouts do
     """
   end
 
+  # ────────────────────────────────────────────────────────
+  # User Menu Dropdown
+  # ────────────────────────────────────────────────────────
+
+  attr :current_user, :map, required: true
+  attr :user_role, :atom, required: true
+
+  defp user_menu(assigns) do
+    ~H"""
+    <div class="dropdown dropdown-end">
+      <div tabindex="0" role="button" class="btn btn-ghost btn-sm gap-2">
+        <.avatar name={@current_user.name || "User"} size="sm" />
+        <span class="hidden sm:inline text-sm font-medium">{@current_user.name}</span>
+        <.icon name="hero-chevron-down-mini" class="size-3 opacity-50" />
+      </div>
+      <ul
+        tabindex="0"
+        class="dropdown-content menu bg-base-100 rounded-xl z-50 w-52 p-1.5 shadow-lg border border-base-300/50"
+      >
+        <li class="menu-title text-xs px-2 py-1">
+          {format_role(@user_role)}
+        </li>
+        <li>
+          <a href="/sign-out" class="text-error rounded-lg">
+            <.icon name="hero-arrow-right-on-rectangle" class="size-4" /> Sign Out
+          </a>
+        </li>
+      </ul>
+    </div>
+    """
+  end
+
+  # ────────────────────────────────────────────────────────
+  # Sidebar Nav (kept for backwards compatibility)
+  # ────────────────────────────────────────────────────────
+
   @doc """
-  Shows the flash group with standard titles and content.
-
-  ## Examples
-
-      <.flash_group flash={@flash} />
+  Renders role-specific sidebar navigation. Delegates to nav_items_for_role.
+  Kept for any pages that still call <.sidebar_nav role={role} /> directly.
   """
-  attr :flash, :map, required: true, doc: "the map of flash messages"
-  attr :id, :string, default: "flash-group", doc: "the optional id of flash container"
+  attr :role, :atom, required: true
+
+  def sidebar_nav(assigns) do
+    assigns = assign(assigns, :nav_items, nav_items_for_role(assigns.role))
+
+    ~H"""
+    <.nav_group
+      :for={group <- @nav_items}
+      label={group.label}
+      items={group.items}
+    />
+    """
+  end
+
+  # ────────────────────────────────────────────────────────
+  # Flash Group
+  # ────────────────────────────────────────────────────────
+
+  attr :flash, :map, required: true
+  attr :id, :string, default: "flash-group"
 
   def flash_group(assigns) do
     ~H"""
@@ -375,11 +279,10 @@ defmodule FitTrackerzWeb.Layouts do
     """
   end
 
-  @doc """
-  Provides dark vs light theme toggle based on themes defined in app.css.
+  # ────────────────────────────────────────────────────────
+  # Theme Toggle
+  # ────────────────────────────────────────────────────────
 
-  See <head> in root.html.heex which applies the theme before page load.
-  """
   def theme_toggle(assigns) do
     ~H"""
     <div class="card relative flex flex-row items-center border-2 border-base-300 bg-base-300 rounded-full">
@@ -412,9 +315,10 @@ defmodule FitTrackerzWeb.Layouts do
     """
   end
 
-  @doc """
-  A browser-history back button.
-  """
+  # ────────────────────────────────────────────────────────
+  # Back Button
+  # ────────────────────────────────────────────────────────
+
   def back_button(assigns) do
     ~H"""
     <button onclick="history.back()" class="btn btn-ghost btn-sm btn-circle" aria-label="Go back">
@@ -422,6 +326,10 @@ defmodule FitTrackerzWeb.Layouts do
     </button>
     """
   end
+
+  # ────────────────────────────────────────────────────────
+  # Notification Bell
+  # ────────────────────────────────────────────────────────
 
   attr :current_user, :map, required: true
 
@@ -444,6 +352,112 @@ defmodule FitTrackerzWeb.Layouts do
     </a>
     """
   end
+
+  # ────────────────────────────────────────────────────────
+  # Navigation Items per Role
+  # ────────────────────────────────────────────────────────
+
+  defp nav_items_for_role(:platform_admin) do
+    [
+      %{label: "Overview", items: [
+        %{href: "/admin/dashboard", icon: "hero-squares-2x2-solid", label: "Dashboard"}
+      ]},
+      %{label: "Management", items: [
+        %{href: "/admin/users", icon: "hero-user-group-solid", label: "Users"},
+        %{href: "/admin/gyms", icon: "hero-building-office-2-solid", label: "Gyms"}
+      ]},
+      %{label: "Analytics", items: [
+        %{href: "/admin/dashboards", icon: "hero-chart-bar-square-solid", label: "Dashboards"},
+        %{href: "/admin/reports", icon: "hero-document-chart-bar-solid", label: "Reports"}
+      ]}
+    ]
+  end
+
+  defp nav_items_for_role(:gym_operator) do
+    [
+      %{label: "Overview", items: [
+        %{href: "/gym/dashboard", icon: "hero-squares-2x2-solid", label: "Dashboard"}
+      ]},
+      %{label: "Gym Management", items: [
+        %{href: "/gym/setup", icon: "hero-building-office-solid", label: "My Gym"},
+        %{href: "/gym/members", icon: "hero-user-group-solid", label: "Members"},
+        %{href: "/gym/trainers", icon: "hero-academic-cap-solid", label: "Trainers"}
+      ]},
+      %{label: "Operations", items: [
+        %{href: "/gym/classes", icon: "hero-calendar-days-solid", label: "Classes"},
+        %{href: "/gym/plans", icon: "hero-credit-card-solid", label: "Plans & Billing"},
+        %{href: "/gym/invitations", icon: "hero-envelope-solid", label: "Invitations"},
+        %{href: "/gym/attendance", icon: "hero-clipboard-document-check-solid", label: "Attendance"},
+        %{href: "/gym/contests", icon: "hero-trophy-solid", label: "Contests"}
+      ]},
+      %{label: "Communication", items: [
+        %{href: "/gym/notifications", icon: "hero-bell-solid", label: "Notifications"},
+        %{href: "/gym/messages", icon: "hero-chat-bubble-left-right-solid", label: "Messages"}
+      ]},
+      %{label: "Analytics", items: [
+        %{href: "/gym/dashboards", icon: "hero-chart-bar-square-solid", label: "Dashboards"},
+        %{href: "/gym/reports", icon: "hero-document-chart-bar-solid", label: "Reports"}
+      ]}
+    ]
+  end
+
+  defp nav_items_for_role(:trainer) do
+    [
+      %{label: "Overview", items: [
+        %{href: "/trainer/dashboard", icon: "hero-squares-2x2-solid", label: "Dashboard"},
+        %{href: "/trainer/gyms", icon: "hero-building-office-2-solid", label: "My Gyms"}
+      ]},
+      %{label: "Clients", items: [
+        %{href: "/trainer/clients", icon: "hero-user-group-solid", label: "My Clients"},
+        %{href: "/trainer/attendance", icon: "hero-clipboard-document-check-solid", label: "Attendance"}
+      ]},
+      %{label: "Programs", items: [
+        %{href: "/trainer/workouts", icon: "hero-fire-solid", label: "Workout Plans"},
+        %{href: "/trainer/diets", icon: "hero-heart-solid", label: "Diet Plans"},
+        %{href: "/trainer/templates", icon: "hero-document-duplicate-solid", label: "Templates"}
+      ]},
+      %{label: "Communication", items: [
+        %{href: "/trainer/messages", icon: "hero-chat-bubble-left-right-solid", label: "Messages"},
+        %{href: "/trainer/reports", icon: "hero-document-chart-bar-solid", label: "Reports"}
+      ]},
+      %{label: "Schedule", items: [
+        %{href: "/trainer/classes", icon: "hero-calendar-days-solid", label: "My Classes"}
+      ]}
+    ]
+  end
+
+  defp nav_items_for_role(_member) do
+    [
+      %{label: "Overview", items: [
+        %{href: "/member/dashboard", icon: "hero-squares-2x2-solid", label: "Dashboard"},
+        %{href: "/member/gym", icon: "hero-building-office-2-solid", label: "My Gyms"},
+        %{href: "/member/trainer", icon: "hero-academic-cap-solid", label: "My Trainer"}
+      ]},
+      %{label: "Fitness", items: [
+        %{href: "/member/workout", icon: "hero-fire-solid", label: "My Workout"},
+        %{href: "/member/diet", icon: "hero-heart-solid", label: "My Diet Plan"},
+        %{href: "/member/attendance", icon: "hero-clipboard-document-check-solid", label: "Attendance"}
+      ]},
+      %{label: "Classes", items: [
+        %{href: "/member/classes", icon: "hero-calendar-days-solid", label: "Browse Classes"},
+        %{href: "/member/bookings", icon: "hero-ticket-solid", label: "My Bookings"}
+      ]},
+      %{label: "Account", items: [
+        %{href: "/member/subscription", icon: "hero-credit-card-solid", label: "Subscription"},
+        %{href: "/member/notifications", icon: "hero-bell-solid", label: "Notifications"},
+        %{href: "/member/messages", icon: "hero-chat-bubble-left-right-solid", label: "Messages"}
+      ]},
+      %{label: "Health", items: [
+        %{href: "/member/health", icon: "hero-chart-bar-solid", label: "Health Metrics"},
+        %{href: "/member/food", icon: "hero-cake-solid", label: "Food Log"},
+        %{href: "/member/progress", icon: "hero-arrow-trending-up-solid", label: "Progress"}
+      ]}
+    ]
+  end
+
+  # ────────────────────────────────────────────────────────
+  # Helpers
+  # ────────────────────────────────────────────────────────
 
   defp notification_path(%{role: :gym_operator}), do: "/gym/notifications"
   defp notification_path(%{role: :trainer}), do: "/trainer/notifications"

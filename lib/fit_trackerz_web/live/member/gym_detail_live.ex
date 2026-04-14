@@ -98,273 +98,162 @@ defmodule FitTrackerzWeb.Member.GymDetailLive do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
       <%= if assigns[:gym_data] do %>
-        <div class="space-y-6">
-          <%!-- Header --%>
-          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div class="flex items-center gap-3">
-              <.link navigate="/member/gym" class="btn btn-ghost btn-sm btn-circle">
-                <.icon name="hero-arrow-left-mini" class="size-5" />
-              </.link>
+        <.page_header title={@gym_data.gym.name} back_path="/member/gym">
+          <:actions>
+            <%= if @gym_data.gym.status == :verified do %>
+              <.badge variant="success">Verified</.badge>
+            <% else %>
+              <.badge variant="warning">{Phoenix.Naming.humanize(@gym_data.gym.status)}</.badge>
+            <% end %>
+            <%= if @gym_data.gym.is_promoted do %>
+              <.badge variant="warning">Featured</.badge>
+            <% end %>
+          </:actions>
+        </.page_header>
 
-              <div>
-                <div class="flex items-center gap-3 flex-wrap">
-                  <h1 class="text-2xl sm:text-3xl font-brand">
-                    {@gym_data.gym.name}
-                  </h1>
-
-                  <%= if @gym_data.gym.status == :verified do %>
-                    <span class="badge badge-sm badge-success gap-1">
-                      <.icon name="hero-check-badge-mini" class="size-3" /> Verified
-                    </span>
-                  <% else %>
-                    <span class="badge badge-sm badge-warning gap-1">
-                      {Phoenix.Naming.humanize(@gym_data.gym.status)}
-                    </span>
-                  <% end %>
-
-                  <%= if @gym_data.gym.is_promoted do %>
-                    <span class="badge badge-sm badge-warning gap-1">
-                      <.icon name="hero-star-mini" class="size-3" /> Featured
-                    </span>
-                  <% end %>
-                </div>
-              </div>
-            </div>
-          </div>
-
+        <div class="space-y-8">
           <%!-- Quick Stats --%>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="card bg-base-200/50 border border-base-300/50">
-              <div class="card-body p-4 text-center">
-                <div class="text-2xl font-black text-primary">1</div>
-                <div class="text-xs text-base-content/50">Location</div>
-              </div>
-            </div>
-
-            <div class="card bg-base-200/50 border border-base-300/50">
-              <div class="card-body p-4 text-center">
-                <div class="text-2xl font-black text-primary">{length(@gym_data.class_defs)}</div>
-                <div class="text-xs text-base-content/50">Class Types</div>
-              </div>
-            </div>
-
-            <div class="card bg-base-200/50 border border-base-300/50">
-              <div class="card-body p-4 text-center">
-                <div class="text-2xl font-black text-primary">{length(@gym_data.plans)}</div>
-                <div class="text-xs text-base-content/50">Plans Available</div>
-              </div>
-            </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+            <.stat_card label="Location" value="1" icon="hero-map-pin" color="primary" />
+            <.stat_card label="Class Types" value={length(@gym_data.class_defs)} icon="hero-calendar-days" color="warning" />
+            <.stat_card label="Plans Available" value={length(@gym_data.plans)} icon="hero-credit-card" color="success" />
           </div>
 
           <%!-- About --%>
           <%= if @gym_data.gym.description do %>
-            <div class="card bg-base-200/50 border border-base-300/50">
-              <div class="card-body p-5">
-                <h2 class="text-lg font-bold flex items-center gap-2">
-                  <.icon name="hero-information-circle-solid" class="size-5 text-info" /> About
-                </h2>
-                <p class="text-base-content/70 mt-2 whitespace-pre-wrap">
-                  {@gym_data.gym.description}
-                </p>
-              </div>
-            </div>
+            <.card title="About">
+              <p class="text-base-content/70 whitespace-pre-wrap">{@gym_data.gym.description}</p>
+            </.card>
           <% end %>
 
           <%!-- Your Location --%>
           <%= if @gym_data.membership.branch do %>
-            <div class="card bg-base-200/50 border border-primary/20">
-              <div class="card-body p-5">
-                <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                  <.icon name="hero-map-pin-solid" class="size-5 text-primary" /> Your Location
-                </h2>
+            <.card title="Your Location">
+              <div class="flex items-start gap-4 p-4 rounded-xl bg-primary/5 border border-primary/20">
+                <%= if @gym_data.membership.branch.logo_url do %>
+                  <img
+                    src={@gym_data.membership.branch.logo_url}
+                    class="w-14 h-14 rounded-lg object-cover shrink-0"
+                  />
+                <% end %>
 
-                <div class="flex items-start gap-4 p-4 rounded-xl bg-primary/5 border border-primary/20">
-                  <%= if @gym_data.membership.branch.logo_url do %>
-                    <img
-                      src={@gym_data.membership.branch.logo_url}
-                      class="w-14 h-14 rounded-lg object-cover shrink-0"
-                    />
-                  <% end %>
-
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2">
-                      <p class="font-semibold">
-                        {@gym_data.membership.branch.city}, {@gym_data.membership.branch.state}
-                      </p>
-
-                      <%= if @gym_data.membership.branch.is_primary do %>
-                        <span class="badge badge-xs badge-primary">Primary</span>
-                      <% end %>
-                    </div>
-
-                    <p class="text-sm text-base-content/60 mt-0.5">
-                      {@gym_data.membership.branch.address} — {@gym_data.membership.branch.postal_code}
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <p class="font-semibold">
+                      {@gym_data.membership.branch.city}, {@gym_data.membership.branch.state}
                     </p>
+                    <%= if @gym_data.membership.branch.is_primary do %>
+                      <.badge variant="primary" size="sm">Primary</.badge>
+                    <% end %>
                   </div>
-
-                  <%= if maps_url(@gym_data.membership.branch.latitude, @gym_data.membership.branch.longitude) do %>
-                    <a
-                      href={maps_url(@gym_data.membership.branch.latitude, @gym_data.membership.branch.longitude)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="btn btn-outline btn-xs gap-1 shrink-0 self-center"
-                    >
-                      <.icon name="hero-map-pin-mini" class="size-3" /> Map
-                    </a>
-                  <% end %>
+                  <p class="text-sm text-base-content/60 mt-0.5">
+                    {@gym_data.membership.branch.address} -- {@gym_data.membership.branch.postal_code}
+                  </p>
                 </div>
+
+                <%= if maps_url(@gym_data.membership.branch.latitude, @gym_data.membership.branch.longitude) do %>
+                  <a
+                    href={maps_url(@gym_data.membership.branch.latitude, @gym_data.membership.branch.longitude)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="btn btn-outline btn-xs gap-1 shrink-0 self-center"
+                  >
+                    <.icon name="hero-map-pin-mini" class="size-3" /> Map
+                  </a>
+                <% end %>
               </div>
-            </div>
+            </.card>
           <% end %>
 
           <%!-- All Locations --%>
           <%= if @gym_data.gym.branches != [] do %>
-            <div class="card bg-base-200/50 border border-base-300/50">
-              <div class="card-body p-5">
-                <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                  <.icon name="hero-map-pin-solid" class="size-5 text-error" /> Location
-                </h2>
+            <.card title="All Locations">
+              <div class="space-y-3">
+                <%= for branch <- @gym_data.gym.branches do %>
+                  <div class="flex items-start gap-4 p-4 rounded-xl bg-base-200/50">
+                    <%= if branch.logo_url do %>
+                      <img
+                        src={branch.logo_url}
+                        class="w-14 h-14 rounded-lg object-cover shrink-0"
+                      />
+                    <% end %>
 
-                <div class="space-y-3">
-                  <%= for branch <- @gym_data.gym.branches do %>
-                    <div class="flex items-start gap-4 p-3 rounded-lg bg-base-300/20">
-                      <%= if branch.logo_url do %>
-                        <img
-                          src={branch.logo_url}
-                          class="w-14 h-14 rounded-lg object-cover shrink-0"
-                        />
-                      <% end %>
-
-                      <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2">
-                          <p class="font-semibold">{branch.city}, {branch.state}</p>
-
-                          <%= if branch.is_primary do %>
-                            <span class="badge badge-xs badge-primary">Primary</span>
-                          <% end %>
-                        </div>
-
-                        <p class="text-sm text-base-content/60 mt-0.5">
-                          {branch.address} — {branch.postal_code}
-                        </p>
-
-                        <%= if branch.gallery_urls && branch.gallery_urls != [] do %>
-                          <div class="flex gap-1.5 mt-2">
-                            <%= for url <- branch.gallery_urls do %>
-                              <img
-                                src={url}
-                                alt="Gallery"
-                                class="w-10 h-10 rounded object-cover"
-                              />
-                            <% end %>
-                          </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2">
+                        <p class="font-semibold">{branch.city}, {branch.state}</p>
+                        <%= if branch.is_primary do %>
+                          <.badge variant="primary" size="sm">Primary</.badge>
                         <% end %>
                       </div>
-
-                      <%= if maps_url(branch.latitude, branch.longitude) do %>
-                        <a
-                          href={maps_url(branch.latitude, branch.longitude)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          class="btn btn-outline btn-xs gap-1 shrink-0 self-center"
-                        >
-                          <.icon name="hero-map-pin-mini" class="size-3" /> Map
-                        </a>
+                      <p class="text-sm text-base-content/60 mt-0.5">
+                        {branch.address} -- {branch.postal_code}
+                      </p>
+                      <%= if branch.gallery_urls && branch.gallery_urls != [] do %>
+                        <div class="flex gap-1.5 mt-2">
+                          <%= for url <- branch.gallery_urls do %>
+                            <img src={url} alt="Gallery" class="w-10 h-10 rounded object-cover" />
+                          <% end %>
+                        </div>
                       <% end %>
                     </div>
-                  <% end %>
-                </div>
+
+                    <%= if maps_url(branch.latitude, branch.longitude) do %>
+                      <a
+                        href={maps_url(branch.latitude, branch.longitude)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="btn btn-outline btn-xs gap-1 shrink-0 self-center"
+                      >
+                        <.icon name="hero-map-pin-mini" class="size-3" /> Map
+                      </a>
+                    <% end %>
+                  </div>
+                <% end %>
               </div>
-            </div>
+            </.card>
           <% end %>
 
           <%!-- Plans & Pricing --%>
           <%= if @gym_data.plans != [] do %>
-            <div class="card bg-base-200/50 border border-base-300/50">
-              <div class="card-body p-5">
-                <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                  <.icon name="hero-credit-card-solid" class="size-5 text-primary" />
-                  Plans & Pricing
-                </h2>
-
-                <div class="overflow-x-auto">
-                  <table class="table table-sm">
-                    <thead>
-                      <tr class="text-base-content/40">
-                        <th>Plan</th>
-                        <th>Type</th>
-                        <th>Duration</th>
-                        <th class="text-right">Price</th>
-                      </tr>
-                    </thead>
-
-                    <tbody>
-                      <%= for plan <- @gym_data.plans do %>
-                        <tr>
-                          <td class="font-semibold">{plan.name}</td>
-
-                          <td>
-                            <span class={"badge badge-xs #{plan_type_class(plan.plan_type)}"}>
-                              {Phoenix.Naming.humanize(plan.plan_type)}
-                            </span>
-                          </td>
-
-                          <td>{format_duration(plan.duration)}</td>
-
-                          <td class="text-right font-bold text-primary">
-                            Rs {format_price(plan.price_in_paise)}
-                          </td>
-                        </tr>
-                      <% end %>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
+            <.card title="Plans & Pricing">
+              <.data_table id="plans-table" rows={@gym_data.plans}>
+                <:col :let={plan} label="Plan">
+                  <span class="font-semibold">{plan.name}</span>
+                </:col>
+                <:col :let={plan} label="Type">
+                  <span class={"badge badge-xs #{plan_type_class(plan.plan_type)}"}>
+                    {Phoenix.Naming.humanize(plan.plan_type)}
+                  </span>
+                </:col>
+                <:col :let={plan} label="Duration">
+                  {format_duration(plan.duration)}
+                </:col>
+                <:col :let={plan} label="Price">
+                  <span class="font-bold text-primary">Rs {format_price(plan.price_in_paise)}</span>
+                </:col>
+              </.data_table>
+            </.card>
           <% end %>
 
           <%!-- Classes & Services --%>
           <%= if @gym_data.class_defs != [] do %>
-            <div class="card bg-base-200/50 border border-base-300/50">
-              <div class="card-body p-5">
-                <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                  <.icon name="hero-calendar-days-solid" class="size-5 text-warning" />
-                  Classes & Services
-                </h2>
-
-                <div class="overflow-x-auto">
-                  <table class="table table-sm">
-                    <thead>
-                      <tr class="text-base-content/40">
-                        <th>Class</th>
-                        <th>Type</th>
-                        <th>Duration</th>
-                        <th>Max Participants</th>
-                      </tr>
-                    </thead>
-
-                    <tbody>
-                      <%= for class_def <- @gym_data.class_defs do %>
-                        <tr>
-                          <td class="font-semibold">{class_def.name}</td>
-
-                          <td>
-                            <span class="badge badge-xs badge-outline">
-                              {Phoenix.Naming.humanize(class_def.class_type)}
-                            </span>
-                          </td>
-
-                          <td>{class_def.default_duration_minutes} min</td>
-                          <td>{class_def.max_participants || "—"}</td>
-                        </tr>
-                      <% end %>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
+            <.card title="Classes & Services">
+              <.data_table id="classes-table" rows={@gym_data.class_defs}>
+                <:col :let={class_def} label="Class">
+                  <span class="font-semibold">{class_def.name}</span>
+                </:col>
+                <:col :let={class_def} label="Type">
+                  <.badge variant="neutral" size="sm">{Phoenix.Naming.humanize(class_def.class_type)}</.badge>
+                </:col>
+                <:col :let={class_def} label="Duration">
+                  {class_def.default_duration_minutes} min
+                </:col>
+                <:col :let={class_def} label="Max Participants">
+                  {class_def.max_participants || "--"}
+                </:col>
+              </.data_table>
+            </.card>
           <% end %>
-
         </div>
       <% end %>
     </Layouts.app>
