@@ -186,11 +186,15 @@ defmodule FitTrackerzWeb.CoreComponents do
   def input(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
     errors = if Phoenix.Component.used_input?(field), do: field.errors, else: []
 
+    # Force-assign value (not assign_new) so HEEx change tracking re-renders
+    # the value attribute on every form re-render. Without this, when other
+    # fields trigger validate/re-render, untouched fields lose their `value=`
+    # attribute and the browser ends up submitting empty strings.
     assigns
     |> assign(field: nil, id: assigns.id || field.id)
     |> assign(:errors, Enum.map(errors, &translate_error(&1)))
     |> assign_new(:name, fn -> if assigns.multiple, do: field.name <> "[]", else: field.name end)
-    |> assign_new(:value, fn -> field.value end)
+    |> assign(:value, Map.get(assigns, :value) || field.value)
     |> input()
   end
 

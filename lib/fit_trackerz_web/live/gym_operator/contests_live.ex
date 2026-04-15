@@ -380,13 +380,12 @@ defmodule FitTrackerzWeb.GymOperator.ContestsLive do
   defp render_contest_fields(assigns) do
     ~H"""
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <.input field={@form[:title]} label="Title" placeholder="e.g. 30-Day Weight Loss Challenge" required />
+      <.input field={@form[:title]} label="Title" placeholder="e.g. 30-Day Weight Loss Challenge" />
       <.input
         field={@form[:contest_type]}
         type="select"
         label="Contest Type"
         options={Enum.map(@contest_types, fn {v, l} -> {l, to_string(v)} end)}
-        required
       />
       <div class="md:col-span-2">
         <.input
@@ -396,14 +395,13 @@ defmodule FitTrackerzWeb.GymOperator.ContestsLive do
           placeholder="Describe the contest rules, goals, and how participants can join..."
         />
       </div>
-      <.input field={@form[:starts_at]} type="datetime-local" label="Start Date" required />
-      <.input field={@form[:ends_at]} type="datetime-local" label="End Date" required />
+      <.input field={@form[:starts_at]} type="datetime-local" label="Start Date" />
+      <.input field={@form[:ends_at]} type="datetime-local" label="End Date" />
       <.input
         field={@form[:status]}
         type="select"
         label="Status"
         options={Enum.map(@status_options, fn {v, l} -> {l, to_string(v)} end)}
-        required
       />
       <.input
         field={@form[:max_participants]}

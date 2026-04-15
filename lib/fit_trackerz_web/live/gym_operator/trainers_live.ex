@@ -203,7 +203,6 @@ defmodule FitTrackerzWeb.GymOperator.TrainersLive do
                       type="email"
                       label="Email Address"
                       placeholder="trainer@example.com"
-                      required
                     />
                   </div>
                   <div class="mb-2">

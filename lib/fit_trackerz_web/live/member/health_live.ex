@@ -290,19 +290,24 @@ defmodule FitTrackerzWeb.Member.HealthLive do
             <.form for={@form} id="health-form" phx-change="validate" phx-submit="save">
               <div class="flex flex-wrap gap-4 items-end">
                 <div>
-                  <.input field={@form[:recorded_on]} type="date" label="Date" required />
+                  <label class="label"><span class="label-text font-medium">Date</span></label>
+                  <input type="date" name="metric[recorded_on]" id="health_recorded_on" value={@form[:recorded_on].value || ""} class="input" />
                 </div>
                 <div>
-                  <.input field={@form[:weight_kg]} type="number" label="Weight (kg)" step="0.1" required />
+                  <label class="label"><span class="label-text font-medium">Weight (kg)</span></label>
+                  <input type="number" step="0.1" name="metric[weight_kg]" id="health_weight_kg" value={@form[:weight_kg].value || ""} class="input" />
                 </div>
                 <div>
-                  <.input field={@form[:height_cm]} type="number" label="Height (cm)" step="0.1" />
+                  <label class="label"><span class="label-text font-medium">Height (cm)</span></label>
+                  <input type="number" step="0.1" name="metric[height_cm]" id="health_height_cm" value={@form[:height_cm].value || ""} class="input" />
                 </div>
                 <div>
-                  <.input field={@form[:body_fat_pct]} type="number" label="Body Fat %" step="0.1" />
+                  <label class="label"><span class="label-text font-medium">Body Fat %</span></label>
+                  <input type="number" step="0.1" name="metric[body_fat_pct]" id="health_body_fat_pct" value={@form[:body_fat_pct].value || ""} class="input" />
                 </div>
                 <div>
-                  <.input field={@form[:notes]} type="text" label="Notes" placeholder="Optional" />
+                  <label class="label"><span class="label-text font-medium">Notes</span></label>
+                  <input type="text" name="metric[notes]" id="health_notes" value={@form[:notes].value || ""} placeholder="Optional" class="input" />
                 </div>
                 <div class="mb-2">
                   <.button variant="primary" size="sm" icon="hero-check" type="submit" id="save-health-btn">
@@ -420,28 +425,36 @@ defmodule FitTrackerzWeb.Member.HealthLive do
             <.form for={@measurement_form} id="measurement-form" phx-change="validate_measurement" phx-submit="save_measurement">
               <div class="flex flex-wrap gap-4 items-end">
                 <div>
-                  <.input field={@measurement_form[:recorded_on]} type="date" label="Date" required />
+                  <label class="label"><span class="label-text font-medium">Date</span></label>
+                  <input type="date" name="measurement[recorded_on]" id="meas_recorded_on" value={@measurement_form[:recorded_on].value || ""} class="input" />
                 </div>
                 <div>
-                  <.input field={@measurement_form[:chest_cm]} type="number" label="Chest (cm)" step="0.1" />
+                  <label class="label"><span class="label-text font-medium">Chest (cm)</span></label>
+                  <input type="number" step="0.1" name="measurement[chest_cm]" id="meas_chest_cm" value={@measurement_form[:chest_cm].value || ""} class="input" />
                 </div>
                 <div>
-                  <.input field={@measurement_form[:waist_cm]} type="number" label="Waist (cm)" step="0.1" />
+                  <label class="label"><span class="label-text font-medium">Waist (cm)</span></label>
+                  <input type="number" step="0.1" name="measurement[waist_cm]" id="meas_waist_cm" value={@measurement_form[:waist_cm].value || ""} class="input" />
                 </div>
                 <div>
-                  <.input field={@measurement_form[:hips_cm]} type="number" label="Hips (cm)" step="0.1" />
+                  <label class="label"><span class="label-text font-medium">Hips (cm)</span></label>
+                  <input type="number" step="0.1" name="measurement[hips_cm]" id="meas_hips_cm" value={@measurement_form[:hips_cm].value || ""} class="input" />
                 </div>
                 <div>
-                  <.input field={@measurement_form[:bicep_cm]} type="number" label="Bicep (cm)" step="0.1" />
+                  <label class="label"><span class="label-text font-medium">Bicep (cm)</span></label>
+                  <input type="number" step="0.1" name="measurement[bicep_cm]" id="meas_bicep_cm" value={@measurement_form[:bicep_cm].value || ""} class="input" />
                 </div>
                 <div>
-                  <.input field={@measurement_form[:thigh_cm]} type="number" label="Thigh (cm)" step="0.1" />
+                  <label class="label"><span class="label-text font-medium">Thigh (cm)</span></label>
+                  <input type="number" step="0.1" name="measurement[thigh_cm]" id="meas_thigh_cm" value={@measurement_form[:thigh_cm].value || ""} class="input" />
                 </div>
                 <div>
-                  <.input field={@measurement_form[:muscle_mass_kg]} type="number" label="Muscle (kg)" step="0.1" />
+                  <label class="label"><span class="label-text font-medium">Muscle (kg)</span></label>
+                  <input type="number" step="0.1" name="measurement[muscle_mass_kg]" id="meas_muscle_mass_kg" value={@measurement_form[:muscle_mass_kg].value || ""} class="input" />
                 </div>
                 <div>
-                  <.input field={@measurement_form[:notes]} type="text" label="Notes" placeholder="Optional" />
+                  <label class="label"><span class="label-text font-medium">Notes</span></label>
+                  <input type="text" name="measurement[notes]" id="meas_notes" value={@measurement_form[:notes].value || ""} placeholder="Optional" class="input" />
                 </div>
                 <div class="mb-2">
                   <.button variant="primary" size="sm" icon="hero-check" type="submit" id="save-measurement-btn">

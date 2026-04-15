@@ -1,48 +1,4 @@
-<%!-- Navigation Bar --%>
-<nav class="navbar bg-base-100/90 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 border-b border-base-300/50 px-4 sm:px-6 lg:px-8">
-  <div class="flex-1">
-    <a href="/">
-      <.brand_logo class="h-10 w-auto" />
-    </a>
-  </div>
-  <div class="flex-none flex items-center gap-3">
-    <%!-- Solutions Dropdown --%>
-    <div class="dropdown dropdown-hover">
-      <label tabindex="0" class="btn btn-ghost btn-sm font-semibold">
-        Solutions
-        <.icon name="hero-chevron-down" class="size-4 ml-1" />
-      </label>
-      <ul
-        tabindex="0"
-        class="dropdown-content menu p-2 shadow-lg bg-base-200 rounded-box w-56 mt-1 border border-base-300/50"
-      >
-        <li>
-          <a href="/solutions/members" class="flex items-center gap-3 py-3">
-            <.icon name="hero-user-solid" class="size-5 text-accent" />
-            <div>
-              <div class="font-semibold">For Members</div>
-              <div class="text-xs text-base-content/60">Find your perfect gym</div>
-            </div>
-          </a>
-        </li>
-        <li>
-          <a href="/solutions/operators" class="flex items-center gap-3 py-3">
-            <.icon name="hero-building-office-2-solid" class="size-5 text-primary" />
-            <div>
-              <div class="font-semibold">For Gym Operators</div>
-              <div class="text-xs text-base-content/60">Manage your gym efficiently</div>
-            </div>
-          </a>
-        </li>
-      </ul>
-    </div>
-
-    <a href="/about" class="btn btn-ghost btn-sm font-semibold">About Us</a>
-    <a href="/explore" class="btn btn-ghost btn-sm font-semibold">Explore Gyms</a>
-    <a href="/sign-in" class="btn btn-ghost btn-sm font-semibold">Sign In</a>
-    <a href="/register" class="btn btn-primary btn-sm font-semibold">Get Started</a>
-  </div>
-</nav>
+<FitTrackerzWeb.Layouts.public_navbar />
 
 <%!-- Hero Section --%>
 <section class="relative min-h-[60vh] flex items-center justify-center overflow-hidden pt-16">

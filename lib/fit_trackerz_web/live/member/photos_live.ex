@@ -213,7 +213,7 @@ defmodule FitTrackerzWeb.Member.PhotosLive do
 
                 <div class="flex flex-wrap gap-4 items-end">
                   <div>
-                    <.input field={@form[:taken_on]} type="date" label="Date" required />
+                    <.input field={@form[:taken_on]} type="date" label="Date" />
                   </div>
                   <div>
                     <.input field={@form[:category]} type="select" label="Category" options={[

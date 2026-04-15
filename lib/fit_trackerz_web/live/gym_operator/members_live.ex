@@ -503,7 +503,6 @@ defmodule FitTrackerzWeb.GymOperator.MembersLive do
                       type="email"
                       label="Email Address"
                       placeholder="member@example.com"
-                      required
                     />
                   </div>
                   <div class="mb-2">
@@ -622,7 +621,6 @@ defmodule FitTrackerzWeb.GymOperator.MembersLive do
                                   class="select select-bordered select-xs w-32"
                                   name="trainer_id"
                                   id={"trainer-select-#{member.id}"}
-                                  required
                                 >
                                   <option value="">Pick trainer</option>
                                   <%= for trainer <- @trainers do %>
@@ -696,7 +694,6 @@ defmodule FitTrackerzWeb.GymOperator.MembersLive do
                                       class="select select-bordered select-xs w-40"
                                       id={"plan-select-#{member.id}"}
                                       name="plan_id"
-                                      required
                                     >
                                       <option value="">Pick a plan</option>
                                       <%= for plan <- @plans do %>

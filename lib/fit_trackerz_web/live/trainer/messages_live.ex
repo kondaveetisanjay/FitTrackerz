@@ -708,7 +708,6 @@ defmodule FitTrackerzWeb.Trainer.MessagesLive do
                         name="title"
                         class="input input-bordered"
                         placeholder="e.g., Gym closed Monday"
-                        required
                       />
                     </div>
                     <div class="form-control">
@@ -719,7 +718,6 @@ defmodule FitTrackerzWeb.Trainer.MessagesLive do
                         name="body"
                         class="textarea textarea-bordered h-32"
                         placeholder="Write your announcement..."
-                        required
                       ></textarea>
                     </div>
                     <p class="text-xs text-base-content/40">

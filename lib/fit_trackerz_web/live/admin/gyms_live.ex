@@ -191,7 +191,6 @@ defmodule FitTrackerzWeb.Admin.GymsLive do
                     icon="hero-shield-check-mini"
                     phx-click="verify_gym"
                     phx-value-id={gym.id}
-                    id={"verify-gym-#{gym.id}"}
                   >
                     Verify
                   </.button>
@@ -204,7 +203,6 @@ defmodule FitTrackerzWeb.Admin.GymsLive do
                     icon="hero-no-symbol-mini"
                     phx-click="suspend_gym"
                     phx-value-id={gym.id}
-                    id={"suspend-gym-#{gym.id}"}
                   >
                     Suspend
                   </.button>
@@ -217,7 +215,6 @@ defmodule FitTrackerzWeb.Admin.GymsLive do
                     icon="hero-arrow-path-mini"
                     phx-click="verify_gym"
                     phx-value-id={gym.id}
-                    id={"unsuspend-gym-#{gym.id}"}
                   >
                     Reinstate
                   </.button>
@@ -229,7 +226,6 @@ defmodule FitTrackerzWeb.Admin.GymsLive do
                   icon={if(gym.is_promoted, do: "hero-star-solid", else: "hero-star")}
                   phx-click="toggle_promoted"
                   phx-value-id={gym.id}
-                  id={"toggle-promoted-#{gym.id}"}
                 >
                   <%= if gym.is_promoted do %>
                     Unpromote
@@ -245,7 +241,6 @@ defmodule FitTrackerzWeb.Admin.GymsLive do
                   phx-click="toggle_tier"
                   phx-value-id={gym.id}
                   data-confirm={if(gym.tier == :free, do: "Upgrade this gym to Premium?", else: "Downgrade this gym to Free tier?")}
-                  id={"toggle-tier-#{gym.id}"}
                 >
                   {if gym.tier == :free, do: "Upgrade", else: "Downgrade"}
                 </.button>

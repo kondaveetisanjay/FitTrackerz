@@ -250,7 +250,6 @@ defmodule FitTrackerzWeb.Trainer.WorkoutsLive do
                     field={@form[:name]}
                     label="Plan Name"
                     placeholder="e.g., Full Body Strength"
-                    required
                   />
                   <div>
                     <label class="label"><span class="label-text font-medium">Client</span></label>
@@ -258,10 +257,13 @@ defmodule FitTrackerzWeb.Trainer.WorkoutsLive do
                       name="workout[member_id]"
                       class="select select-bordered w-full"
                       id="workout-member-select"
-                      required
                     >
-                      <option value="">Select a client...</option>
-                      <option :for={client <- @clients} value={client.id}>
+                      <option value="" selected={@form[:member_id].value in [nil, ""]}>Select a client...</option>
+                      <option
+                        :for={client <- @clients}
+                        value={client.id}
+                        selected={@form[:member_id].value == client.id}
+                      >
                         {client.user.name}
                       </option>
                     </select>
@@ -272,10 +274,13 @@ defmodule FitTrackerzWeb.Trainer.WorkoutsLive do
                       name="workout[gym_id]"
                       class="select select-bordered w-full"
                       id="workout-gym-select"
-                      required
                     >
-                      <option value="">Select a gym...</option>
-                      <option :for={gym <- @gyms} value={gym.id}>
+                      <option value="" selected={@form[:gym_id].value in [nil, ""]}>Select a gym...</option>
+                      <option
+                        :for={gym <- @gyms}
+                        value={gym.id}
+                        selected={@form[:gym_id].value == gym.id}
+                      >
                         {gym.name}
                       </option>
                     </select>
@@ -439,7 +444,6 @@ defmodule FitTrackerzWeb.Trainer.WorkoutsLive do
                 phx-click="delete_workout"
                 phx-value-id={workout.id}
                 data-confirm="Are you sure you want to delete this workout plan?"
-                id={"delete-workout-#{workout.id}"}
               >
                 <span class="sr-only">Delete</span>
               </.button>

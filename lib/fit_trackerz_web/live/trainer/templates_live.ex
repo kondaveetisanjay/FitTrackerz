@@ -69,9 +69,15 @@ defmodule FitTrackerzWeb.Trainer.TemplatesLive do
          workout_form: workout_form,
          diet_form: diet_form,
          show_workout_form: false,
-         show_diet_form: false
+         show_diet_form: false,
+         active_tab: "workouts"
        )}
     end
+  end
+
+  @impl true
+  def handle_event("change_tab", %{"tab" => tab}, socket) do
+    {:noreply, assign(socket, active_tab: tab)}
   end
 
   @impl true
@@ -298,7 +304,7 @@ defmodule FitTrackerzWeb.Trainer.TemplatesLive do
           subtitle="You haven't been added to any gym yet. Ask a gym operator to invite you."
         />
       <% else %>
-        <.tab_group active="workouts" on_tab_change="change_tab">
+        <.tab_group active={@active_tab} on_tab_change="change_tab">
           <:tab id="workouts" label="Workout Templates" icon="hero-fire-solid">
             <%!-- Workout Templates --%>
             <.section title="Workout Templates">
@@ -320,12 +326,17 @@ defmodule FitTrackerzWeb.Trainer.TemplatesLive do
                       class="space-y-4"
                     >
                       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <.input
-                          field={@workout_form[:name]}
-                          label="Template Name"
-                          placeholder="e.g., Push Pull Legs"
-                          required
-                        />
+                        <div>
+                          <label class="label"><span class="label-text font-medium">Template Name</span></label>
+                          <input
+                            type="text"
+                            name="workout_template[name]"
+                            id="workout_template_name"
+                            value={@workout_form[:name].value || ""}
+                            placeholder="e.g., Push Pull Legs"
+                            class="w-full input"
+                          />
+                        </div>
                         <div>
                           <label class="label">
                             <span class="label-text font-medium">Difficulty Level</span>
@@ -335,10 +346,10 @@ defmodule FitTrackerzWeb.Trainer.TemplatesLive do
                             class="select select-bordered w-full"
                             id="workout-template-difficulty-select"
                           >
-                            <option value="">Select level...</option>
-                            <option value="beginner">Beginner</option>
-                            <option value="intermediate">Intermediate</option>
-                            <option value="advanced">Advanced</option>
+                            <option value="" selected={@workout_form[:difficulty_level].value in [nil, ""]}>Select level...</option>
+                            <option value="beginner" selected={to_string(@workout_form[:difficulty_level].value) == "beginner"}>Beginner</option>
+                            <option value="intermediate" selected={to_string(@workout_form[:difficulty_level].value) == "intermediate"}>Intermediate</option>
+                            <option value="advanced" selected={to_string(@workout_form[:difficulty_level].value) == "advanced"}>Advanced</option>
                           </select>
                         </div>
                         <div>
@@ -347,10 +358,13 @@ defmodule FitTrackerzWeb.Trainer.TemplatesLive do
                             name="workout_template[gym_id]"
                             class="select select-bordered w-full"
                             id="workout-template-gym-select"
-                            required
                           >
-                            <option value="">Select a gym...</option>
-                            <option :for={gym <- @gyms} value={gym.id}>
+                            <option value="" selected={@workout_form[:gym_id].value in [nil, ""]}>Select a gym...</option>
+                            <option
+                              :for={gym <- @gyms}
+                              value={gym.id}
+                              selected={@workout_form[:gym_id].value == gym.id}
+                            >
                               {gym.name}
                             </option>
                           </select>
@@ -406,7 +420,6 @@ defmodule FitTrackerzWeb.Trainer.TemplatesLive do
                       phx-click="delete_workout_template"
                       phx-value-id={template.id}
                       data-confirm="Are you sure you want to delete this template?"
-                      id={"delete-workout-template-#{template.id}"}
                     >
                       <span class="sr-only">Delete</span>
                     </.button>
@@ -437,18 +450,28 @@ defmodule FitTrackerzWeb.Trainer.TemplatesLive do
                       class="space-y-4"
                     >
                       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <.input
-                          field={@diet_form[:name]}
-                          label="Template Name"
-                          placeholder="e.g., Keto Starter"
-                          required
-                        />
-                        <.input
-                          field={@diet_form[:calorie_target]}
-                          label="Calorie Target"
-                          type="number"
-                          placeholder="2000"
-                        />
+                        <div>
+                          <label class="label"><span class="label-text font-medium">Template Name</span></label>
+                          <input
+                            type="text"
+                            name="diet_template[name]"
+                            id="diet_template_name"
+                            value={@diet_form[:name].value || ""}
+                            placeholder="e.g., Keto Starter"
+                            class="w-full input"
+                          />
+                        </div>
+                        <div>
+                          <label class="label"><span class="label-text font-medium">Calorie Target</span></label>
+                          <input
+                            type="number"
+                            name="diet_template[calorie_target]"
+                            id="diet_template_calorie_target"
+                            value={@diet_form[:calorie_target].value || ""}
+                            placeholder="2000"
+                            class="w-full input"
+                          />
+                        </div>
                         <div>
                           <label class="label">
                             <span class="label-text font-medium">Dietary Type</span>
@@ -458,11 +481,11 @@ defmodule FitTrackerzWeb.Trainer.TemplatesLive do
                             class="select select-bordered w-full"
                             id="diet-template-type-select"
                           >
-                            <option value="">Select type...</option>
-                            <option value="vegetarian">Vegetarian</option>
-                            <option value="non_vegetarian">Non-Vegetarian</option>
-                            <option value="vegan">Vegan</option>
-                            <option value="eggetarian">Eggetarian</option>
+                            <option value="" selected={@diet_form[:dietary_type].value in [nil, ""]}>Select type...</option>
+                            <option value="vegetarian" selected={to_string(@diet_form[:dietary_type].value) == "vegetarian"}>Vegetarian</option>
+                            <option value="non_vegetarian" selected={to_string(@diet_form[:dietary_type].value) == "non_vegetarian"}>Non-Vegetarian</option>
+                            <option value="vegan" selected={to_string(@diet_form[:dietary_type].value) == "vegan"}>Vegan</option>
+                            <option value="eggetarian" selected={to_string(@diet_form[:dietary_type].value) == "eggetarian"}>Eggetarian</option>
                           </select>
                         </div>
                         <div>
@@ -471,10 +494,13 @@ defmodule FitTrackerzWeb.Trainer.TemplatesLive do
                             name="diet_template[gym_id]"
                             class="select select-bordered w-full"
                             id="diet-template-gym-select"
-                            required
                           >
-                            <option value="">Select a gym...</option>
-                            <option :for={gym <- @gyms} value={gym.id}>
+                            <option value="" selected={@diet_form[:gym_id].value in [nil, ""]}>Select a gym...</option>
+                            <option
+                              :for={gym <- @gyms}
+                              value={gym.id}
+                              selected={@diet_form[:gym_id].value == gym.id}
+                            >
                               {gym.name}
                             </option>
                           </select>
@@ -530,7 +556,6 @@ defmodule FitTrackerzWeb.Trainer.TemplatesLive do
                       phx-click="delete_diet_template"
                       phx-value-id={template.id}
                       data-confirm="Are you sure you want to delete this template?"
-                      id={"delete-diet-template-#{template.id}"}
                     >
                       <span class="sr-only">Delete</span>
                     </.button>

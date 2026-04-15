@@ -834,7 +834,7 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
           phx-submit="update_plan"
         >
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <.input field={@edit_form[:name]} label="Plan Name" required />
+            <.input field={@edit_form[:name]} label="Plan Name" />
             <.input field={@edit_form[:category]} label="Category" />
             <.input
               field={@edit_form[:plan_type]}
@@ -845,7 +845,6 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
                 {"General", "general"},
                 {"Personal Training", "personal_training"}
               ]}
-              required
             />
             <.input
               field={@edit_form[:duration]}
@@ -860,13 +859,11 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
                 {"12 Months", "annual"},
                 {"24 Months", "two_year"}
               ]}
-              required
             />
             <.input
               field={@edit_form[:price_in_rupees]}
               type="number"
               label="Price (in Rupees)"
-              required
             />
           </div>
           <div class="flex gap-2 mt-4">

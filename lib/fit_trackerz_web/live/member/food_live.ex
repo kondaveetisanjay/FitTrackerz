@@ -245,22 +245,68 @@ defmodule FitTrackerzWeb.Member.FoodLive do
             <.form for={@form} id="food-form" phx-change="validate" phx-submit="save">
               <div class="flex flex-wrap gap-3 items-end">
                 <div>
-                  <.input field={@form[:meal_type]} type="select" label="Meal" options={Enum.map(@meal_types, fn {v, l} -> {l, to_string(v)} end)} required />
+                  <label class="label"><span class="label-text font-medium">Meal</span></label>
+                  <select name="food[meal_type]" id="food_meal_type" class="select select-bordered w-full">
+                    <option
+                      :for={{v, l} <- @meal_types}
+                      value={to_string(v)}
+                      selected={to_string(@form[:meal_type].value) == to_string(v)}
+                    >{l}</option>
+                  </select>
                 </div>
                 <div class="flex-1 min-w-[150px]">
-                  <.input field={@form[:food_name]} type="text" label="Food Name" placeholder="e.g., Chicken Biryani" required />
+                  <label class="label"><span class="label-text font-medium">Food Name</span></label>
+                  <input
+                    type="text"
+                    name="food[food_name]"
+                    id="food_food_name"
+                    value={@form[:food_name].value || ""}
+                    placeholder="e.g., Chicken Biryani"
+                    class="w-full input"
+                  />
                 </div>
                 <div>
-                  <.input field={@form[:calories]} type="number" label="Calories" required />
+                  <label class="label"><span class="label-text font-medium">Calories</span></label>
+                  <input
+                    type="number"
+                    name="food[calories]"
+                    id="food_calories"
+                    value={@form[:calories].value || ""}
+                    class="w-full input"
+                  />
                 </div>
                 <div>
-                  <.input field={@form[:protein_g]} type="number" label="Protein (g)" step="0.1" />
+                  <label class="label"><span class="label-text font-medium">Protein (g)</span></label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    name="food[protein_g]"
+                    id="food_protein_g"
+                    value={@form[:protein_g].value || ""}
+                    class="w-full input"
+                  />
                 </div>
                 <div>
-                  <.input field={@form[:carbs_g]} type="number" label="Carbs (g)" step="0.1" />
+                  <label class="label"><span class="label-text font-medium">Carbs (g)</span></label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    name="food[carbs_g]"
+                    id="food_carbs_g"
+                    value={@form[:carbs_g].value || ""}
+                    class="w-full input"
+                  />
                 </div>
                 <div>
-                  <.input field={@form[:fat_g]} type="number" label="Fat (g)" step="0.1" />
+                  <label class="label"><span class="label-text font-medium">Fat (g)</span></label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    name="food[fat_g]"
+                    id="food_fat_g"
+                    value={@form[:fat_g].value || ""}
+                    class="w-full input"
+                  />
                 </div>
                 <div class="mb-2">
                   <.button variant="primary" size="sm" icon="hero-plus" type="submit" id="add-food-btn">

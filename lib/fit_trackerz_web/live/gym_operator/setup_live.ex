@@ -121,11 +121,11 @@ defmodule FitTrackerzWeb.GymOperator.SetupLive do
            %{equipment: socket.assigns.selected_equipment, services: socket.assigns.selected_services},
            actor: actor
          ) do
-      {:ok, updated_gym} ->
+      {:ok, _updated_gym} ->
         {:noreply,
          socket
-         |> put_flash(:info, "Equipment and services saved!")
-         |> assign(gym: updated_gym)}
+         |> put_flash(:info, "Gym setup complete!")
+         |> push_navigate(to: ~p"/gym/dashboard")}
 
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Failed to save equipment and services.")}
@@ -455,13 +455,11 @@ defmodule FitTrackerzWeb.GymOperator.SetupLive do
                     field={@form[:name]}
                     label="Gym Name"
                     placeholder="Enter gym name"
-                    required
                   />
                   <.input
                     field={@form[:slug]}
                     label="Slug (URL-friendly)"
                     placeholder="e.g. iron-paradise"
-                    required
                   />
                 </div>
                 <.input
@@ -545,25 +543,21 @@ defmodule FitTrackerzWeb.GymOperator.SetupLive do
                     field={@location_form[:address]}
                     label="Address"
                     placeholder="123 Main St"
-                    required
                   />
                   <.input
                     field={@location_form[:city]}
                     label="City"
                     placeholder="Mumbai"
-                    required
                   />
                   <.input
                     field={@location_form[:state]}
                     label="State"
                     placeholder="Maharashtra"
-                    required
                   />
                   <.input
                     field={@location_form[:postal_code]}
                     label="Postal Code"
                     placeholder="400001"
-                    required
                   />
                 </div>
 
@@ -867,13 +861,11 @@ defmodule FitTrackerzWeb.GymOperator.SetupLive do
                   field={@form[:name]}
                   label="Gym Name"
                   placeholder="e.g. Iron Paradise Fitness"
-                  required
                 />
                 <.input
                   field={@form[:slug]}
                   label="Slug (URL-friendly)"
                   placeholder="e.g. iron-paradise"
-                  required
                 />
               </div>
               <.input

@@ -180,7 +180,6 @@ defmodule FitTrackerzWeb.Admin.UsersLive do
                   icon="hero-no-symbol-mini"
                   phx-click="toggle_active"
                   phx-value-id={user.id}
-                  id={"toggle-active-#{user.id}"}
                 >
                   Deactivate
                 </.button>
@@ -191,7 +190,6 @@ defmodule FitTrackerzWeb.Admin.UsersLive do
                   icon="hero-check-mini"
                   phx-click="toggle_active"
                   phx-value-id={user.id}
-                  id={"toggle-active-#{user.id}"}
                 >
                   Activate
                 </.button>

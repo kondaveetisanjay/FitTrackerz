@@ -246,19 +246,16 @@ defmodule FitTrackerzWeb.GymOperator.ClassesLive do
                           field={@def_form[:name]}
                           label="Class Name"
                           placeholder="e.g. Yoga Basics"
-                          required
                         />
                         <.input
                           field={@def_form[:class_type]}
                           label="Class Type"
                           placeholder="e.g. yoga, cardio, strength"
-                          required
                         />
                         <.input
                           field={@def_form[:default_duration_minutes]}
                           type="number"
                           label="Default Duration (minutes)"
-                          required
                         />
                         <.input
                           field={@def_form[:max_participants]}
@@ -319,19 +316,16 @@ defmodule FitTrackerzWeb.GymOperator.ClassesLive do
                           label="Class Type"
                           prompt="Select a class type"
                           options={Enum.map(@class_definitions, &{&1.name, &1.id})}
-                          required
                         />
                         <.input
                           field={@schedule_form[:scheduled_at]}
                           type="datetime-local"
                           label="Scheduled At"
-                          required
                         />
                         <.input
                           field={@schedule_form[:duration_minutes]}
                           type="number"
                           label="Duration (minutes)"
-                          required
                         />
                       </div>
                       <div class="flex gap-2 mt-4">

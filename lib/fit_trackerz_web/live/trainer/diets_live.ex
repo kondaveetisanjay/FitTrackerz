@@ -205,18 +205,28 @@ defmodule FitTrackerzWeb.Trainer.DietsLive do
                 class="space-y-4"
               >
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <.input
-                    field={@form[:name]}
-                    label="Plan Name"
-                    placeholder="e.g., High Protein Plan"
-                    required
-                  />
-                  <.input
-                    field={@form[:calorie_target]}
-                    label="Calorie Target"
-                    type="number"
-                    placeholder="2000"
-                  />
+                  <div>
+                    <label class="label"><span class="label-text font-medium">Plan Name</span></label>
+                    <input
+                      type="text"
+                      name="diet[name]"
+                      id="diet_name"
+                      value={@form[:name].value || ""}
+                      placeholder="e.g., High Protein Plan"
+                      class="w-full input"
+                    />
+                  </div>
+                  <div>
+                    <label class="label"><span class="label-text font-medium">Calorie Target</span></label>
+                    <input
+                      type="number"
+                      name="diet[calorie_target]"
+                      id="diet_calorie_target"
+                      value={@form[:calorie_target].value || ""}
+                      placeholder="2000"
+                      class="w-full input"
+                    />
+                  </div>
                   <div>
                     <label class="label">
                       <span class="label-text font-medium">Dietary Type</span>
@@ -226,11 +236,11 @@ defmodule FitTrackerzWeb.Trainer.DietsLive do
                       class="select select-bordered w-full"
                       id="diet-type-select"
                     >
-                      <option value="">Select type...</option>
-                      <option value="vegetarian">Vegetarian</option>
-                      <option value="non_vegetarian">Non-Vegetarian</option>
-                      <option value="vegan">Vegan</option>
-                      <option value="eggetarian">Eggetarian</option>
+                      <option value="" selected={@form[:dietary_type].value in [nil, ""]}>Select type...</option>
+                      <option value="vegetarian" selected={to_string(@form[:dietary_type].value) == "vegetarian"}>Vegetarian</option>
+                      <option value="non_vegetarian" selected={to_string(@form[:dietary_type].value) == "non_vegetarian"}>Non-Vegetarian</option>
+                      <option value="vegan" selected={to_string(@form[:dietary_type].value) == "vegan"}>Vegan</option>
+                      <option value="eggetarian" selected={to_string(@form[:dietary_type].value) == "eggetarian"}>Eggetarian</option>
                     </select>
                   </div>
                 </div>
@@ -241,10 +251,13 @@ defmodule FitTrackerzWeb.Trainer.DietsLive do
                       name="diet[member_id]"
                       class="select select-bordered w-full"
                       id="diet-member-select"
-                      required
                     >
-                      <option value="">Select a client...</option>
-                      <option :for={client <- @clients} value={client.id}>
+                      <option value="" selected={@form[:member_id].value in [nil, ""]}>Select a client...</option>
+                      <option
+                        :for={client <- @clients}
+                        value={client.id}
+                        selected={@form[:member_id].value == client.id}
+                      >
                         {client.user.name}
                       </option>
                     </select>
@@ -255,10 +268,13 @@ defmodule FitTrackerzWeb.Trainer.DietsLive do
                       name="diet[gym_id]"
                       class="select select-bordered w-full"
                       id="diet-gym-select"
-                      required
                     >
-                      <option value="">Select a gym...</option>
-                      <option :for={gym <- @gyms} value={gym.id}>
+                      <option value="" selected={@form[:gym_id].value in [nil, ""]}>Select a gym...</option>
+                      <option
+                        :for={gym <- @gyms}
+                        value={gym.id}
+                        selected={@form[:gym_id].value == gym.id}
+                      >
                         {gym.name}
                       </option>
                     </select>
@@ -328,7 +344,6 @@ defmodule FitTrackerzWeb.Trainer.DietsLive do
                 phx-click="delete_diet"
                 phx-value-id={diet.id}
                 data-confirm="Are you sure you want to delete this diet plan?"
-                id={"delete-diet-#{diet.id}"}
               >
                 <span class="sr-only">Delete</span>
               </.button>
