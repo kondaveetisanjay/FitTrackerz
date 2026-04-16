@@ -79,87 +79,85 @@ defmodule FitTrackerzWeb.GymOperator.DashboardLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
-      <div class="space-y-8">
+      <div class="space-y-6">
         <%= if @has_gym do %>
-          <%!-- Page Header --%>
-          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <div class="flex items-center gap-3">
-                <h1 class="text-2xl sm:text-3xl font-brand">{@gym.name}</h1>
+          <%!-- Page Header (elevated hero) --%>
+          <div class="surface-3 accent-top relative overflow-hidden reveal">
+            <div class="pointer-events-none absolute -top-16 -right-16 w-56 h-56 rounded-full bg-primary/25 blur-3xl"></div>
+            <div class="pointer-events-none absolute -bottom-20 -left-12 w-48 h-48 rounded-full bg-secondary/20 blur-3xl"></div>
 
-                <span class={[
-                  "badge badge-sm",
-                  @gym.status == :verified && "badge-success",
-                  @gym.status == :pending_verification && "badge-warning",
-                  @gym.status == :suspended && "badge-error"
-                ]}>
-                  {Phoenix.Naming.humanize(@gym.status)}
-                </span>
+            <div class="relative p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+              <div>
+                <div class="flex items-center gap-3 flex-wrap">
+                  <h1 class="text-3xl sm:text-4xl font-brand text-gradient-brand">{@gym.name}</h1>
+                  <span class={[
+                    "badge badge-sm font-semibold",
+                    @gym.status == :verified && "badge-glow-success",
+                    @gym.status == :pending_verification && "badge-glow-warning badge-pulse",
+                    @gym.status == :suspended && "badge-error"
+                  ]}>
+                    {Phoenix.Naming.humanize(@gym.status)}
+                  </span>
+                </div>
+                <p class="text-base-content/60 mt-2">Manage your gym and members.</p>
               </div>
 
-              <p class="text-base-content/50 mt-1">Manage your gym and members.</p>
-            </div>
-
-            <div class="flex gap-2">
-              <.link navigate="/gym/members" class="btn btn-primary btn-sm gap-2 font-semibold">
-                <.icon name="hero-user-plus-mini" class="size-4" /> Members
-              </.link>
+              <div class="flex gap-2">
+                <.link navigate="/gym/members" class="btn btn-gradient gap-2 font-semibold">
+                  <.icon name="hero-user-plus-mini" class="size-4" /> Members
+                </.link>
+              </div>
             </div>
           </div>
           <%!-- Stats Grid --%>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div id="operator-stats" class="grid grid-cols-1 sm:grid-cols-2 gap-4" phx-hook="StaggerChildren" data-stagger="100">
             <.link
               navigate="/gym/members"
-              class="card bg-base-200/50 border border-base-300/50 hover:shadow-md"
+              class="stat-card accent-top reveal block p-5"
               id="stat-members"
             >
-              <div class="card-body p-5">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
-                      Members
-                    </p>
-
-                    <p class="text-3xl font-black mt-1">{@member_count}</p>
-                  </div>
-
-                  <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <.icon name="hero-user-group-solid" class="size-6 text-primary" />
-                  </div>
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-semibold text-base-content/50 uppercase tracking-wider">Members</p>
+                  <p
+                    id="counter-members"
+                    class="text-3xl font-black mt-1"
+                    phx-hook="AnimatedCounter"
+                    data-target={@member_count}
+                  >0</p>
                 </div>
-
-                <p class="text-xs text-base-content/40 mt-2">Active members</p>
+                <div class="w-12 h-12 icon-tile icon-tile-primary">
+                  <.icon name="hero-user-group-solid" class="size-6" />
+                </div>
               </div>
+              <p class="text-xs text-base-content/40 mt-3">Active members</p>
             </.link>
+
             <.link
               navigate="/gym/invitations"
-              class="card bg-base-200/50 border border-base-300/50 hover:shadow-md"
+              class="stat-card accent-top reveal block p-5"
               id="stat-invites"
             >
-              <div class="card-body p-5">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
-                      Pending Invites
-                    </p>
-
-                    <p class="text-3xl font-black mt-1">
-                      {@pending_member_invites}
-                    </p>
-                  </div>
-
-                  <div class="w-12 h-12 rounded-xl bg-warning/10 flex items-center justify-center">
-                    <.icon name="hero-envelope-solid" class="size-6 text-warning" />
-                  </div>
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-semibold text-base-content/50 uppercase tracking-wider">Pending Invites</p>
+                  <p
+                    id="counter-invites"
+                    class="text-3xl font-black mt-1"
+                    phx-hook="AnimatedCounter"
+                    data-target={@pending_member_invites}
+                  >0</p>
                 </div>
-
-                <p class="text-xs text-base-content/40 mt-2">Awaiting response</p>
+                <div class="w-12 h-12 icon-tile icon-tile-warning">
+                  <.icon name="hero-envelope-solid" class="size-6" />
+                </div>
               </div>
+              <p class="text-xs text-base-content/40 mt-3">Awaiting response</p>
             </.link>
           </div>
-          <%!-- Tab Navigation --%>
-          <div class="border-b border-base-300/50">
-            <div class="flex gap-0 overflow-x-auto">
+          <%!-- Tab Navigation (segmented control look) --%>
+          <div class="surface-1 p-1.5 inline-flex w-full overflow-x-auto rounded-xl">
+            <div class="flex gap-1 min-w-fit">
               <%= for {label, tab_id, icon} <- [
                 {"Details", "details", "hero-information-circle"},
                 {"Pricing", "pricing", "hero-credit-card"},
@@ -171,8 +169,10 @@ defmodule FitTrackerzWeb.GymOperator.DashboardLive do
                   phx-click="switch_tab"
                   phx-value-tab={tab_id}
                   class={[
-                    "btn btn-ghost btn-sm gap-2 rounded-none border-b-2 font-medium",
-                    if(@active_tab == tab_id, do: "border-primary text-primary", else: "border-transparent text-base-content/60")
+                    "btn btn-sm gap-2 rounded-lg font-semibold border-0 shrink-0",
+                    if(@active_tab == tab_id,
+                      do: "btn-gradient",
+                      else: "btn-ghost text-base-content/70 hover:text-primary hover:bg-primary/10")
                   ]}
                 >
                   <.icon name={icon} class="size-4" /> {label}
@@ -182,8 +182,8 @@ defmodule FitTrackerzWeb.GymOperator.DashboardLive do
           </div>
 
           <%!-- Tab Content --%>
-          <div class="card bg-base-200/50 border border-base-300/50">
-            <div class="card-body p-5">
+          <div class="surface-2 accent-top relative overflow-hidden">
+            <div class="p-5">
               <%= case @active_tab do %>
                 <% "details" -> %>
                   <h3 class="text-lg font-bold mb-4">Gym Details</h3>
@@ -339,20 +339,21 @@ defmodule FitTrackerzWeb.GymOperator.DashboardLive do
         <% else %>
           <%!-- No Gym Setup --%>
           <div class="min-h-[60vh] flex items-center justify-center">
-            <div class="text-center max-w-md">
-              <div class="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center mx-auto mb-6">
-                <.icon name="hero-building-office-2-solid" class="size-10 text-primary" />
+            <div class="surface-3 accent-top relative overflow-hidden text-center max-w-md p-8 sm:p-10">
+              <div class="pointer-events-none absolute -top-12 -right-12 w-44 h-44 rounded-full bg-primary/25 blur-3xl"></div>
+              <div class="pointer-events-none absolute -bottom-12 -left-12 w-44 h-44 rounded-full bg-secondary/20 blur-3xl"></div>
+              <div class="relative">
+                <div class="w-20 h-20 rounded-3xl icon-tile icon-tile-primary mx-auto mb-6 animate-float">
+                  <.icon name="hero-building-office-2-solid" class="size-10" />
+                </div>
+                <h1 class="text-2xl font-brand text-gradient-brand">Set Up Your Gym</h1>
+                <p class="text-base-content/60 mt-3">
+                  You haven't created a gym yet. Get started by setting up your gym profile and adding your first branch.
+                </p>
+                <.link navigate="/gym/setup" class="btn btn-gradient btn-lg gap-2 mt-8 font-bold">
+                  <.icon name="hero-plus-mini" class="size-5" /> Create Your Gym
+                </.link>
               </div>
-
-              <h1 class="text-2xl font-brand">Set Up Your Gym</h1>
-
-              <p class="text-base-content/50 mt-3">
-                You haven't created a gym yet. Get started by setting up your gym profile and adding your first branch.
-              </p>
-
-              <.link navigate="/gym/setup" class="btn btn-primary btn-lg gap-2 mt-8 font-bold">
-                <.icon name="hero-plus-mini" class="size-5" /> Create Your Gym
-              </.link>
             </div>
           </div>
         <% end %>

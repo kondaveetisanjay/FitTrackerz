@@ -23,7 +23,7 @@ defmodule FitTrackerzWeb.Auth.RegisterLive do
                 <.icon name="hero-bolt-solid" class="size-8 text-primary-content" />
               </div>
             </div>
-            <.brand_logo class="h-20 w-auto mx-auto" />
+            <.brand_logo class="h-20 w-auto mx-auto" dumbbell={true} />
             <h1 class="text-3xl font-brand mt-4">Join Us</h1>
             <p class="mt-4 text-lg text-base-content/60 leading-relaxed">
               Whether you're a gym owner or fitness enthusiast — there's a place for you here.
@@ -79,8 +79,8 @@ defmodule FitTrackerzWeb.Auth.RegisterLive do
       <div class="flex-1 flex items-center justify-center p-6 sm:p-12 bg-base-100">
         <div class="w-full max-w-md">
           <%!-- Mobile Logo --%>
-          <div class="lg:hidden flex items-center justify-center mb-8">
-            <.brand_logo class="h-14 w-auto" />
+          <div class="lg:hidden flex items-center justify-center mb-10">
+            <.brand_logo class="h-14 w-auto" dumbbell={true} />
           </div>
 
           <div class="text-center mb-8">

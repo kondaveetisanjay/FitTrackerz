@@ -2,7 +2,7 @@
 <nav class="navbar bg-base-100/90 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 border-b border-base-300/50 px-4 sm:px-6 lg:px-8">
   <div class="flex-1">
     <a href="/">
-      <.brand_logo class="h-10 w-auto" />
+      <.brand_logo class="h-10 w-auto" dumbbell={true} />
     </a>
   </div>
 
@@ -67,7 +67,7 @@
     <%!-- Mobile Menu Header --%>
     <div class="flex items-center justify-between p-4 border-b border-base-300">
       <a href="/">
-        <.brand_logo class="h-10 w-auto" />
+        <.brand_logo class="h-10 w-auto" dumbbell={true} />
       </a>
       <button
         id="mobile-menu-close"
@@ -128,11 +128,12 @@
 
 <%!-- Hero Split-Screen Section --%>
 <section class="relative min-h-screen flex items-center overflow-hidden pt-16">
-  <%!-- Background – gradient with animated glows --%>
-  <div class="absolute inset-0 bg-gradient-to-br from-base-100 via-base-100 to-base-200"></div>
-  <div class="absolute top-1/4 -left-32 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-float-slow"></div>
-  <div class="absolute bottom-1/4 -right-32 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-float-slow" style="animation-delay: 2s;"></div>
-  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl animate-float-slow" style="animation-delay: 4s;"></div>
+  <%!-- Background – richer mesh with bigger animated glows --%>
+  <div class="absolute inset-0 bg-gradient-to-br from-primary/10 via-base-200 to-secondary/15"></div>
+  <div class="absolute top-[10%] -left-40 w-[34rem] h-[34rem] bg-primary/55 rounded-full blur-3xl animate-float-slow"></div>
+  <div class="absolute bottom-[8%] -right-40 w-[34rem] h-[34rem] bg-secondary/50 rounded-full blur-3xl animate-float-slow" style="animation-delay: 2s;"></div>
+  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[720px] h-[720px] bg-accent/30 rounded-full blur-3xl animate-float-slow" style="animation-delay: 4s;"></div>
+  <div class="absolute top-[60%] left-[15%] w-[18rem] h-[18rem] bg-fuchsia-400/30 rounded-full blur-3xl animate-float" style="animation-delay: 5s;"></div>
 
   <%!-- Floating Fitness Icons (decorative) --%>
   <div class="absolute inset-0 overflow-hidden pointer-events-none">
@@ -164,10 +165,10 @@
         </div>
 
         <h1 class="font-brand text-4xl sm:text-5xl lg:text-6xl xl:text-7xl leading-tight">
-          DISCOVER, CONNECT & TRANSFORM YOUR <span class="text-primary">FITNESS JOURNEY</span>
+          DISCOVER, CONNECT & TRANSFORM YOUR <span class="text-gradient-brand">FITNESS JOURNEY</span>
         </h1>
 
-        <p class="mt-6 text-lg sm:text-xl text-base-content/60 max-w-xl leading-relaxed">
+        <p class="mt-6 text-lg sm:text-xl text-base-content/70 max-w-xl leading-relaxed">
           The all-in-one platform connecting gyms and members. Find gyms, book classes, track progress, and grow your fitness business.
         </p>
 
@@ -175,11 +176,11 @@
         <div class="mt-10 flex flex-col sm:flex-row items-start gap-4">
           <a
             href="/explore"
-            class="btn btn-primary btn-lg gap-2 shadow-lg shadow-primary/25 font-bold px-8"
+            class="btn btn-gradient btn-lg gap-2 font-bold px-8"
           >
             <.icon name="hero-magnifying-glass" class="size-5" /> Explore Gyms
           </a>
-          <a href="/register" class="btn btn-ghost btn-lg gap-2 font-semibold border border-base-300">
+          <a href="/register" class="btn btn-ghost btn-lg gap-2 font-semibold border border-primary/30 hover:bg-primary/10">
             <.icon name="hero-rocket-launch-solid" class="size-5" /> Start Free Trial
           </a>
         </div>
@@ -285,7 +286,7 @@
 </section>
 
 <%!-- About Us Preview Section --%>
-<section class="py-20 px-4 sm:px-6 lg:px-8 bg-base-200/50">
+<section class="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-base-200 via-primary/8 to-base-200/60 relative">
   <div class="max-w-6xl mx-auto">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
       <%!-- Left: Visual illustration --%>
@@ -532,7 +533,7 @@
 </section>
 
 <%!-- Features Section --%>
-<section id="features" class="py-24 px-4 sm:px-6 lg:px-8 bg-base-200/50 relative">
+<section id="features" class="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-bl from-secondary/12 via-base-200 to-accent/10 relative">
   <%!-- Decorative top accent --%>
   <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
     <div class="w-12 h-12 rounded-xl bg-base-100 border border-base-300/50 flex items-center justify-center shadow-sm rotate-45">
@@ -1220,7 +1221,7 @@
       <%!-- Brand Column --%>
       <div>
         <a href="/" class="flex items-center gap-2 mb-4">
-          <.brand_logo class="h-10 w-auto" />
+          <.brand_logo class="h-10 w-auto" dumbbell={true} />
         </a>
         <p class="text-base-content/60 text-sm mb-4">
           The all-in-one platform connecting gyms and members for a better fitness experience.

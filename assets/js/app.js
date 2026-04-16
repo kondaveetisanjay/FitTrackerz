@@ -271,20 +271,322 @@ const PasswordVisibilityToggle = {
   }
 }
 
+// ============================================================
+// Animation Hooks — Scroll Reveal, Counters, Stagger, Page Transitions
+// ============================================================
+
+// Easing function for counter animations
+function easeOutExpo(t) {
+  return t === 1 ? 1 : 1 - Math.pow(2, -10 * t)
+}
+
+// ScrollReveal — IntersectionObserver-based scroll animations
+// Add class="reveal" (or reveal-scale, reveal-left, reveal-right) to elements.
+// They get .revealed when in view, lose it when out — so the keyframe
+// pop animation REPLAYS every time you scroll them back in.
+const ScrollReveal = {
+  mounted() {
+    this._observeElements()
+  },
+  updated() {
+    // Re-observe new elements after LiveView DOM updates
+    this._observeElements()
+  },
+  destroyed() {
+    if (this._observer) this._observer.disconnect()
+  },
+  _observeElements() {
+    if (this._observer) this._observer.disconnect()
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (prefersReducedMotion) {
+      this.el.querySelectorAll('.reveal, .reveal-scale, .reveal-left, .reveal-right').forEach(el => {
+        el.classList.add('revealed')
+      })
+      return
+    }
+
+    this._observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          // Force a reflow so the animation restarts even if class flicker is fast
+          entry.target.classList.remove('revealed')
+          // eslint-disable-next-line no-unused-expressions
+          void entry.target.offsetWidth
+          entry.target.classList.add('revealed')
+        } else {
+          // Element scrolled out of view → reset so it can pop back in
+          entry.target.classList.remove('revealed')
+        }
+      })
+    }, {
+      threshold: 0.12,
+      rootMargin: '0px 0px -60px 0px'
+    })
+
+    this.el.querySelectorAll('.reveal, .reveal-scale, .reveal-left, .reveal-right').forEach(el => {
+      this._observer.observe(el)
+    })
+  }
+}
+
+// AnimatedCounter — animates a number from 0 to data-target
+// Usage: <span id="counter-1" phx-hook="AnimatedCounter" data-target="248">0</span>
+const AnimatedCounter = {
+  mounted() {
+    this._animate()
+  },
+  updated() {
+    // Re-animate if data-target changes
+    const newTarget = parseInt(this.el.dataset.target, 10)
+    if (newTarget !== this._lastTarget) {
+      this._animate()
+    }
+  },
+  _animate() {
+    const target = parseInt(this.el.dataset.target, 10)
+    if (isNaN(target)) return
+    this._lastTarget = target
+
+    const duration = 800
+    const start = performance.now()
+    const suffix = this.el.dataset.suffix || ''
+    const prefix = this.el.dataset.prefix || ''
+
+    // Only animate when visible
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          observer.unobserve(this.el)
+          this._runAnimation(target, duration, start, prefix, suffix)
+        }
+      })
+    }, { threshold: 0.3 })
+
+    observer.observe(this.el)
+  },
+  _runAnimation(target, duration, start, prefix, suffix) {
+    const step = (now) => {
+      const elapsed = now - start
+      const progress = Math.min(elapsed / duration, 1)
+      const value = Math.round(easeOutExpo(progress) * target)
+      this.el.textContent = prefix + value.toLocaleString() + suffix
+
+      if (progress < 1) {
+        requestAnimationFrame(step)
+      } else {
+        this.el.classList.add('counter-done')
+        // Remove the class after animation completes so it can replay
+        setTimeout(() => this.el.classList.remove('counter-done'), 300)
+      }
+    }
+    requestAnimationFrame(step)
+  }
+}
+
+// StaggerChildren — applies staggered --reveal-delay to child .reveal elements
+// Usage: <div id="grid-1" phx-hook="StaggerChildren" data-stagger="60">
+const StaggerChildren = {
+  mounted() {
+    this._applyStagger()
+  },
+  updated() {
+    this._applyStagger()
+  },
+  _applyStagger() {
+    const staggerMs = parseInt(this.el.dataset.stagger || '60', 10)
+    const children = this.el.querySelectorAll('.reveal, .reveal-scale, .reveal-left, .reveal-right')
+    children.forEach((child, i) => {
+      child.style.setProperty('--reveal-delay', `${i * staggerMs}ms`)
+    })
+  }
+}
+
+// PageTransition — adds page-enter animation on mount
+// Usage: <main id="main-content" phx-hook="PageTransition">
+const PageTransition = {
+  mounted() {
+    this.el.classList.add('page-enter')
+    // Clean up class after animation to avoid re-triggering on updates
+    this.el.addEventListener('animationend', () => {
+      this.el.classList.remove('page-enter')
+    }, { once: true })
+  }
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {Geolocation, BranchGeolocation, PlacesAutocomplete, ExplorePlacesAutocomplete, PasswordVisibilityToggle},
+  hooks: {
+    Geolocation, BranchGeolocation, PlacesAutocomplete,
+    ExplorePlacesAutocomplete, PasswordVisibilityToggle,
+    ScrollReveal, AnimatedCounter, StaggerChildren, PageTransition
+  },
 })
 
 // Show progress bar on live navigation and form submits
-topbar.config({barColors: {0: "#C62828"}, shadowColor: "rgba(0, 0, 0, .15)"})
-window.addEventListener("phx:page-loading-start", _info => topbar.show(300))
+// Using brand primary indigo color
+topbar.config({barColors: {0: "#4338ca", 0.5: "#6366f1", 1.0: "#818cf8"}, shadowColor: "rgba(67, 56, 202, .2)"})
+window.addEventListener("phx:page-loading-start", _info => topbar.show(200))
 window.addEventListener("phx:page-loading-stop", _info => topbar.hide())
 
 // connect if there are any LiveViews on the page
 liveSocket.connect()
+
+// ============================================================
+// Smooth wheel scroll — lerps the window scrollTop toward a
+// target updated by wheel events. Doesn't hijack keyboard,
+// touch, anchor links, or nested scroll containers.
+// ============================================================
+;(function smoothWheelScroll() {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  // Most touch devices already scroll smoothly; only intercept wheel input.
+  const ua = navigator.userAgent
+  if (/Mobi|Android|iP(hone|ad|od)/.test(ua)) return
+
+  const EASE = 0.12          // 0..1, higher = snappier
+  const MULT = 1.0           // wheel sensitivity multiplier
+  const SETTLE = 0.4         // px threshold to stop the loop
+
+  let target = window.scrollY
+  let current = window.scrollY
+  let raf = null
+  let lastTs = performance.now()
+
+  function maxScroll() {
+    return Math.max(0, document.documentElement.scrollHeight - window.innerHeight)
+  }
+
+  function tick(ts) {
+    const dt = Math.min(64, ts - lastTs) / 16.6667 // frames @60Hz
+    lastTs = ts
+    const ease = 1 - Math.pow(1 - EASE, dt)
+    current += (target - current) * ease
+    if (Math.abs(target - current) < SETTLE) {
+      current = target
+      window.scrollTo(0, current)
+      raf = null
+      return
+    }
+    window.scrollTo(0, current)
+    raf = requestAnimationFrame(tick)
+  }
+
+  function onWheel(e) {
+    // Skip if user is over a nested scrollable (modals, dropdowns, code blocks)
+    let n = e.target
+    while (n && n !== document.body) {
+      if (n.scrollHeight > n.clientHeight) {
+        const cs = getComputedStyle(n)
+        if (/(auto|scroll|overlay)/.test(cs.overflowY)) return
+      }
+      n = n.parentElement
+    }
+    // Skip ctrl-wheel (zoom) and pinch
+    if (e.ctrlKey) return
+
+    e.preventDefault()
+    target = Math.max(0, Math.min(maxScroll(), target + e.deltaY * MULT))
+    if (!raf) {
+      lastTs = performance.now()
+      raf = requestAnimationFrame(tick)
+    }
+  }
+
+  // Resync on direct scroll (keyboard, scrollbar, anchor, programmatic)
+  function onScroll() {
+    if (raf) return // animating — let lerp finish
+    target = current = window.scrollY
+  }
+
+  window.addEventListener('wheel', onWheel, { passive: false })
+  window.addEventListener('scroll', onScroll, { passive: true })
+  // Resync target after navigation
+  window.addEventListener('phx:page-loading-stop', () => {
+    target = current = window.scrollY
+    if (raf) { cancelAnimationFrame(raf); raf = null }
+  })
+})()
+
+// ============================================================
+// Global Scroll Reveal — works on static (controller) pages too.
+// Pop animation REPLAYS every time the element scrolls into view.
+// Single shared observer so we don't double-attach when LiveView
+// re-runs this on navigation.
+// ============================================================
+let __globalRevealObserver = null
+
+function initGlobalScrollReveal() {
+  const REVEAL_BASE_SELECTOR = '.reveal, .reveal-scale, .reveal-left, .reveal-right'
+
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  if (prefersReducedMotion) {
+    document.querySelectorAll(REVEAL_BASE_SELECTOR).forEach(el => el.classList.add('revealed'))
+    return
+  }
+
+  // Auto-stagger any grid/container marked with [data-auto-stagger]
+  document.querySelectorAll('[data-auto-stagger]').forEach(container => {
+    const ms = parseInt(container.dataset.autoStagger || '70', 10)
+    container.querySelectorAll(':scope > .reveal, :scope > .reveal-scale, :scope > .reveal-left, :scope > .reveal-right')
+      .forEach((child, i) => child.style.setProperty('--reveal-delay', `${i * ms}ms`))
+  })
+
+  // Build (or reuse) a single observer
+  if (!__globalRevealObserver) {
+    __globalRevealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const el = entry.target
+        if (entry.isIntersecting) {
+          // Reflow trick → animation re-runs from frame 0 each time
+          el.classList.remove('revealed')
+          // eslint-disable-next-line no-unused-expressions
+          void el.offsetWidth
+          el.classList.add('revealed')
+        } else {
+          el.classList.remove('revealed')
+        }
+      })
+    }, {
+      threshold: 0.12,
+      rootMargin: '0px 0px -60px 0px'
+    })
+  }
+
+  // Observe every reveal element (idempotent — observe() on the same node is a no-op)
+  document.querySelectorAll(REVEAL_BASE_SELECTOR).forEach(el => __globalRevealObserver.observe(el))
+
+  // Auto-tag common card elements that don't already opt in
+  const AUTO_REVEAL_SELECTORS = ['.glass-card', '.surface-2', '.surface-3', '.stat-card']
+  document.querySelectorAll(AUTO_REVEAL_SELECTORS.join(','))
+    .forEach(el => {
+      // Skip absolute / fixed positioned elements (orbit badges, decorative blobs)
+      const cs = window.getComputedStyle(el)
+      if (cs.position === 'absolute' || cs.position === 'fixed') return
+
+      if (
+        !el.classList.contains('reveal') &&
+        !el.classList.contains('reveal-scale') &&
+        !el.classList.contains('reveal-left') &&
+        !el.classList.contains('reveal-right')
+      ) {
+        el.classList.add('reveal')
+        __globalRevealObserver.observe(el)
+      }
+    })
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initGlobalScrollReveal)
+} else {
+  initGlobalScrollReveal()
+}
+
+// Re-run on LiveView navigation so newly arrived static pages also animate
+window.addEventListener('phx:page-loading-stop', () => {
+  requestAnimationFrame(initGlobalScrollReveal)
+})
 
 // expose liveSocket on window for web console debug logs and latency simulation:
 // >> liveSocket.enableDebug()

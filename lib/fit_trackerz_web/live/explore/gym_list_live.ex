@@ -207,7 +207,7 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
 
   defp branch_logo(entry) do
     branches = entry.gym.branches
-    primary = Enum.find(branches, &(&1.is_primary)) || List.first(branches)
+    primary = Enum.find(branches, & &1.is_primary) || List.first(branches)
     if primary, do: primary.logo_url, else: nil
   end
 
@@ -236,12 +236,16 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
       <div class="space-y-6">
-        <%!-- Page Header --%>
-        <div class="bg-gradient-to-r from-primary/5 via-base-100 to-secondary/5 rounded-2xl p-6 mb-2">
-          <h1 class="text-3xl sm:text-4xl font-brand">Explore Gyms</h1>
-          <p class="text-base text-base-content/50 mt-1">
-            Discover gyms near you, compare prices & services — all in one place.
-          </p>
+        <%!-- Page Header (hero with glow) --%>
+        <div class="surface-3 accent-top relative overflow-hidden reveal">
+          <div class="pointer-events-none absolute -top-16 -right-16 w-56 h-56 rounded-full bg-primary/25 blur-3xl"></div>
+          <div class="pointer-events-none absolute -bottom-20 -left-12 w-48 h-48 rounded-full bg-secondary/20 blur-3xl"></div>
+          <div class="relative p-6 sm:p-8">
+            <h1 class="text-3xl sm:text-4xl font-brand text-gradient-brand">Explore Gyms</h1>
+            <p class="text-base text-base-content/60 mt-2">
+              Discover gyms near you, compare prices &amp; services — all in one place.
+            </p>
+          </div>
         </div>
 
         <%!-- Location Hint --%>
@@ -255,7 +259,7 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
         <% end %>
 
         <%!-- Search & Filters Bar --%>
-        <div class="glass-card">
+        <div class="glass-card reveal">
           <div class="card-body p-4">
             <div class="flex flex-col sm:flex-row gap-3">
               <%!-- Search --%>
@@ -383,11 +387,11 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
           </div>
         <% else %>
           <% page_entries = @sorted_entries |> Enum.drop((@page - 1) * @per_page) |> Enum.take(@per_page) %>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="gym-list">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="gym-list" phx-hook="StaggerChildren" data-stagger="60">
             <%= for {entry, distance} <- page_entries do %>
               <a
                 href={"/explore/#{entry.gym.slug}"}
-                class="glass-card cursor-pointer overflow-hidden group"
+                class="glass-card accent-top cursor-pointer overflow-hidden group hover-lift hover-img-zoom reveal block"
                 id={"gym-card-#{entry.gym.id}"}
               >
                 <%!-- Image --%>
@@ -417,7 +421,7 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
                   <div class="flex items-start justify-between gap-2">
                     <h3 class="card-title text-lg truncate">{entry.gym.name}</h3>
                     <%= if entry.gym.is_promoted do %>
-                      <span class="badge badge-xs badge-warning gap-1 shrink-0">
+                      <span class="badge badge-xs badge-glow-warning gap-1 shrink-0">
                         <.icon name="hero-star-mini" class="size-2.5" /> Featured
                       </span>
                     <% end %>
@@ -442,10 +446,10 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
                   </div>
 
                   <%!-- Price + Distance --%>
-                  <div class="flex items-center justify-between mt-1 pt-2 border-t border-base-300/30">
+                  <div class="flex items-center justify-between mt-1 pt-3 border-t border-primary/10">
                     <div>
                       <%= if format_price(entry.cheapest_monthly) do %>
-                        <span class="text-xl font-black text-primary">
+                        <span class="text-xl font-black text-gradient-brand">
                           Rs {format_price(entry.cheapest_monthly)}
                         </span>
                         <span class="text-sm text-base-content/40">/mo</span>
@@ -454,7 +458,7 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
                       <% end %>
                     </div>
                     <%= if distance do %>
-                      <span class="badge badge-sm badge-info gap-1">
+                      <span class="badge badge-sm badge-glow-primary gap-1">
                         <.icon name="hero-map-pin-mini" class="size-3" />
                         {format_distance(distance)}
                       </span>
@@ -509,26 +513,26 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
 
         <%!-- Sign Up CTA --%>
         <%= if @current_user == nil do %>
-          <div class="glass-card mt-4 relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-            <div class="absolute bottom-0 left-0 w-20 h-20 bg-secondary/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
-            <div class="card-body p-6 text-center relative z-10">
-              <div class="flex justify-center mb-2">
-                <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
-                  <.icon name="hero-rocket-launch-solid" class="size-5 text-primary" />
+          <div class="surface-3 accent-top mt-6 relative overflow-hidden">
+            <div class="pointer-events-none absolute -top-12 -right-12 w-44 h-44 rounded-full bg-primary/25 blur-3xl"></div>
+            <div class="pointer-events-none absolute -bottom-12 -left-12 w-44 h-44 rounded-full bg-secondary/20 blur-3xl"></div>
+            <div class="p-6 sm:p-8 text-center relative z-10">
+              <div class="flex justify-center mb-3">
+                <div class="w-12 h-12 icon-tile icon-tile-primary animate-float">
+                  <.icon name="hero-rocket-launch-solid" class="size-6" />
                 </div>
               </div>
-              <h2 class="text-lg font-bold">Ready to start your fitness journey?</h2>
-              <p class="text-base-content/60 mt-1">
+              <h2 class="text-xl font-bold text-gradient-brand">Ready to start your fitness journey?</h2>
+              <p class="text-base-content/60 mt-2">
                 Sign up to join a gym, book classes, and track your progress.
               </p>
-              <div class="flex flex-wrap justify-center gap-3 mt-3 text-xs text-base-content/50">
-                <span class="flex items-center gap-1"><.icon name="hero-check-circle-solid" class="size-3 text-success" /> Free signup</span>
-                <span class="flex items-center gap-1"><.icon name="hero-check-circle-solid" class="size-3 text-success" /> No credit card</span>
-                <span class="flex items-center gap-1"><.icon name="hero-check-circle-solid" class="size-3 text-success" /> Instant access</span>
+              <div class="flex flex-wrap justify-center gap-3 mt-4 text-xs text-base-content/60">
+                <span class="flex items-center gap-1"><.icon name="hero-check-circle-solid" class="size-3.5 text-success" /> Free signup</span>
+                <span class="flex items-center gap-1"><.icon name="hero-check-circle-solid" class="size-3.5 text-success" /> No credit card</span>
+                <span class="flex items-center gap-1"><.icon name="hero-check-circle-solid" class="size-3.5 text-success" /> Instant access</span>
               </div>
-              <div class="mt-4">
-                <a href="/register" class="btn btn-primary btn-sm gap-2 animate-glow-pulse">
+              <div class="mt-5">
+                <a href="/register" class="btn btn-gradient gap-2 font-semibold">
                   <.icon name="hero-user-plus-mini" class="size-4" /> Create Free Account
                 </a>
               </div>

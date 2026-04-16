@@ -11,15 +11,20 @@ defmodule FitTrackerzWeb.Member.DashboardLive do
   defp load_dashboard(socket, user) do
     actor = user
 
-    pending_invitations = case FitTrackerz.Gym.list_pending_member_invitations(actor.email, actor: actor, load: [:gym, :invited_by, :branch]) do
-      {:ok, invitations} -> invitations
-      _ -> []
-    end
+    pending_invitations =
+      case FitTrackerz.Gym.list_pending_member_invitations(actor.email,
+             actor: actor,
+             load: [:gym, :invited_by, :branch]
+           ) do
+        {:ok, invitations} -> invitations
+        _ -> []
+      end
 
-    memberships = case FitTrackerz.Gym.list_active_memberships(actor.id, actor: actor, load: [:gym]) do
-      {:ok, memberships} -> memberships
-      _ -> []
-    end
+    memberships =
+      case FitTrackerz.Gym.list_active_memberships(actor.id, actor: actor, load: [:gym]) do
+        {:ok, memberships} -> memberships
+        _ -> []
+      end
 
     if memberships == [] do
       socket
@@ -38,28 +43,35 @@ defmodule FitTrackerzWeb.Member.DashboardLive do
       member_ids = Enum.map(memberships, & &1.id)
 
       # Get latest workout plan
-      workout_plan = case FitTrackerz.Training.list_workouts_by_member(member_ids, actor: actor) do
-        {:ok, plans} -> List.first(plans)
-        _ -> nil
-      end
+      workout_plan =
+        case FitTrackerz.Training.list_workouts_by_member(member_ids, actor: actor) do
+          {:ok, plans} -> List.first(plans)
+          _ -> nil
+        end
 
       # Get latest diet plan
-      diet_plan = case FitTrackerz.Training.list_diets_by_member(member_ids, actor: actor) do
-        {:ok, plans} -> List.first(plans)
-        _ -> nil
-      end
+      diet_plan =
+        case FitTrackerz.Training.list_diets_by_member(member_ids, actor: actor) do
+          {:ok, plans} -> List.first(plans)
+          _ -> nil
+        end
 
       # Get bookings
-      bookings = case FitTrackerz.Scheduling.list_bookings_by_member(member_ids, actor: actor, load: [scheduled_class: [:class_definition, :branch]]) do
-        {:ok, bookings} -> Enum.filter(bookings, &(&1.status == :confirmed))
-        _ -> []
-      end
+      bookings =
+        case FitTrackerz.Scheduling.list_bookings_by_member(member_ids,
+               actor: actor,
+               load: [scheduled_class: [:class_definition, :branch]]
+             ) do
+          {:ok, bookings} -> Enum.filter(bookings, &(&1.status == :confirmed))
+          _ -> []
+        end
 
       # Get attendance count
-      attendance_records = case FitTrackerz.Training.list_attendance_by_member(member_ids, actor: actor) do
-        {:ok, records} -> records
-        _ -> []
-      end
+      attendance_records =
+        case FitTrackerz.Training.list_attendance_by_member(member_ids, actor: actor) do
+          {:ok, records} -> records
+          _ -> []
+        end
 
       now = DateTime.utc_now()
 
@@ -69,10 +81,14 @@ defmodule FitTrackerzWeb.Member.DashboardLive do
         end)
 
       # Get active subscription
-      subscription = case FitTrackerz.Billing.list_active_subscriptions_by_member(member_ids, actor: actor, load: [:subscription_plan, :gym]) do
-        {:ok, subs} -> List.first(subs)
-        _ -> nil
-      end
+      subscription =
+        case FitTrackerz.Billing.list_active_subscriptions_by_member(member_ids,
+               actor: actor,
+               load: [:subscription_plan, :gym]
+             ) do
+          {:ok, subs} -> List.first(subs)
+          _ -> nil
+        end
 
       socket
       |> assign(
@@ -103,7 +119,8 @@ defmodule FitTrackerzWeb.Member.DashboardLive do
              |> load_dashboard(actor)}
 
           {:error, _} ->
-            {:noreply, put_flash(socket, :error, "Failed to accept invitation. Please try again.")}
+            {:noreply,
+             put_flash(socket, :error, "Failed to accept invitation. Please try again.")}
         end
 
       {:error, _} ->
@@ -125,7 +142,8 @@ defmodule FitTrackerzWeb.Member.DashboardLive do
              |> load_dashboard(actor)}
 
           {:error, _} ->
-            {:noreply, put_flash(socket, :error, "Failed to decline invitation. Please try again.")}
+            {:noreply,
+             put_flash(socket, :error, "Failed to decline invitation. Please try again.")}
         end
 
       {:error, _} ->
@@ -137,23 +155,25 @@ defmodule FitTrackerzWeb.Member.DashboardLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
-      <div class="space-y-8">
-        <%!-- Welcome Header --%>
-        <div class="card bg-gradient-to-r from-primary/10 via-base-200/50 to-secondary/10 border border-base-300/50">
-          <div class="card-body p-6">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <p class="text-sm text-base-content/50 font-medium">Good to see you</p>
+      <div class="space-y-6">
+        <%!-- Welcome Header (elevated hero with glow) --%>
+        <div class="surface-3 accent-top relative overflow-hidden reveal">
+          <%!-- Decorative glow blobs --%>
+          <div class="pointer-events-none absolute -top-16 -right-16 w-56 h-56 rounded-full bg-primary/25 blur-3xl"></div>
+          <div class="pointer-events-none absolute -bottom-20 -left-12 w-48 h-48 rounded-full bg-secondary/20 blur-3xl"></div>
 
-                <h1 class="text-2xl sm:text-3xl font-brand mt-1">
+          <div class="relative p-6 sm:p-8">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+              <div>
+                <p class="text-sm text-base-content/50 font-semibold uppercase tracking-wider">Good to see you</p>
+                <h1 class="text-3xl sm:text-4xl font-brand mt-2 text-gradient-brand">
                   {@current_user.name}
                 </h1>
-
-                <p class="text-base-content/50 mt-1">Keep pushing towards your fitness goals!</p>
+                <p class="text-base-content/60 mt-2">Keep pushing towards your fitness goals.</p>
               </div>
 
               <div class="flex gap-2">
-                <.link navigate="/member/classes" class="btn btn-primary btn-sm gap-2 font-semibold">
+                <.link navigate="/member/classes" class="btn btn-gradient gap-2 font-semibold">
                   <.icon name="hero-calendar-days-mini" class="size-4" /> Book a Class
                 </.link>
               </div>
@@ -163,23 +183,23 @@ defmodule FitTrackerzWeb.Member.DashboardLive do
 
         <%!-- Pending Invitations --%>
         <%= if @pending_invitations != [] do %>
-          <div class="card bg-base-200/50 border border-primary/30" id="pending-invitations">
-            <div class="card-body p-6">
+          <div class="surface-2 accent-top relative overflow-hidden reveal" id="pending-invitations">
+            <div class="p-6">
               <h2 class="text-lg font-bold flex items-center gap-2">
-                <.icon name="hero-envelope-solid" class="size-5 text-primary" />
+                <span class="size-8 icon-tile icon-tile-primary"><.icon name="hero-envelope-solid" class="size-4" /></span>
                 Pending Invitations
-                <span class="badge badge-primary badge-sm">{length(@pending_invitations)}</span>
+                <span class="badge badge-glow-primary badge-sm">{length(@pending_invitations)}</span>
               </h2>
 
               <div class="space-y-3 mt-4">
                 <%= for inv <- @pending_invitations do %>
                   <div
-                    class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-base-300/30 border border-base-300/50"
+                    class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-primary/5 border border-primary/15"
                     id={"invitation-#{inv.id}"}
                   >
                     <div class="flex items-center gap-4">
-                      <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                        <.icon name="hero-building-office-2-solid" class="size-5 text-primary" />
+                      <div class="w-10 h-10 icon-tile icon-tile-primary shrink-0">
+                        <.icon name="hero-building-office-2-solid" class="size-5" />
                       </div>
 
                       <div>
@@ -225,132 +245,115 @@ defmodule FitTrackerzWeb.Member.DashboardLive do
         <%= if @no_gym do %>
           <%= if @pending_invitations == [] do %>
             <div class="min-h-[40vh] flex items-center justify-center">
-              <div class="text-center max-w-md">
-                <div class="w-20 h-20 rounded-3xl bg-warning/10 flex items-center justify-center mx-auto mb-6">
-                  <.icon name="hero-building-office-2-solid" class="size-10 text-warning" />
-                </div>
-
-                <h2 class="text-xl font-brand">No Gym Membership</h2>
-
-                <p class="text-base-content/50 mt-3">
-                  You haven't joined any gym yet. Ask a gym operator to invite you as a member.
-                </p>
-              </div>
+              <.empty_state
+                icon="hero-building-office-2-solid"
+                title="No Gym Membership"
+                subtitle="You haven't joined any gym yet. Ask a gym operator to invite you as a member."
+                icon_color="text-warning"
+                icon_bg="bg-warning/10"
+                action_label="Explore Gyms"
+                action_href="/explore"
+              />
             </div>
           <% end %>
         <% else %>
-          <%!-- Stats Grid --%>
-          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <%!-- Stats Grid (rich cards with gradient accent + icon tile) --%>
+          <div id="stats-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4" phx-hook="StaggerChildren" data-stagger="80">
             <.link
               navigate="/member/bookings"
-              class="card bg-base-200/50 border border-base-300/50 hover:shadow-md"
+              class="stat-card accent-top reveal block p-4 sm:p-5"
               id="stat-bookings"
             >
-              <div class="card-body p-4 sm:p-5">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
-                      Bookings
-                    </p>
-
-                    <p class="text-2xl sm:text-3xl font-black mt-1">{@booking_count}</p>
-                  </div>
-
-                  <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-info/10 flex items-center justify-center">
-                    <.icon name="hero-ticket-solid" class="size-5 sm:size-6 text-info" />
-                  </div>
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-semibold text-base-content/50 uppercase tracking-wider">Bookings</p>
+                  <p
+                    id="counter-bookings"
+                    class="text-2xl sm:text-3xl font-black mt-1"
+                    phx-hook="AnimatedCounter"
+                    data-target={@booking_count}
+                  >0</p>
                 </div>
-
-                <p class="text-xs text-base-content/40 mt-2">Active bookings</p>
+                <div class="w-11 h-11 sm:w-12 sm:h-12 icon-tile icon-tile-info">
+                  <.icon name="hero-ticket-solid" class="size-5 sm:size-6" />
+                </div>
               </div>
+              <p class="text-xs text-base-content/40 mt-3">Active bookings</p>
             </.link>
+
             <.link
               navigate="/member/attendance"
-              class="card bg-base-200/50 border border-base-300/50 hover:shadow-md"
+              class="stat-card accent-top reveal block p-4 sm:p-5"
               id="stat-attendance"
             >
-              <div class="card-body p-4 sm:p-5">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
-                      Attendance
-                    </p>
-
-                    <p class="text-2xl sm:text-3xl font-black mt-1">{@attendance_count}</p>
-                  </div>
-
-                  <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-success/10 flex items-center justify-center">
-                    <.icon name="hero-check-badge-solid" class="size-5 sm:size-6 text-success" />
-                  </div>
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-semibold text-base-content/50 uppercase tracking-wider">Attendance</p>
+                  <p
+                    id="counter-attendance"
+                    class="text-2xl sm:text-3xl font-black mt-1"
+                    phx-hook="AnimatedCounter"
+                    data-target={@attendance_count}
+                  >0</p>
                 </div>
-
-                <p class="text-xs text-base-content/40 mt-2">This month</p>
+                <div class="w-11 h-11 sm:w-12 sm:h-12 icon-tile icon-tile-success">
+                  <.icon name="hero-check-badge-solid" class="size-5 sm:size-6" />
+                </div>
               </div>
+              <p class="text-xs text-base-content/40 mt-3">This month</p>
             </.link>
+
             <.link
               navigate="/member/workout"
-              class="card bg-base-200/50 border border-base-300/50 hover:shadow-md"
+              class="stat-card accent-top reveal block p-4 sm:p-5"
               id="stat-workout"
             >
-              <div class="card-body p-4 sm:p-5">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
-                      Workout
-                    </p>
-
-                    <p class="text-2xl sm:text-3xl font-black mt-1">
-                      {if @workout_plan, do: length(@workout_plan.exercises || []), else: "--"}
-                    </p>
-                  </div>
-
-                  <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-accent/10 flex items-center justify-center">
-                    <.icon name="hero-fire-solid" class="size-5 sm:size-6 text-accent" />
-                  </div>
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-semibold text-base-content/50 uppercase tracking-wider">Workout</p>
+                  <p class="text-2xl sm:text-3xl font-black mt-1">
+                    {if @workout_plan, do: length(@workout_plan.exercises || []), else: "--"}
+                  </p>
                 </div>
-
-                <p class="text-xs text-base-content/40 mt-2">Exercises</p>
+                <div class="w-11 h-11 sm:w-12 sm:h-12 icon-tile icon-tile-accent">
+                  <.icon name="hero-fire-solid" class="size-5 sm:size-6" />
+                </div>
               </div>
+              <p class="text-xs text-base-content/40 mt-3">Exercises</p>
             </.link>
+
             <.link
               navigate="/member/diet"
-              class="card bg-base-200/50 border border-base-300/50 hover:shadow-md"
+              class="stat-card accent-top reveal block p-4 sm:p-5"
               id="stat-calories"
             >
-              <div class="card-body p-4 sm:p-5">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="text-xs font-semibold text-base-content/40 uppercase tracking-wider">
-                      Calories
-                    </p>
-
-                    <p class="text-2xl sm:text-3xl font-black mt-1">
-                      {if @diet_plan && @diet_plan.calorie_target,
-                        do: @diet_plan.calorie_target,
-                        else: "--"}
-                    </p>
-                  </div>
-
-                  <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-warning/10 flex items-center justify-center">
-                    <.icon name="hero-heart-solid" class="size-5 sm:size-6 text-warning" />
-                  </div>
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-semibold text-base-content/50 uppercase tracking-wider">Calories</p>
+                  <p class="text-2xl sm:text-3xl font-black mt-1">
+                    {if @diet_plan && @diet_plan.calorie_target,
+                      do: @diet_plan.calorie_target,
+                      else: "--"}
+                  </p>
                 </div>
-
-                <p class="text-xs text-base-content/40 mt-2">Daily target</p>
+                <div class="w-11 h-11 sm:w-12 sm:h-12 icon-tile icon-tile-warning">
+                  <.icon name="hero-heart-solid" class="size-5 sm:size-6" />
+                </div>
               </div>
+              <p class="text-xs text-base-content/40 mt-3">Daily target</p>
             </.link>
           </div>
           <%!-- Main Content Grid --%>
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <%!-- My Workout Plan --%>
-            <div class="card bg-base-200/50 border border-base-300/50" id="my-workout">
-              <div class="card-body p-5">
+            <div class="surface-2 accent-top relative overflow-hidden hover-lift reveal" id="my-workout">
+              <div class="p-5">
                 <div class="flex items-center justify-between">
                   <h2 class="text-lg font-bold flex items-center gap-2">
-                    <.icon name="hero-fire-solid" class="size-5 text-accent" /> My Workout Plan
+                    <span class="size-8 icon-tile icon-tile-accent"><.icon name="hero-fire-solid" class="size-4" /></span>
+                    My Workout Plan
                   </h2>
-
-                  <.link navigate="/member/workout" class="btn btn-ghost btn-xs gap-1">
+                  <.link navigate="/member/workout" class="btn btn-ghost btn-xs gap-1 hover-icon-move">
                     View Full Plan <.icon name="hero-arrow-right-mini" class="size-3" />
                   </.link>
                 </div>
@@ -359,36 +362,31 @@ defmodule FitTrackerzWeb.Member.DashboardLive do
                   <%= if @workout_plan do %>
                     <div class="space-y-2">
                       <p class="font-semibold">{@workout_plan.name}</p>
-
-                      <p class="text-sm text-base-content/50">
+                      <p class="text-sm text-base-content/60">
                         {length(@workout_plan.exercises || [])} exercises
                       </p>
                     </div>
                   <% else %>
-                    <div class="p-4 rounded-xl bg-base-300/30 text-center">
-                      <div class="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-3">
-                        <.icon name="hero-fire" class="size-7 text-accent" />
-                      </div>
-
-                      <p class="text-sm font-semibold">No Workout Plan Yet</p>
-
-                      <p class="text-xs text-base-content/40 mt-1">
-                        Your gym operator will assign a workout plan tailored for you.
-                      </p>
-                    </div>
+                    <.empty_state
+                      icon="hero-fire"
+                      title="No Workout Plan Yet"
+                      subtitle="Your gym operator will assign a workout plan tailored for you."
+                      icon_color="text-accent"
+                      icon_bg="bg-accent/10"
+                    />
                   <% end %>
                 </div>
               </div>
             </div>
             <%!-- My Diet Plan --%>
-            <div class="card bg-base-200/50 border border-base-300/50" id="my-diet">
-              <div class="card-body p-5">
+            <div class="surface-2 accent-top relative overflow-hidden hover-lift reveal" id="my-diet">
+              <div class="p-5">
                 <div class="flex items-center justify-between">
                   <h2 class="text-lg font-bold flex items-center gap-2">
-                    <.icon name="hero-heart-solid" class="size-5 text-success" /> My Diet Plan
+                    <span class="size-8 icon-tile icon-tile-success"><.icon name="hero-heart-solid" class="size-4" /></span>
+                    My Diet Plan
                   </h2>
-
-                  <.link navigate="/member/diet" class="btn btn-ghost btn-xs gap-1">
+                  <.link navigate="/member/diet" class="btn btn-ghost btn-xs gap-1 hover-icon-move">
                     View Full Plan <.icon name="hero-arrow-right-mini" class="size-3" />
                   </.link>
                 </div>
@@ -397,44 +395,35 @@ defmodule FitTrackerzWeb.Member.DashboardLive do
                   <%= if @diet_plan do %>
                     <div class="space-y-2">
                       <p class="font-semibold">{@diet_plan.name}</p>
-
                       <%= if @diet_plan.calorie_target do %>
-                        <p class="text-sm text-base-content/50">
+                        <p class="text-sm text-base-content/60">
                           {@diet_plan.calorie_target} kcal/day target
                         </p>
                       <% end %>
                     </div>
                   <% else %>
-                    <div class="p-4 rounded-xl bg-base-300/30 text-center">
-                      <div class="w-14 h-14 rounded-2xl bg-success/10 flex items-center justify-center mx-auto mb-3">
-                        <.icon name="hero-heart" class="size-7 text-success" />
-                      </div>
-
-                      <p class="text-sm font-semibold">No Diet Plan Yet</p>
-
-                      <p class="text-xs text-base-content/40 mt-1">
-                        Your gym operator will create a nutrition plan based on your goals.
-                      </p>
-                    </div>
+                    <.empty_state
+                      icon="hero-heart"
+                      title="No Diet Plan Yet"
+                      subtitle="Your gym operator will create a nutrition plan based on your goals."
+                      icon_color="text-success"
+                      icon_bg="bg-success/10"
+                    />
                   <% end %>
                 </div>
               </div>
             </div>
           </div>
           <%!-- Upcoming Bookings & Subscription --%>
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
             <%!-- Upcoming Bookings --%>
-            <div
-              class="lg:col-span-2 card bg-base-200/50 border border-base-300/50"
-              id="upcoming-bookings"
-            >
-              <div class="card-body p-5">
+            <div class="lg:col-span-2 surface-2 accent-top relative overflow-hidden reveal" id="upcoming-bookings">
+              <div class="p-5">
                 <div class="flex items-center justify-between">
                   <h2 class="text-lg font-bold flex items-center gap-2">
-                    <.icon name="hero-calendar-days-solid" class="size-5 text-info" />
+                    <span class="size-8 icon-tile icon-tile-info"><.icon name="hero-calendar-days-solid" class="size-4" /></span>
                     Upcoming Bookings
                   </h2>
-
                   <.link navigate="/member/classes" class="btn btn-ghost btn-xs gap-1">
                     Browse Classes <.icon name="hero-arrow-right-mini" class="size-3" />
                   </.link>
@@ -442,34 +431,31 @@ defmodule FitTrackerzWeb.Member.DashboardLive do
 
                 <div class="mt-4">
                   <%= if @upcoming_bookings == [] do %>
-                    <div class="flex items-center gap-3 p-3 rounded-lg bg-base-300/20">
-                      <.icon name="hero-calendar" class="size-5 text-base-content/30" />
-                      <p class="text-sm text-base-content/50">
+                    <div class="flex items-center gap-3 p-4 rounded-xl bg-primary/5 border border-primary/10">
+                      <.icon name="hero-calendar" class="size-5 text-primary/60" />
+                      <p class="text-sm text-base-content/60">
                         No upcoming bookings.
-                        <.link navigate="/member/classes" class="text-primary hover:underline">
+                        <.link navigate="/member/classes" class="text-primary font-semibold hover:underline">
                           Browse available classes
                         </.link>
                       </p>
                     </div>
                   <% else %>
-                    <div class="overflow-x-auto">
-                      <table class="table table-sm">
+                    <div class="overflow-x-auto rounded-xl border border-base-300/50">
+                      <table class="table table-sm table-fancy m-0">
                         <thead>
-                          <tr class="text-base-content/40">
+                          <tr>
                             <th>Class</th>
-
                             <th>Date & Time</th>
                           </tr>
                         </thead>
-
                         <tbody>
                           <%= for booking <- @upcoming_bookings do %>
                             <tr>
-                              <td class="font-medium">
+                              <td class="font-semibold">
                                 {booking.scheduled_class.class_definition.name}
                               </td>
-
-                              <td class="text-base-content/60">
+                              <td class="text-base-content/70">
                                 {Calendar.strftime(
                                   booking.scheduled_class.scheduled_at,
                                   "%b %d, %H:%M"
@@ -484,38 +470,34 @@ defmodule FitTrackerzWeb.Member.DashboardLive do
                 </div>
               </div>
             </div>
+
             <%!-- Subscription Status --%>
-            <div class="card bg-base-200/50 border border-base-300/50" id="subscription-status">
-              <div class="card-body p-5">
+            <div class="surface-2 accent-top relative overflow-hidden reveal" id="subscription-status">
+              <div class="p-5">
                 <h2 class="text-lg font-bold flex items-center gap-2">
-                  <.icon name="hero-credit-card-solid" class="size-5 text-warning" /> Subscription
+                  <span class="size-8 icon-tile icon-tile-warning"><.icon name="hero-credit-card-solid" class="size-4" /></span>
+                  Subscription
                 </h2>
 
                 <div class="mt-4">
                   <%= if @subscription do %>
                     <div class="space-y-3">
-                      <div class="p-3 rounded-lg bg-success/10 border border-success/20">
-                        <div class="flex items-center gap-2">
-                          <.icon name="hero-check-circle-solid" class="size-4 text-success" />
-                          <span class="text-sm font-semibold text-success">Active</span>
-                        </div>
+                      <div class="px-3 py-2 rounded-xl bg-success/10 border border-success/25 inline-flex items-center gap-2">
+                        <.icon name="hero-check-circle-solid" class="size-4 text-success" />
+                        <span class="text-sm font-bold text-success">Active</span>
                       </div>
-
-                      <p class="font-semibold">{@subscription.subscription_plan.name}</p>
-
+                      <p class="font-semibold text-base">{@subscription.subscription_plan.name}</p>
                       <p class="text-xs text-base-content/50">
                         Expires: {Calendar.strftime(@subscription.ends_at, "%b %d, %Y")}
                       </p>
                     </div>
                   <% else %>
-                    <div class="p-4 rounded-xl bg-base-300/30 text-center">
-                      <div class="w-14 h-14 rounded-2xl bg-warning/10 flex items-center justify-center mx-auto mb-3">
-                        <.icon name="hero-credit-card" class="size-7 text-warning" />
+                    <div class="p-5 rounded-xl bg-warning/5 border border-warning/15 text-center">
+                      <div class="w-14 h-14 icon-tile icon-tile-warning mx-auto mb-3">
+                        <.icon name="hero-credit-card" class="size-7" />
                       </div>
-
                       <p class="text-sm font-semibold">No Active Subscription</p>
-
-                      <p class="text-xs text-base-content/40 mt-1">
+                      <p class="text-xs text-base-content/50 mt-1">
                         Contact your gym to subscribe to a plan.
                       </p>
                     </div>

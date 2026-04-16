@@ -450,16 +450,29 @@ defmodule FitTrackerzWeb.CoreComponents do
 
   Uses daisyUI theme variables for automatic light/dark mode adaptation.
 
+  Pass `dumbbell={true}` to add a tiny dumbbell that hangs from the
+  coral underline and swings back and forth like a pendulum.
+
   ## Examples
 
       <.brand_logo class="h-8" />
       <.brand_logo class="h-6" />
+      <.brand_logo class="h-10" dumbbell={true} />
   """
   attr :class, :string, default: "h-8 w-auto"
+  attr :dumbbell, :boolean, default: false
 
   def brand_logo(assigns) do
     ~H"""
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 50" class={@class} role="img" aria-label="FitTrackerz">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 320 50"
+      class={@class}
+      role="img"
+      aria-label="FitTrackerz"
+      overflow="visible"
+      style="overflow: visible;"
+    >
       <text
         x="0"
         y="40"
@@ -470,8 +483,143 @@ defmodule FitTrackerzWeb.CoreComponents do
       >
         <tspan style="fill: var(--color-primary)">Fit</tspan><tspan style="fill: currentColor">Trackerz</tspan>
       </text>
+      <%!-- Coral underline --%>
       <rect x="0" y="46" width="95" height="3.5" rx="1.75" style="fill: var(--color-secondary)" />
+
+      <%= if @dumbbell do %>
+        <%!-- Pivot anchor point at (50, 49.75) — middle of the underline --%>
+        <g class="logo-dumbbell-swing">
+          <%!-- Hanging string from the underline down to the dumbbell bar --%>
+          <line
+            x1="50" y1="49.75" x2="50" y2="64"
+            stroke="currentColor" stroke-width="0.8" stroke-linecap="round"
+            opacity="0.55"
+          />
+          <%!-- Dumbbell at the end of the string --%>
+          <g transform="translate(50, 70)">
+            <%!-- Center bar --%>
+            <rect x="-11" y="-1.4" width="22" height="2.8" rx="1.4" style="fill: var(--color-primary)" />
+            <%!-- Inner plates --%>
+            <rect x="-17" y="-5" width="6" height="10" rx="1.2" style="fill: var(--color-secondary)" />
+            <rect x="11"  y="-5" width="6" height="10" rx="1.2" style="fill: var(--color-secondary)" />
+            <%!-- Outer plates (smaller) --%>
+            <rect x="-21" y="-3.5" width="4" height="7" rx="0.8" style="fill: var(--color-primary)" />
+            <rect x="17"  y="-3.5" width="4" height="7" rx="0.8" style="fill: var(--color-primary)" />
+            <%!-- End caps --%>
+            <circle cx="-22.5" cy="0" r="0.9" style="fill: var(--color-primary)" />
+            <circle cx="22.5"  cy="0" r="0.9" style="fill: var(--color-primary)" />
+          </g>
+        </g>
+      <% end %>
     </svg>
+    """
+  end
+
+  @doc """
+  Renders a skeleton loader placeholder.
+
+  Used to show loading states before data arrives. Supports multiple shapes.
+
+  ## Examples
+
+      <.skeleton shape="text" />
+      <.skeleton shape="stat" />
+      <.skeleton shape="card" />
+      <.skeleton shape="circle" />
+  """
+  attr :shape, :string, default: "text", values: ~w(text circle card stat)
+  attr :class, :string, default: ""
+  attr :count, :integer, default: 1
+
+  def skeleton(%{shape: "text"} = assigns) do
+    ~H"""
+    <div class={["space-y-2", @class]}>
+      <%= for _i <- 1..@count do %>
+        <div class="skeleton-loader h-4 w-full rounded"></div>
+      <% end %>
+    </div>
+    """
+  end
+
+  def skeleton(%{shape: "circle"} = assigns) do
+    ~H"""
+    <div class={["skeleton-loader rounded-full w-12 h-12 shrink-0", @class]}></div>
+    """
+  end
+
+  def skeleton(%{shape: "card"} = assigns) do
+    ~H"""
+    <div class={["card bg-base-200/50 border border-base-300/50 overflow-hidden", @class]}>
+      <div class="skeleton-loader h-40 w-full"></div>
+      <div class="p-4 space-y-3">
+        <div class="skeleton-loader h-5 w-3/4 rounded"></div>
+        <div class="skeleton-loader h-3 w-1/2 rounded"></div>
+        <div class="skeleton-loader h-3 w-full rounded"></div>
+      </div>
+    </div>
+    """
+  end
+
+  def skeleton(%{shape: "stat"} = assigns) do
+    ~H"""
+    <div class={["card bg-base-200/50 border border-base-300/50", @class]}>
+      <div class="card-body p-5">
+        <div class="flex items-center justify-between">
+          <div class="space-y-2">
+            <div class="skeleton-loader h-3 w-20 rounded"></div>
+            <div class="skeleton-loader h-8 w-16 rounded"></div>
+          </div>
+          <div class="skeleton-loader w-12 h-12 rounded-xl"></div>
+        </div>
+        <div class="skeleton-loader h-3 w-24 rounded mt-2"></div>
+      </div>
+    </div>
+    """
+  end
+
+  @doc """
+  Renders an animated empty state with a floating icon and message.
+
+  ## Examples
+
+      <.empty_state
+        icon="hero-fire"
+        title="No Workout Plan Yet"
+        subtitle="Your trainer will assign one soon."
+      />
+
+      <.empty_state
+        icon="hero-building-office-2-solid"
+        title="No Gyms Found"
+        subtitle="Try adjusting your filters."
+        action_label="Clear Filters"
+        action_click="clear_filters"
+      />
+  """
+  attr :icon, :string, required: true
+  attr :title, :string, required: true
+  attr :subtitle, :string, default: nil
+  attr :icon_color, :string, default: "text-primary"
+  attr :icon_bg, :string, default: "bg-primary/10"
+  attr :action_label, :string, default: nil
+  attr :action_href, :string, default: nil
+  attr :action_click, :string, default: nil
+
+  def empty_state(assigns) do
+    ~H"""
+    <div class="flex flex-col items-center justify-center py-8 text-center reveal-scale">
+      <div class={["w-16 h-16 rounded-2xl flex items-center justify-center mb-4 animate-float", @icon_bg]}>
+        <.icon name={@icon} class={["size-8", @icon_color]} />
+      </div>
+      <p class="text-sm font-semibold">{@title}</p>
+      <p :if={@subtitle} class="text-xs text-base-content/40 mt-1 max-w-xs">{@subtitle}</p>
+      <a :if={@action_label && @action_href} href={@action_href} class="btn btn-primary btn-sm gap-2 mt-4 press-scale">
+        {@action_label}
+      </a>
+      <button :if={@action_label && @action_click} phx-click={@action_click} class="btn btn-primary btn-sm gap-2 mt-4 press-scale">
+        {@action_label}
+      </button>
+    </div>
     """
   end
 

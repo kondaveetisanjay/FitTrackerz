@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -51,7 +51,13 @@
       })();
     </script>
   </head>
-  <body class="bg-base-100 text-base-content antialiased">
-    {@inner_content}
+  <body class="bg-base-100 text-base-content antialiased relative">
+    <%!-- Ambient background — blurred gradient blobs (sits behind everything) --%>
+    <div class="ambient-bg" aria-hidden="true">
+      <span class="blob-accent"></span>
+    </div>
+    <div class="relative z-10">
+      {@inner_content}
+    </div>
   </body>
 </html>

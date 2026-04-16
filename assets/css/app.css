@@ -31,11 +31,11 @@
   default: true;
   prefersdark: false;
   color-scheme: "light";
-  /* Base surfaces – clean white with cool undertones */
-  --color-base-100: oklch(100% 0 0);
-  --color-base-200: oklch(97% 0.003 280);
-  --color-base-300: oklch(92% 0.005 280);
-  --color-base-content: oklch(18% 0.005 280);
+  /* Base surfaces – clearly tinted lavender/indigo for warmth & depth */
+  --color-base-100: oklch(97% 0.015 280);
+  --color-base-200: oklch(92% 0.022 285);
+  --color-base-300: oklch(85% 0.030 285);
+  --color-base-content: oklch(22% 0.035 280);
   /* Indigo – rich purple-blue, trust & professionalism */
   --color-primary: oklch(40% 0.22 280);
   --color-primary-content: oklch(100% 0 0);
@@ -77,11 +77,11 @@
   default: false;
   prefersdark: false;
   color-scheme: "dark";
-  /* Base surfaces – deep indigo-blacks */
-  --color-base-100: oklch(8% 0.005 280);
-  --color-base-200: oklch(15% 0.005 280);
-  --color-base-300: oklch(22% 0.005 280);
-  --color-base-content: oklch(94% 0 0);
+  /* Base surfaces – deep indigo-blacks (richer tint) */
+  --color-base-100: oklch(10% 0.020 280);
+  --color-base-200: oklch(16% 0.025 280);
+  --color-base-300: oklch(24% 0.030 280);
+  --color-base-content: oklch(95% 0.005 280);
   /* Indigo – brighter for dark bg readability */
   --color-primary: oklch(55% 0.22 280);
   --color-primary-content: oklch(100% 0 0);
@@ -121,6 +121,17 @@
 
 /* Use the data attribute for dark mode  */
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+/* Sticky-nav offset for anchor links. Smooth scroll handled by JS lerp. */
+html {
+  scroll-padding-top: 5rem;
+}
+
+/* Helps the browser skip painting offscreen sections — big perf win */
+section {
+  content-visibility: auto;
+  contain-intrinsic-size: 800px;
+}
 
 /* Make LiveView wrapper divs transparent for layout */
 [data-phx-session], [data-phx-teleported-src] { display: contents }
@@ -173,21 +184,80 @@
   letter-spacing: 0.02em;
 }
 
-/* Smooth transitions on interactive elements only */
+/* ============================================================
+   Logo dumbbell — pendulum swing under the coral underline
+   The pivot is at the underline (50, 49.75 in viewBox coords).
+   `transform-box: view-box` makes transform-origin use SVG
+   user units, so the rotation pivots from the string anchor.
+   ============================================================ */
+
+@keyframes logoDumbbellSwing {
+  0%   { transform: rotate(-16deg); }
+  50%  { transform: rotate( 16deg); }
+  100% { transform: rotate(-16deg); }
+}
+
+.logo-dumbbell-swing {
+  transform-box: view-box;
+  transform-origin: 50px 49.75px;
+  animation: logoDumbbellSwing 2.6s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Reduced-motion users get a gentler hold (no swing) */
+@media (prefers-reduced-motion: reduce) {
+  .logo-dumbbell-swing {
+    animation: none;
+    transform: rotate(-4deg);
+  }
+}
+
+/* ============================================================
+   Animation Timing System
+   Standardized easing & duration tokens
+   ============================================================ */
+
+:root {
+  /* Easing curves */
+  --ease-out-expo: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  /* Duration tokens */
+  --duration-micro: 150ms;
+  --duration-fast: 200ms;
+  --duration-normal: 300ms;
+  --duration-slow: 500ms;
+  --duration-page: 600ms;
+}
+
+/* ============================================================
+   Global Smooth Transitions
+   Applied to all interactive elements
+   ============================================================ */
+
 a, button, .btn, .card, .badge, .collapse, input, select, textarea,
 [class*="hover:"] {
-  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
+  transition-property: color, background-color, border-color, outline-color,
+    text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter;
+  transition-timing-function: var(--ease-out-expo);
+  transition-duration: var(--duration-fast);
 }
 
 /* Brand button hover effects */
 .btn-primary:hover {
-  filter: brightness(0.85);
+  filter: brightness(1.1);
+  box-shadow: 0 4px 16px oklch(40% 0.22 280 / 0.3);
+}
+
+.btn-primary:active {
+  transform: scale(0.96);
+  filter: brightness(0.95);
 }
 
 /* ============================================================
-   Animation Keyframes
+   Keyframes — Core Animation Library
    ============================================================ */
 
 @keyframes float {
@@ -200,9 +270,67 @@ a, button, .btn, .card, .badge, .collapse, input, select, textarea,
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(32px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(32px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-32px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes scaleUp {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+
 @keyframes glowPulse {
-  0%, 100% { box-shadow: 0 0 8px 2px oklch(40% 0.22 280 / 0.3); }
-  50% { box-shadow: 0 0 20px 6px oklch(40% 0.22 280 / 0.5); }
+  0%, 100% { box-shadow: 0 0 8px 2px oklch(40% 0.22 280 / 0.25); }
+  50% { box-shadow: 0 0 24px 8px oklch(40% 0.22 280 / 0.4); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+@keyframes gradientFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+@keyframes counterPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
 }
 
 @keyframes marqueeLeft {
@@ -215,9 +343,15 @@ a, button, .btn, .card, .badge, .collapse, input, select, textarea,
   100% { transform: translateX(0); }
 }
 
-@keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes badgePing {
+  0%   { transform: scale(1); opacity: 1; }
+  75%  { transform: scale(1.6); opacity: 0; }
+  100% { transform: scale(1.6); opacity: 0; }
 }
 
 /* ============================================================
@@ -237,11 +371,43 @@ a, button, .btn, .card, .badge, .collapse, input, select, textarea,
 }
 
 .animate-fade-up {
-  animation: fadeUp 0.6s ease-out both;
+  animation: fadeUp var(--duration-page) var(--ease-out-expo) both;
+}
+
+.animate-fade-down {
+  animation: fadeDown var(--duration-slow) var(--ease-out-expo) both;
+}
+
+.animate-slide-up {
+  animation: slideUp var(--duration-page) var(--ease-out-expo) both;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight var(--duration-page) var(--ease-out-expo) both;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft var(--duration-page) var(--ease-out-expo) both;
+}
+
+.animate-scale-in {
+  animation: scaleIn var(--duration-normal) var(--ease-out-expo) both;
+}
+
+.animate-scale-up {
+  animation: scaleUp var(--duration-slow) var(--ease-out-back) both;
 }
 
 .animate-glow-pulse {
   animation: glowPulse 2.5s ease-in-out infinite;
+}
+
+.animate-breathe {
+  animation: breathe 3s ease-in-out infinite;
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
 }
 
 .animate-marquee-left {
@@ -252,11 +418,15 @@ a, button, .btn, .card, .badge, .collapse, input, select, textarea,
   animation: marqueeRight 30s linear infinite;
 }
 
-.animate-scale-in {
-  animation: scaleIn 0.4s ease-out both;
-}
+/* Stagger delay utilities */
+.stagger-1 { animation-delay: 50ms; }
+.stagger-2 { animation-delay: 100ms; }
+.stagger-3 { animation-delay: 150ms; }
+.stagger-4 { animation-delay: 200ms; }
+.stagger-5 { animation-delay: 250ms; }
+.stagger-6 { animation-delay: 300ms; }
 
-/* Pause marquee on mobile for accessibility */
+/* Pause marquee on mobile */
 @media (max-width: 768px) {
   .animate-marquee-left,
   .animate-marquee-right {
@@ -265,30 +435,837 @@ a, button, .btn, .card, .badge, .collapse, input, select, textarea,
 }
 
 /* ============================================================
-   Glass Card Utility
+   Page Entry Animation
+   Applied to main content on every page load
+   ============================================================ */
+
+.page-enter {
+  animation: pageEnter var(--duration-page) var(--ease-out-expo) both;
+}
+
+/* ============================================================
+   Scroll Reveal System
+   Elements start invisible, get .revealed class via JS hook
+   ============================================================ */
+
+/* "Pop-out" reveal — implemented with @keyframes animation (not
+   transition) so it can't be overridden by hover-lift / transform
+   transitions on the same element. Elements start invisible
+   (opacity:0) and play a one-shot bounce animation when JS toggles
+   `.revealed`. */
+
+@keyframes revealPop {
+  0%   { opacity: 0; transform: translateY(40px) scale(0.92); filter: blur(8px); }
+  60%  { opacity: 1;                                          filter: blur(0); }
+  80%  {              transform: translateY(-6px) scale(1.02);                    }
+  100% { opacity: 1; transform: translateY(0)    scale(1);    filter: blur(0); }
+}
+
+@keyframes revealPopScale {
+  0%   { opacity: 0; transform: scale(0.78); filter: blur(8px); }
+  60%  { opacity: 1;                          filter: blur(0); }
+  80%  {              transform: scale(1.04);                    }
+  100% { opacity: 1; transform: scale(1);    filter: blur(0); }
+}
+
+@keyframes revealPopLeft {
+  0%   { opacity: 0; transform: translateX(-56px) scale(0.96); filter: blur(8px); }
+  60%  { opacity: 1;                                            filter: blur(0); }
+  80%  {              transform: translateX(8px)  scale(1.01);                    }
+  100% { opacity: 1; transform: translateX(0)    scale(1);    filter: blur(0); }
+}
+
+@keyframes revealPopRight {
+  0%   { opacity: 0; transform: translateX(56px)  scale(0.96); filter: blur(8px); }
+  60%  { opacity: 1;                                            filter: blur(0); }
+  80%  {              transform: translateX(-8px) scale(1.01);                    }
+  100% { opacity: 1; transform: translateX(0)    scale(1);    filter: blur(0); }
+}
+
+.reveal,
+.reveal-scale,
+.reveal-left,
+.reveal-right {
+  opacity: 0;
+  will-change: opacity, transform, filter;
+}
+
+.reveal.revealed {
+  animation: revealPop 850ms var(--ease-out-expo) both;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+
+.reveal-scale.revealed {
+  animation: revealPopScale 850ms var(--ease-out-expo) both;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+
+.reveal-left.revealed {
+  animation: revealPopLeft 850ms var(--ease-out-expo) both;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+
+.reveal-right.revealed {
+  animation: revealPopRight 850ms var(--ease-out-expo) both;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+
+/* ============================================================
+   Hover Interaction System
+   Composable utility classes for interactive elements
+   ============================================================ */
+
+/* Lift — card/element hovers up with enhanced shadow */
+.hover-lift {
+  transition: transform var(--duration-fast) var(--ease-out-expo),
+              box-shadow var(--duration-fast) var(--ease-out-expo);
+}
+
+.hover-lift:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 32px -8px rgb(0 0 0 / 0.12),
+              0 4px 8px -2px rgb(0 0 0 / 0.06);
+}
+
+:where([data-theme=dark]) .hover-lift:hover {
+  box-shadow: 0 12px 32px -8px rgb(0 0 0 / 0.4),
+              0 4px 8px -2px rgb(0 0 0 / 0.2);
+}
+
+/* Scale — subtle zoom effect */
+.hover-scale {
+  transition: transform var(--duration-fast) var(--ease-out-expo);
+}
+
+.hover-scale:hover {
+  transform: scale(1.03);
+}
+
+/* Glow — primary color glow on hover */
+.hover-glow {
+  transition: box-shadow var(--duration-normal) var(--ease-out-expo);
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 20px 4px oklch(40% 0.22 280 / 0.2);
+}
+
+:where([data-theme=dark]) .hover-glow:hover {
+  box-shadow: 0 0 24px 6px oklch(55% 0.22 280 / 0.25);
+}
+
+/* Image zoom inside container */
+.hover-img-zoom img,
+.hover-img-zoom figure img {
+  transition: transform var(--duration-normal) var(--ease-out-expo);
+}
+
+.hover-img-zoom:hover img,
+.hover-img-zoom:hover figure img {
+  transform: scale(1.06);
+}
+
+/* Icon wiggle on hover */
+.hover-icon-move:hover .icon-target,
+.hover-icon-move:hover [class*="hero-"] {
+  transform: translateX(2px);
+  transition: transform var(--duration-fast) var(--ease-out-expo);
+}
+
+/* ============================================================
+   Press / Click Feedback
+   ============================================================ */
+
+.press-scale {
+  transition: transform var(--duration-micro) var(--ease-out-expo);
+}
+
+.press-scale:active {
+  transform: scale(0.95);
+}
+
+/* Applied globally to all buttons */
+.btn:active {
+  transform: scale(0.96);
+  transition-duration: 80ms;
+}
+
+/* ============================================================
+   Input Focus Animations
+   ============================================================ */
+
+input:focus, select:focus, textarea:focus,
+.input:focus, .select:focus, .textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px oklch(40% 0.22 280 / 0.15);
+  transition: box-shadow var(--duration-fast) var(--ease-out-expo),
+              border-color var(--duration-fast) var(--ease-out-expo);
+}
+
+:where([data-theme=dark]) input:focus,
+:where([data-theme=dark]) select:focus,
+:where([data-theme=dark]) textarea:focus {
+  box-shadow: 0 0 0 3px oklch(55% 0.22 280 / 0.2);
+}
+
+/* Error shake for invalid form fields */
+.input-shake {
+  animation: shake 0.4s ease-in-out;
+}
+
+/* ============================================================
+   Skeleton Loader
+   ============================================================ */
+
+.skeleton-loader {
+  background: linear-gradient(
+    90deg,
+    oklch(92% 0.005 280 / 0.6) 25%,
+    oklch(96% 0.003 280 / 0.8) 50%,
+    oklch(92% 0.005 280 / 0.6) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 0.5rem;
+}
+
+:where([data-theme=dark]) .skeleton-loader {
+  background: linear-gradient(
+    90deg,
+    oklch(18% 0.005 280 / 0.6) 25%,
+    oklch(25% 0.005 280 / 0.8) 50%,
+    oklch(18% 0.005 280 / 0.6) 75%
+  );
+  background-size: 200% 100%;
+}
+
+/* ============================================================
+   Badge Animations
+   ============================================================ */
+
+.badge-pulse {
+  position: relative;
+}
+
+.badge-pulse::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: inherit;
+  animation: badgePing 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* ============================================================
+   Animated Gradient Backgrounds
+   For hero sections and CTAs
+   ============================================================ */
+
+.gradient-animate {
+  background-size: 200% 200%;
+  animation: gradientFlow 8s ease infinite;
+}
+
+/* Counter pulse — plays once after counter finishes */
+.counter-done {
+  animation: counterPulse 0.3s var(--ease-out-back);
+}
+
+/* ============================================================
+   Tab Content Transitions
+   ============================================================ */
+
+.tab-content-enter {
+  animation: fadeUp var(--duration-normal) var(--ease-out-expo) both;
+}
+
+/* ============================================================
+   Glass Card Utility (Premium — richer blur, tint, border)
    ============================================================ */
 
 .glass-card {
-  background: oklch(100% 0 0 / 0.60);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  background:
+    linear-gradient(135deg,
+      oklch(100% 0 0 / 0.78) 0%,
+      oklch(99% 0.005 280 / 0.62) 100%);
+  backdrop-filter: blur(28px) saturate(140%);
+  -webkit-backdrop-filter: blur(28px) saturate(140%);
   border-radius: 1rem;
-  border: 1px solid oklch(92% 0.005 280 / 0.30);
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
-  transition: box-shadow 0.2s, transform 0.2s;
+  border: 1px solid oklch(40% 0.22 280 / 0.10);
+  box-shadow:
+    0 1px 0 0 oklch(100% 0 0 / 0.6) inset,
+    0 4px 16px -4px oklch(40% 0.22 280 / 0.08),
+    0 2px 6px -2px rgb(0 0 0 / 0.05);
+  transition: box-shadow var(--duration-normal) var(--ease-out-expo),
+              transform var(--duration-normal) var(--ease-out-expo),
+              border-color var(--duration-normal) var(--ease-out-expo);
 }
 
 .glass-card:hover {
-  box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-  transform: translateY(-2px);
+  box-shadow:
+    0 1px 0 0 oklch(100% 0 0 / 0.7) inset,
+    0 20px 48px -12px oklch(40% 0.22 280 / 0.18),
+    0 8px 20px -6px rgb(0 0 0 / 0.08);
+  transform: translateY(-4px);
+  border-color: oklch(40% 0.22 280 / 0.22);
 }
 
 :where([data-theme=dark]) .glass-card {
-  background: oklch(15% 0 0 / 0.60);
-  border-color: oklch(22% 0 0 / 0.40);
+  background:
+    linear-gradient(135deg,
+      oklch(18% 0.01 280 / 0.72) 0%,
+      oklch(14% 0.008 280 / 0.55) 100%);
+  border-color: oklch(55% 0.22 280 / 0.18);
+  box-shadow:
+    0 1px 0 0 oklch(100% 0 0 / 0.05) inset,
+    0 4px 16px -4px rgb(0 0 0 / 0.4),
+    0 2px 6px -2px rgb(0 0 0 / 0.3);
 }
 
-/* Google Places autocomplete dropdown styling */
+:where([data-theme=dark]) .glass-card:hover {
+  box-shadow:
+    0 1px 0 0 oklch(100% 0 0 / 0.08) inset,
+    0 20px 48px -12px oklch(55% 0.22 280 / 0.25),
+    0 8px 20px -6px rgb(0 0 0 / 0.5);
+  border-color: oklch(55% 0.22 280 / 0.32);
+}
+
+/* ============================================================
+   Surface Levels — visual hierarchy system
+   .surface-1  → page sections / subtle background tile
+   .surface-2  → standard cards
+   .surface-3  → elevated / hero cards (with glow + gradient border)
+   ============================================================ */
+
+.surface-1 {
+  background: linear-gradient(180deg,
+    oklch(98% 0.004 280 / 0.6),
+    oklch(96% 0.005 280 / 0.4));
+  border: 1px solid oklch(40% 0.22 280 / 0.06);
+  border-radius: 1rem;
+}
+
+:where([data-theme=dark]) .surface-1 {
+  background: linear-gradient(180deg,
+    oklch(13% 0.008 280 / 0.6),
+    oklch(11% 0.006 280 / 0.4));
+  border-color: oklch(55% 0.22 280 / 0.10);
+}
+
+.surface-2 {
+  position: relative;
+  background:
+    linear-gradient(180deg,
+      oklch(100% 0 0 / 0.92),
+      oklch(99% 0.008 280 / 0.78));
+  border: 1px solid oklch(40% 0.22 280 / 0.14);
+  border-radius: 1rem;
+  box-shadow:
+    0 1px 0 0 oklch(100% 0 0 / 0.85) inset,
+    0 6px 20px -6px oklch(40% 0.22 280 / 0.12),
+    0 2px 6px -2px oklch(40% 0.22 280 / 0.06);
+}
+
+:where([data-theme=dark]) .surface-2 {
+  background: linear-gradient(180deg,
+    oklch(20% 0.020 280 / 0.92),
+    oklch(15% 0.018 280 / 0.78));
+  border-color: oklch(55% 0.22 280 / 0.20);
+  box-shadow:
+    0 1px 0 0 oklch(100% 0 0 / 0.05) inset,
+    0 6px 20px -6px rgb(0 0 0 / 0.5),
+    0 2px 8px -2px rgb(0 0 0 / 0.3);
+}
+
+.surface-3 {
+  position: relative;
+  background:
+    linear-gradient(135deg,
+      oklch(100% 0 0 / 0.96),
+      oklch(98% 0.014 280 / 0.85));
+  border: 1px solid oklch(40% 0.22 280 / 0.22);
+  border-radius: 1.25rem;
+  box-shadow:
+    0 1px 0 0 oklch(100% 0 0 / 0.95) inset,
+    0 14px 36px -8px oklch(40% 0.22 280 / 0.25),
+    0 6px 16px -4px oklch(68% 0.20 25 / 0.10);
+}
+
+:where([data-theme=dark]) .surface-3 {
+  background: linear-gradient(135deg,
+    oklch(22% 0.025 280 / 0.94),
+    oklch(16% 0.022 280 / 0.82));
+  border-color: oklch(55% 0.22 280 / 0.34);
+  box-shadow:
+    0 1px 0 0 oklch(100% 0 0 / 0.08) inset,
+    0 18px 42px -8px oklch(55% 0.22 280 / 0.45),
+    0 6px 16px -4px oklch(72% 0.18 25 / 0.16);
+}
+
+/* Gradient accent bar on top of cards */
+.accent-top { position: relative; }
+
+.accent-top::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  border-radius: 1rem 1rem 0 0;
+  background: linear-gradient(90deg,
+    oklch(40% 0.22 280),
+    oklch(58% 0.20 310),
+    oklch(68% 0.18 25));
+  opacity: 0.85;
+  pointer-events: none;
+  z-index: 1;
+}
+
+:where([data-theme=dark]) .accent-top::before {
+  background: linear-gradient(90deg,
+    oklch(60% 0.22 280),
+    oklch(70% 0.20 310),
+    oklch(76% 0.18 25));
+}
+
+/* ============================================================
+   Ambient Page Background — blurred gradient blobs + mesh
+   Always-on layered backdrop so pages never feel flat.
+   ============================================================ */
+
+/* Body-level base color — flat, no fixed-attachment (avoids scroll jank).
+   The colorful mesh + dot pattern + blobs all live inside .ambient-bg
+   which is a single position:fixed layer — far cheaper to paint. */
+body {
+  background-color: var(--color-base-100);
+  position: relative;
+}
+
+/* Single fixed compositor layer — GPU composites this once, no repaints
+   on scroll. Mesh gradient + dot pattern + soft glow blobs all stack here. */
+.ambient-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  /* Promote to its own GPU layer */
+  transform: translateZ(0);
+  will-change: transform;
+
+  /* Multi-color radial mesh wash */
+  background-image:
+    radial-gradient(at 8% 4%,    oklch(50% 0.26 280 / 0.32) 0px, transparent 45%),
+    radial-gradient(at 92% 12%,  oklch(70% 0.22 25 / 0.28)  0px, transparent 50%),
+    radial-gradient(at 78% 88%,  oklch(75% 0.18 75 / 0.24)  0px, transparent 45%),
+    radial-gradient(at 14% 82%,  oklch(58% 0.24 310 / 0.26) 0px, transparent 50%);
+}
+
+:where([data-theme=dark]) .ambient-bg {
+  background-image:
+    radial-gradient(at 8% 4%,    oklch(60% 0.26 280 / 0.32) 0px, transparent 45%),
+    radial-gradient(at 92% 12%,  oklch(72% 0.20 25 / 0.24)  0px, transparent 50%),
+    radial-gradient(at 78% 88%,  oklch(78% 0.16 75 / 0.20)  0px, transparent 45%),
+    radial-gradient(at 14% 82%,  oklch(70% 0.24 310 / 0.24) 0px, transparent 50%);
+}
+
+/* Soft moving glow #1 (top-left indigo) — smaller blur, GPU-friendly */
+.ambient-bg::before {
+  content: '';
+  position: absolute;
+  top: -200px;
+  left: -180px;
+  width: 640px;
+  height: 640px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, oklch(50% 0.26 280 / 0.55), transparent 70%);
+  filter: blur(60px);
+  animation: float 14s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Soft moving glow #2 (bottom-right coral) */
+.ambient-bg::after {
+  content: '';
+  position: absolute;
+  bottom: -240px;
+  right: -200px;
+  width: 720px;
+  height: 720px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, oklch(70% 0.22 25 / 0.50), transparent 70%);
+  filter: blur(60px);
+  animation: float 18s ease-in-out infinite 2s;
+  will-change: transform;
+}
+
+:where([data-theme=dark]) .ambient-bg::before {
+  background: radial-gradient(circle, oklch(60% 0.26 280 / 0.50), transparent 70%);
+}
+
+:where([data-theme=dark]) .ambient-bg::after {
+  background: radial-gradient(circle, oklch(72% 0.22 25 / 0.40), transparent 70%);
+}
+
+/* Center amber blob (the .blob-accent span we render in the layout) */
+.ambient-bg .blob-accent {
+  position: absolute;
+  top: 35%;
+  left: 50%;
+  transform: translate(-50%, -10%) translateZ(0);
+  width: 560px;
+  height: 560px;
+  border-radius: 9999px;
+  filter: blur(60px);
+  background: radial-gradient(circle, oklch(75% 0.18 75 / 0.42), transparent 70%);
+  animation: float 22s ease-in-out infinite 4s;
+  will-change: transform;
+}
+
+:where([data-theme=dark]) .ambient-bg .blob-accent {
+  background: radial-gradient(circle, oklch(80% 0.16 75 / 0.34), transparent 70%);
+}
+
+/* ============================================================
+   Gradient text helper (for hero headlines)
+   ============================================================ */
+
+.text-gradient-brand {
+  background: linear-gradient(120deg,
+    oklch(40% 0.22 280) 0%,
+    oklch(55% 0.22 310) 50%,
+    oklch(68% 0.18 25) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+:where([data-theme=dark]) .text-gradient-brand {
+  background: linear-gradient(120deg,
+    oklch(70% 0.22 280) 0%,
+    oklch(75% 0.20 310) 50%,
+    oklch(80% 0.18 25) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ============================================================
+   Gradient buttons & glow
+   ============================================================ */
+
+.btn-gradient {
+  background: linear-gradient(120deg,
+    oklch(40% 0.22 280) 0%,
+    oklch(50% 0.22 310) 55%,
+    oklch(68% 0.18 25) 100%);
+  background-size: 180% 180%;
+  background-position: 0% 50%;
+  color: oklch(100% 0 0);
+  border: none;
+  box-shadow:
+    0 4px 14px -2px oklch(40% 0.22 280 / 0.35),
+    0 2px 6px -1px oklch(68% 0.18 25 / 0.18);
+  transition: background-position var(--duration-slow) var(--ease-out-expo),
+              box-shadow var(--duration-normal) var(--ease-out-expo),
+              transform var(--duration-fast) var(--ease-out-expo);
+}
+
+.btn-gradient:hover {
+  background-position: 100% 50%;
+  box-shadow:
+    0 8px 24px -4px oklch(40% 0.22 280 / 0.5),
+    0 4px 12px -2px oklch(68% 0.18 25 / 0.3);
+}
+
+.btn-gradient:active {
+  transform: scale(0.96);
+}
+
+:where([data-theme=dark]) .btn-gradient {
+  box-shadow:
+    0 4px 18px -2px oklch(55% 0.22 280 / 0.5),
+    0 2px 8px -1px oklch(72% 0.18 25 / 0.25);
+}
+
+/* Subtle gradient on default primary button */
+.btn-primary {
+  background: linear-gradient(120deg,
+    oklch(40% 0.22 280) 0%,
+    oklch(46% 0.22 295) 100%);
+  border-color: transparent;
+}
+
+:where([data-theme=dark]) .btn-primary {
+  background: linear-gradient(120deg,
+    oklch(55% 0.22 280) 0%,
+    oklch(60% 0.22 295) 100%);
+}
+
+/* ============================================================
+   Stat-icon gradient backgrounds
+   Use as background for the small icon tile inside stat cards.
+   ============================================================ */
+
+.icon-tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.85rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.icon-tile::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 0 1px oklch(100% 0 0 / 0.10) inset;
+  pointer-events: none;
+}
+
+.icon-tile-primary  { background: linear-gradient(135deg, oklch(40% 0.22 280 / 0.28), oklch(55% 0.22 295 / 0.16)); color: oklch(40% 0.22 280); box-shadow: 0 0 18px -4px oklch(40% 0.22 280 / 0.25); }
+.icon-tile-secondary{ background: linear-gradient(135deg, oklch(68% 0.18 25 / 0.30),  oklch(75% 0.16 35 / 0.16));   color: oklch(58% 0.20 25);  box-shadow: 0 0 18px -4px oklch(68% 0.18 25 / 0.30); }
+.icon-tile-accent   { background: linear-gradient(135deg, oklch(72% 0.15 75 / 0.32),  oklch(80% 0.14 85 / 0.16));   color: oklch(60% 0.16 75);  box-shadow: 0 0 18px -4px oklch(72% 0.15 75 / 0.30); }
+.icon-tile-info     { background: linear-gradient(135deg, oklch(52% 0.15 250 / 0.30), oklch(65% 0.14 240 / 0.16));  color: oklch(50% 0.15 250); box-shadow: 0 0 18px -4px oklch(52% 0.15 250 / 0.28); }
+.icon-tile-success  { background: linear-gradient(135deg, oklch(55% 0.16 155 / 0.30), oklch(65% 0.14 145 / 0.16));  color: oklch(50% 0.16 155); box-shadow: 0 0 18px -4px oklch(55% 0.16 155 / 0.28); }
+.icon-tile-warning  { background: linear-gradient(135deg, oklch(72% 0.14 82 / 0.32),  oklch(80% 0.12 70 / 0.16));   color: oklch(58% 0.16 70);  box-shadow: 0 0 18px -4px oklch(72% 0.14 82 / 0.30); }
+
+:where([data-theme=dark]) .icon-tile-primary  { color: oklch(78% 0.18 280); }
+:where([data-theme=dark]) .icon-tile-secondary{ color: oklch(82% 0.18 25);  }
+:where([data-theme=dark]) .icon-tile-accent   { color: oklch(85% 0.15 75);  }
+:where([data-theme=dark]) .icon-tile-info     { color: oklch(72% 0.16 250); }
+:where([data-theme=dark]) .icon-tile-success  { color: oklch(75% 0.16 155); }
+:where([data-theme=dark]) .icon-tile-warning  { color: oklch(82% 0.16 80);  }
+
+/* ============================================================
+   Stat card — polished card with gradient accent + hover glow
+   Pair with .accent-top::before (gradient line on top).
+   ============================================================ */
+
+.stat-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  background:
+    linear-gradient(180deg,
+      oklch(100% 0 0 / 0.95),
+      oklch(98% 0.012 280 / 0.82));
+  border: 1px solid oklch(40% 0.22 280 / 0.14);
+  box-shadow:
+    0 1px 0 0 oklch(100% 0 0 / 0.85) inset,
+    0 6px 18px -6px oklch(40% 0.22 280 / 0.14),
+    0 2px 6px -2px oklch(40% 0.22 280 / 0.06);
+  transition: transform var(--duration-fast) var(--ease-out-expo),
+              box-shadow var(--duration-normal) var(--ease-out-expo),
+              border-color var(--duration-normal) var(--ease-out-expo);
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  border-color: oklch(40% 0.22 280 / 0.30);
+  box-shadow:
+    0 1px 0 0 oklch(100% 0 0 / 0.9) inset,
+    0 18px 38px -10px oklch(40% 0.22 280 / 0.30),
+    0 6px 14px -4px oklch(68% 0.20 25 / 0.10);
+}
+
+:where([data-theme=dark]) .stat-card {
+  background: linear-gradient(180deg,
+    oklch(22% 0.022 280 / 0.92),
+    oklch(16% 0.020 280 / 0.78));
+  border-color: oklch(55% 0.22 280 / 0.22);
+  box-shadow:
+    0 1px 0 0 oklch(100% 0 0 / 0.06) inset,
+    0 6px 18px -6px rgb(0 0 0 / 0.45);
+}
+
+:where([data-theme=dark]) .stat-card:hover {
+  border-color: oklch(55% 0.22 280 / 0.40);
+  box-shadow:
+    0 1px 0 0 oklch(100% 0 0 / 0.10) inset,
+    0 18px 38px -10px oklch(55% 0.22 280 / 0.45),
+    0 6px 14px -4px oklch(72% 0.18 25 / 0.18);
+}
+
+/* ============================================================
+   Section divider — soft gradient line
+   ============================================================ */
+
+.divider-gradient {
+  height: 1px;
+  border: none;
+  background: linear-gradient(90deg,
+    transparent,
+    oklch(40% 0.22 280 / 0.25),
+    oklch(68% 0.18 25 / 0.20),
+    transparent);
+}
+
+:where([data-theme=dark]) .divider-gradient {
+  background: linear-gradient(90deg,
+    transparent,
+    oklch(55% 0.22 280 / 0.30),
+    oklch(72% 0.18 25 / 0.22),
+    transparent);
+}
+
+/* ============================================================
+   Table polish — zebra + hover highlight
+   ============================================================ */
+
+.table-fancy thead th {
+  background: linear-gradient(180deg,
+    oklch(40% 0.22 280 / 0.06),
+    transparent);
+  color: oklch(35% 0.10 280);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid oklch(40% 0.22 280 / 0.12);
+}
+
+.table-fancy tbody tr {
+  transition: background-color var(--duration-fast) var(--ease-out-expo);
+}
+
+.table-fancy tbody tr:nth-child(even) {
+  background: oklch(40% 0.22 280 / 0.025);
+}
+
+.table-fancy tbody tr:hover {
+  background: oklch(40% 0.22 280 / 0.07);
+}
+
+:where([data-theme=dark]) .table-fancy thead th {
+  background: linear-gradient(180deg,
+    oklch(55% 0.22 280 / 0.10),
+    transparent);
+  color: oklch(80% 0.10 280);
+  border-bottom-color: oklch(55% 0.22 280 / 0.18);
+}
+
+:where([data-theme=dark]) .table-fancy tbody tr:nth-child(even) {
+  background: oklch(55% 0.22 280 / 0.04);
+}
+
+:where([data-theme=dark]) .table-fancy tbody tr:hover {
+  background: oklch(55% 0.22 280 / 0.10);
+}
+
+/* ============================================================
+   Badge polish — subtle glow on important states
+   ============================================================ */
+
+.badge-glow-success {
+  background: oklch(55% 0.16 155 / 0.15);
+  color: oklch(45% 0.18 155);
+  border: 1px solid oklch(55% 0.16 155 / 0.35);
+  box-shadow: 0 0 12px -2px oklch(55% 0.16 155 / 0.35);
+}
+
+.badge-glow-warning {
+  background: oklch(72% 0.14 82 / 0.18);
+  color: oklch(50% 0.18 70);
+  border: 1px solid oklch(72% 0.14 82 / 0.40);
+  box-shadow: 0 0 12px -2px oklch(72% 0.14 82 / 0.35);
+}
+
+.badge-glow-primary {
+  background: oklch(40% 0.22 280 / 0.15);
+  color: oklch(40% 0.22 280);
+  border: 1px solid oklch(40% 0.22 280 / 0.35);
+  box-shadow: 0 0 12px -2px oklch(40% 0.22 280 / 0.35);
+}
+
+:where([data-theme=dark]) .badge-glow-success {
+  color: oklch(78% 0.16 155);
+  background: oklch(65% 0.16 155 / 0.18);
+  border-color: oklch(65% 0.16 155 / 0.40);
+}
+
+:where([data-theme=dark]) .badge-glow-warning {
+  color: oklch(82% 0.16 80);
+  background: oklch(80% 0.16 82 / 0.18);
+  border-color: oklch(80% 0.16 82 / 0.40);
+}
+
+:where([data-theme=dark]) .badge-glow-primary {
+  color: oklch(78% 0.18 280);
+  background: oklch(60% 0.22 280 / 0.20);
+  border-color: oklch(60% 0.22 280 / 0.40);
+}
+
+/* ============================================================
+   Navigation Active Indicator
+   ============================================================ */
+
+.nav-link-active {
+  position: relative;
+  color: oklch(40% 0.22 280);
+  background: oklch(40% 0.22 280 / 0.08);
+}
+
+.nav-link-active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  border-radius: 0 4px 4px 0;
+  background: oklch(40% 0.22 280);
+  transition: height var(--duration-fast) var(--ease-out-expo);
+}
+
+:where([data-theme=dark]) .nav-link-active {
+  color: oklch(70% 0.18 280);
+  background: oklch(55% 0.22 280 / 0.1);
+}
+
+:where([data-theme=dark]) .nav-link-active::before {
+  background: oklch(55% 0.22 280);
+}
+
+/* ============================================================
+   Flash / Notification Animations
+   ============================================================ */
+
+.toast {
+  animation: slideInRight var(--duration-normal) var(--ease-out-expo) both;
+}
+
+/* ============================================================
+   Accessibility: Respect reduced motion preference
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .reveal, .reveal-scale, .reveal-left, .reveal-right {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .page-enter {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+}
+
+/* ============================================================
+   Google Places Autocomplete Styling
+   ============================================================ */
+
 .pac-container {
   z-index: 10000 !important;
   background-color: oklch(100% 0 0);
@@ -303,6 +1280,7 @@ a, button, .btn, .card, .badge, .collapse, input, select, textarea,
   color: oklch(25% 0.005 280);
   border-top: 1px solid oklch(94% 0.003 280);
   cursor: pointer;
+  transition: background-color var(--duration-micro) var(--ease-out-expo);
 }
 
 .pac-item:first-child {
@@ -345,7 +1323,10 @@ a, button, .btn, .card, .badge, .collapse, input, select, textarea,
   color: oklch(55% 0.22 280);
 }
 
-/* Scrollbar styling */
+/* ============================================================
+   Scrollbar Styling
+   ============================================================ */
+
 :where([data-theme=dark]) {
   scrollbar-color: oklch(25% 0 0) transparent;
 }

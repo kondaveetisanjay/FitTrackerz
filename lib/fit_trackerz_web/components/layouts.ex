@@ -44,9 +44,9 @@ defmodule FitTrackerzWeb.Layouts do
         <input id="sidebar-toggle" type="checkbox" class="drawer-toggle" />
 
         <%!-- Main Content Area --%>
-        <div class="drawer-content flex flex-col min-h-screen bg-base-100">
-          <%!-- Top Navbar (mobile + desktop) --%>
-          <header class="navbar bg-base-100 border-b border-base-300/50 px-4 lg:px-6 sticky top-0 z-30">
+        <div class="drawer-content flex flex-col min-h-screen bg-transparent">
+          <%!-- Top Navbar (mobile + desktop) — glass surface --%>
+          <header class="navbar px-4 lg:px-6 sticky top-0 z-30 backdrop-blur-xl bg-base-100/70 border-b border-primary/10 shadow-[0_1px_0_0_oklch(100%_0_0_/_0.4)_inset]">
             <div class="flex-none lg:hidden">
               <label
                 for="sidebar-toggle"
@@ -57,30 +57,30 @@ defmodule FitTrackerzWeb.Layouts do
               </label>
             </div>
             <div class="flex-1 lg:flex-none lg:hidden">
-              <.brand_logo class="h-10 w-auto" />
+              <.brand_logo class="h-10 w-auto" dumbbell={true} />
             </div>
             <div class="flex-1 hidden lg:block"></div>
             <div class="flex-none flex items-center gap-3">
               <.theme_toggle />
               <div class="dropdown dropdown-end">
-                <div tabindex="0" role="button" class="btn btn-ghost btn-sm gap-2">
-                  <div class="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center">
-                    <span class="text-xs font-bold text-primary">
+                <div tabindex="0" role="button" class="btn btn-ghost btn-sm gap-2 rounded-full pl-1 pr-3 hover:bg-primary/10">
+                  <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 icon-tile icon-tile-primary">
+                    <span class="text-xs font-bold">
                       {String.first(@current_user.name || "U")}
                     </span>
                   </div>
-                  <span class="hidden sm:inline text-sm font-medium">{@current_user.name}</span>
+                  <span class="hidden sm:inline text-sm font-semibold">{@current_user.name}</span>
                   <.icon name="hero-chevron-down-mini" class="size-3 opacity-50" />
                 </div>
                 <ul
                   tabindex="0"
-                  class="dropdown-content menu bg-base-200 rounded-box z-50 w-52 p-2 shadow-lg border border-base-300"
+                  class="dropdown-content menu surface-2 rounded-box z-50 w-56 p-2 mt-2"
                 >
                   <li class="menu-title text-xs">
                     {format_role(@user_role)}
                   </li>
                   <li>
-                    <a href="/sign-out" class="text-error">
+                    <a href="/sign-out" class="text-error font-medium">
                       <.icon name="hero-arrow-right-on-rectangle" class="size-4" /> Sign Out
                     </a>
                   </li>
@@ -91,34 +91,44 @@ defmodule FitTrackerzWeb.Layouts do
 
           <%!-- Page Content --%>
           <main class="flex-1 p-4 sm:p-6 lg:p-8">
-            <div class="max-w-7xl mx-auto">
-              {render_slot(@inner_block)}
+            <div id="main-content" class="max-w-7xl mx-auto" phx-hook="PageTransition">
+              <div id="scroll-reveal-root" phx-hook="ScrollReveal">
+                {render_slot(@inner_block)}
+              </div>
             </div>
           </main>
         </div>
 
-        <%!-- Sidebar --%>
+        <%!-- Sidebar — gradient-tinted glass panel --%>
         <div class="drawer-side z-40">
           <label for="sidebar-toggle" aria-label="Close menu" class="drawer-overlay"></label>
-          <aside class="w-72 min-h-full bg-base-200 border-r border-base-300/50 flex flex-col">
+          <aside class="w-72 min-h-full flex flex-col relative
+                        bg-gradient-to-b from-base-200/95 via-base-200/85 to-base-100/80
+                        backdrop-blur-xl border-r border-primary/15
+                        shadow-[1px_0_0_0_oklch(100%_0_0_/_0.3)_inset]">
+            <%!-- Subtle inner glow line --%>
+            <div class="pointer-events-none absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-primary/20 to-transparent"></div>
+
             <%!-- Sidebar Header --%>
-            <div class="p-5 border-b border-base-300/50">
-              <a href="/dashboard">
-                <.brand_logo class="h-10 w-auto" />
+            <div class="p-5 pb-7 border-b border-primary/10">
+              <a href="/dashboard" class="block">
+                <.brand_logo class="h-10 w-auto" dumbbell={true} />
               </a>
-              <p class="text-xs text-base-content/40 mt-1">{format_role(@user_role)} Portal</p>
+              <p class="text-xs text-base-content/50 mt-4 font-semibold uppercase tracking-wider">
+                {format_role(@user_role)} Portal
+              </p>
             </div>
 
             <%!-- Navigation Links --%>
-            <nav class="flex-1 p-4 space-y-1">
+            <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
               <.sidebar_nav role={@user_role} />
             </nav>
 
             <%!-- Sidebar Footer --%>
-            <div class="p-4 border-t border-base-300/50">
-              <div class="flex items-center gap-3 px-3 py-2">
-                <div class="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
-                  <span class="text-sm font-bold text-primary">
+            <div class="p-4 border-t border-primary/10">
+              <div class="flex items-center gap-3 px-3 py-2 rounded-xl bg-primary/5 border border-primary/10">
+                <div class="w-9 h-9 rounded-full icon-tile icon-tile-primary shrink-0">
+                  <span class="text-sm font-bold">
                     {String.first(@current_user.name || "U")}
                   </span>
                 </div>
@@ -132,15 +142,15 @@ defmodule FitTrackerzWeb.Layouts do
         </div>
       </div>
     <% else %>
-      <%!-- Public layout (no sidebar) --%>
-      <header class="navbar px-4 sm:px-6 lg:px-8">
+      <%!-- Public layout (no sidebar) — glass navbar over ambient bg --%>
+      <header class="navbar px-4 sm:px-6 lg:px-8 sticky top-0 z-30 backdrop-blur-xl bg-base-100/70 border-b border-primary/10">
         <div class="flex-1">
           <a href="/" class="flex-1 flex w-fit items-center gap-2">
-            <.brand_logo class="h-10 w-auto" />
+            <.brand_logo class="h-10 w-auto" dumbbell={true} />
           </a>
         </div>
         <div class="flex-none">
-          <ul class="flex flex-column px-1 space-x-4 items-center">
+          <ul class="flex flex-column px-1 space-x-2 sm:space-x-4 items-center">
             <li>
               <a href="/explore" class="btn btn-ghost btn-sm font-semibold">Explore Gyms</a>
             </li>
@@ -151,15 +161,17 @@ defmodule FitTrackerzWeb.Layouts do
               <.theme_toggle />
             </li>
             <li>
-              <a href="/sign-in" class="btn btn-primary btn-sm">Sign In</a>
+              <a href="/sign-in" class="btn btn-gradient btn-sm font-semibold">Sign In</a>
             </li>
           </ul>
         </div>
       </header>
 
-      <main class="px-4 py-20 sm:px-6 lg:px-8">
-        <div class="mx-auto max-w-4xl space-y-4">
-          {render_slot(@inner_block)}
+      <main class="px-4 py-16 sm:px-6 lg:px-8">
+        <div id="main-content-public" class="mx-auto max-w-5xl space-y-4" phx-hook="PageTransition">
+          <div id="scroll-reveal-public" phx-hook="ScrollReveal">
+            {render_slot(@inner_block)}
+          </div>
         </div>
       </main>
     <% end %>
@@ -258,9 +270,13 @@ defmodule FitTrackerzWeb.Layouts do
     ~H"""
     <a
       href={@href}
-      class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-base-content/70 hover:text-base-content hover:bg-base-300/50"
+      class="group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-base-content/70
+             hover:text-primary hover:bg-gradient-to-r hover:from-primary/10 hover:to-secondary/5
+             border border-transparent hover:border-primary/15 transition-all"
     >
-      <.icon name={@icon} class="size-5 shrink-0" />
+      <span class="size-7 shrink-0 rounded-lg flex items-center justify-center group-hover:icon-tile group-hover:icon-tile-primary transition-colors">
+        <.icon name={@icon} class="size-5" />
+      </span>
       <span>{@label}</span>
     </a>
     """
