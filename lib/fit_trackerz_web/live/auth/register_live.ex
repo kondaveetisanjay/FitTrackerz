@@ -141,6 +141,18 @@ defmodule FitTrackerzWeb.Auth.RegisterLive do
               autocomplete="new-password"
             />
 
+            <div class="form-control w-full">
+              <label class="label" for="user_role">
+                <span class="label-text font-medium">I am a</span>
+              </label>
+              <select name="user[role]" id="user_role" class="select select-bordered w-full" required>
+                <option value="" disabled selected>Select your role...</option>
+                <option value="member">Member — I want to join a gym</option>
+                <option value="trainer">Trainer — I train clients at a gym</option>
+                <option value="gym_operator">Gym Operator — I own or manage a gym</option>
+              </select>
+            </div>
+
             <.button type="submit" variant="primary" class="btn btn-primary w-full gap-2 font-semibold text-base rounded-xl mt-2">
               <.icon name="hero-rocket-launch-mini" class="size-5" />
               Create Account

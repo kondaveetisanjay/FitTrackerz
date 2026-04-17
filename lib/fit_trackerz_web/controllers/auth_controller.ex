@@ -94,7 +94,7 @@ defmodule FitTrackerzWeb.AuthController do
 
   defp redirect_for_user(user, activity) do
     if registration?(activity) do
-      {~p"/choose-role", "Account created! Please choose your role."}
+      {dashboard_path_for_role(user.role), "Account created! Welcome to FitTrackerz."}
     else
       {dashboard_path_for_role(user.role), "Welcome back, #{user.name}!"}
     end
