@@ -234,7 +234,7 @@ defmodule FitTrackerzWeb.Explore.GymListLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
       <div class="space-y-6">
         <.page_header title="Explore Gyms" subtitle="Discover gyms near you, compare prices & services -- all in one place." />
 

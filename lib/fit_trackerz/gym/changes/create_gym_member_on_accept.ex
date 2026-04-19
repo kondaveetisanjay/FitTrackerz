@@ -19,12 +19,14 @@ defmodule FitTrackerz.Gym.Changes.CreateGymMemberOnAccept do
               {:error, _} -> nil
             end
 
+          system_actor = SystemActor.system_actor()
+
           if existing do
             # Membership already exists — update branch if provided
             if invitation.branch_id do
               existing
-              |> Ash.Changeset.for_update(:update, %{branch_id: invitation.branch_id})
-              |> Ash.update(actor: SystemActor.system_actor())
+              |> Ash.Changeset.for_update(:update, %{branch_id: invitation.branch_id}, actor: system_actor)
+              |> Ash.update(actor: system_actor)
             end
           else
             params = %{
@@ -38,8 +40,8 @@ defmodule FitTrackerz.Gym.Changes.CreateGymMemberOnAccept do
                 else: params
 
             FitTrackerz.Gym.GymMember
-            |> Ash.Changeset.for_create(:create, params)
-            |> Ash.create(actor: SystemActor.system_actor())
+            |> Ash.Changeset.for_create(:create, params, actor: system_actor)
+            |> Ash.create(actor: system_actor)
           end
 
           {:ok, invitation}

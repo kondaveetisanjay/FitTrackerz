@@ -18,8 +18,7 @@ defmodule FitTrackerzWeb.Member.AttendanceLive do
            memberships: [],
            attendance_records: [],
            total_count: 0,
-           no_gym: true,
-           gym_tier: :free
+           no_gym: true
          )}
 
       memberships ->
@@ -30,20 +29,13 @@ defmodule FitTrackerzWeb.Member.AttendanceLive do
           _ -> []
         end
 
-        gym_tier =
-          case memberships do
-            [m | _] -> if m.gym, do: m.gym.tier, else: :free
-            _ -> :free
-          end
-
         {:ok,
          assign(socket,
            page_title: "Attendance",
            memberships: memberships,
            attendance_records: attendance_records,
            total_count: length(attendance_records),
-           no_gym: false,
-           gym_tier: gym_tier
+           no_gym: false
          )}
     end
   end
@@ -67,16 +59,8 @@ defmodule FitTrackerzWeb.Member.AttendanceLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
-      <.page_header title="Attendance History" subtitle="Track your gym check-in history." back_path="/member">
-        <:actions>
-          <%= if @gym_tier == :premium do %>
-            <.button variant="primary" size="sm" icon="hero-qr-code" navigate="/member/qr-code">
-              My QR Code
-            </.button>
-          <% end %>
-        </:actions>
-      </.page_header>
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
+      <.page_header title="Attendance History" subtitle="Track your gym check-in history." back_path="/member" />
 
       <%= if @no_gym do %>
         <.empty_state

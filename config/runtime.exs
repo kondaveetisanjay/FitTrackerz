@@ -42,7 +42,7 @@ if System.get_env("PHX_SERVER") do
 end
 
 config :fit_trackerz, FitTrackerzWeb.Endpoint,
-  http: [port: String.to_integer(System.get_env("PORT", "4000"))]
+  http: [port: String.to_integer(System.get_env("PORT", "3000"))]
 
 # Google Maps API key for reverse geocoding (precise location names)
 config :fit_trackerz, :google_maps_api_key, System.get_env("GOOGLE_MAPS_API_KEY")

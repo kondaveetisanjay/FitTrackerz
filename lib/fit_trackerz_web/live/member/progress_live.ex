@@ -228,7 +228,7 @@ defmodule FitTrackerzWeb.Member.ProgressLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
       <.page_header title="My Progress" subtitle="Track your fitness journey over time." back_path="/member" />
 
       <%= if @no_gym do %>

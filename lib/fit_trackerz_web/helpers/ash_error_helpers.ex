@@ -25,7 +25,21 @@ defmodule FitTrackerzWeb.AshErrorHelpers do
   def user_friendly_message(_), do: "Something went wrong. Please try again."
 
   defp format_error(%Ash.Error.Changes.InvalidAttribute{field: field, message: message}) do
-    "#{humanize(field)} #{message}"
+    cond do
+      is_nil(message) or message == "" ->
+        "#{humanize(field)} is invalid"
+
+      # If message is already a full sentence (starts with capital letter), show as-is
+      String.match?(message, ~r/^[A-Z]/) ->
+        message
+
+      true ->
+        "#{humanize(field)} #{message}"
+    end
+  end
+
+  defp format_error(%Ash.Error.Changes.InvalidChanges{message: message}) when is_binary(message) do
+    message
   end
 
   defp format_error(%Ash.Error.Changes.Required{field: field}) do

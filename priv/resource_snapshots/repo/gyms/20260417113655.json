@@ -21,7 +21,7 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "token",
+      "source": "name",
       "type": "text"
     },
     {
@@ -33,8 +33,8 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "expires_at",
-      "type": "utc_datetime"
+      "source": "slug",
+      "type": "citext"
     },
     {
       "allow_nil?": true,
@@ -45,12 +45,12 @@
       "references": null,
       "scale": null,
       "size": null,
-      "source": "used_at",
-      "type": "utc_datetime"
+      "source": "description",
+      "type": "text"
     },
     {
       "allow_nil?": false,
-      "default": "\"active\"",
+      "default": "\"pending_verification\"",
       "generated?": false,
       "precision": null,
       "primary_key?": false,
@@ -59,6 +59,60 @@
       "size": null,
       "source": "status",
       "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "false",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "is_promoted",
+      "type": "boolean"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "phone",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "[]",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "equipment",
+      "type": [
+        "array",
+        "text"
+      ]
+    },
+    {
+      "allow_nil?": true,
+      "default": "[]",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "services",
+      "type": [
+        "array",
+        "text"
+      ]
     },
     {
       "allow_nil?": false,
@@ -103,114 +157,38 @@
           "global": null,
           "strategy": null
         },
-        "name": "training_qr_check_ins_gym_member_id_fkey",
-        "on_delete": "delete",
+        "name": "gyms_owner_id_fkey",
+        "on_delete": "restrict",
         "on_update": null,
         "primary_key?": true,
         "schema": "public",
-        "table": "gym_members"
+        "table": "users"
       },
       "scale": null,
       "size": null,
-      "source": "gym_member_id",
-      "type": "uuid"
-    },
-    {
-      "allow_nil?": true,
-      "default": "nil",
-      "generated?": false,
-      "precision": null,
-      "primary_key?": false,
-      "references": {
-        "deferrable": false,
-        "destination_attribute": "id",
-        "destination_attribute_default": null,
-        "destination_attribute_generated": null,
-        "index?": false,
-        "match_type": null,
-        "match_with": null,
-        "multitenancy": {
-          "attribute": null,
-          "global": null,
-          "strategy": null
-        },
-        "name": "training_qr_check_ins_gym_branch_id_fkey",
-        "on_delete": "nilify",
-        "on_update": null,
-        "primary_key?": true,
-        "schema": "public",
-        "table": "gym_branches"
-      },
-      "scale": null,
-      "size": null,
-      "source": "gym_branch_id",
+      "source": "owner_id",
       "type": "uuid"
     }
   ],
   "base_filter": null,
   "check_constraints": [],
   "create_table_options": null,
-  "custom_indexes": [
-    {
-      "all_tenants?": false,
-      "concurrently": false,
-      "error_fields": [
-        "gym_member_id"
-      ],
-      "fields": [
-        {
-          "type": "atom",
-          "value": "gym_member_id"
-        }
-      ],
-      "include": null,
-      "message": null,
-      "name": null,
-      "nulls_distinct": true,
-      "prefix": null,
-      "table": null,
-      "unique": false,
-      "using": null,
-      "where": null
-    },
-    {
-      "all_tenants?": false,
-      "concurrently": false,
-      "error_fields": [
-        "token"
-      ],
-      "fields": [
-        {
-          "type": "atom",
-          "value": "token"
-        }
-      ],
-      "include": null,
-      "message": null,
-      "name": null,
-      "nulls_distinct": true,
-      "prefix": null,
-      "table": null,
-      "unique": false,
-      "using": null,
-      "where": null
-    }
-  ],
+  "custom_indexes": [],
   "custom_statements": [],
   "has_create_action": true,
-  "hash": "D048BEC4480E0358008015187644B9AEE4965F05AC40225DF70AB86C098462BE",
+  "hash": "C2E4839E8067FB701C31A56421B16556BB2BA2B03F77341752547C6F797EFD60",
   "identities": [
     {
       "all_tenants?": false,
       "base_filter": null,
-      "index_name": "training_qr_check_ins_unique_token_index",
+      "index_name": "gyms_unique_slug_index",
       "keys": [
         {
           "type": "atom",
-          "value": "token"
+          "value": "slug"
         }
       ],
-      "name": "unique_token",
+      "name": "unique_slug",
       "nils_distinct?": true,
       "where": null
     }
@@ -222,5 +200,5 @@
   },
   "repo": "Elixir.FitTrackerz.Repo",
   "schema": null,
-  "table": "training_qr_check_ins"
+  "table": "gyms"
 }

@@ -253,23 +253,6 @@ const CsvDownload = {
   }
 }
 
-// Notification badge hook - updates unread count via PubSub
-const NotificationBadge = {
-  mounted() {
-    this.handleEvent("notification_count", ({count}) => {
-      this.updateBadge(count)
-    })
-  },
-  updateBadge(count) {
-    if (count > 0) {
-      this.el.textContent = count > 9 ? "9+" : count
-      this.el.classList.remove("hidden")
-    } else {
-      this.el.classList.add("hidden")
-    }
-  }
-}
-
 // Password visibility toggle hook
 const PasswordVisibilityToggle = {
   mounted() {
@@ -420,39 +403,11 @@ const SidebarCollapse = {
   }
 }
 
-// QR Code hook – renders QR codes from URL data attribute
-const QrCode = {
-  mounted() {
-    this.renderQR()
-  },
-  updated() {
-    this.renderQR()
-  },
-  async renderQR() {
-    const url = this.el.dataset.url
-    if (url) {
-      try {
-        const QRCode = await import("qrcode")
-        const canvas = document.createElement("canvas")
-        await QRCode.toCanvas(canvas, url, {
-          width: 256,
-          margin: 2,
-          color: { dark: "#1e293b", light: "#ffffff" }
-        })
-        this.el.innerHTML = ""
-        this.el.appendChild(canvas)
-      } catch (e) {
-        this.el.innerHTML = '<p class="text-error text-sm">Failed to render QR code</p>'
-      }
-    }
-  }
-}
-
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {Geolocation, BranchGeolocation, PlacesAutocomplete, ExplorePlacesAutocomplete, PasswordVisibilityToggle, ChartHook, NotificationBadge, ScrollToBottom, AutoResize, CsvDownload, CommandPalette, SidebarCollapse, QrCode},
+  hooks: {Geolocation, BranchGeolocation, PlacesAutocomplete, ExplorePlacesAutocomplete, PasswordVisibilityToggle, ChartHook, ScrollToBottom, AutoResize, CsvDownload, CommandPalette, SidebarCollapse},
 })
 
 // Show progress bar on live navigation and form submits – use new primary blue

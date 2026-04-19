@@ -43,3 +43,6 @@ npm-debug.log
 .env
 
 .superpowers/
+
+# Playwright MCP test artifacts
+/.playwright-mcp/

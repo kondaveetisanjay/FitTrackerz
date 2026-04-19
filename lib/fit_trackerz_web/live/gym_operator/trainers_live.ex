@@ -170,9 +170,9 @@ defmodule FitTrackerzWeb.GymOperator.TrainersLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
       <div class="space-y-6">
-        <.page_header title="Trainers" subtitle="Manage your gym trainers and invite new ones." back_path="/gym">
+        <.page_header title="Trainers" subtitle="Manage your gym trainers and invite new ones." back_path="/gym/dashboard">
           <:actions>
             <%= if @gym do %>
               <.button variant="primary" size="sm" icon="hero-academic-cap-mini" phx-click="toggle_invite" id="toggle-trainer-invite-btn">Invite Trainer</.button>
@@ -203,7 +203,6 @@ defmodule FitTrackerzWeb.GymOperator.TrainersLive do
                       type="email"
                       label="Email Address"
                       placeholder="trainer@example.com"
-                      required
                     />
                   </div>
                   <div class="mb-2">

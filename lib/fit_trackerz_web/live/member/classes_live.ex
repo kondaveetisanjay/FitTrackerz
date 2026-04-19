@@ -126,7 +126,7 @@ defmodule FitTrackerzWeb.Member.ClassesLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
       <.page_header title="Browse Classes" subtitle="Discover and book upcoming classes at your gyms." back_path="/member" />
 
       <%= if @no_gym do %>

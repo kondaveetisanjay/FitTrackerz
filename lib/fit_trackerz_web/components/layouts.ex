@@ -18,6 +18,8 @@ defmodule FitTrackerzWeb.Layouts do
 
   attr :current_user, :map, default: nil, doc: "the current authenticated user"
 
+  attr :unread_notification_count, :integer, default: 0
+
   slot :inner_block, required: true
 
   def app(assigns) do
@@ -54,7 +56,7 @@ defmodule FitTrackerzWeb.Layouts do
               </button>
             </div>
             <div class="flex-none flex items-center gap-3">
-              <.notification_bell current_user={@current_user} />
+              <.notification_bell current_user={@current_user} count={@unread_notification_count} />
               <.theme_toggle />
               <.user_menu current_user={@current_user} user_role={@user_role} />
             </div>
@@ -112,31 +114,9 @@ defmodule FitTrackerzWeb.Layouts do
       />
     <% else %>
       <%!-- Public layout --%>
-      <header class="navbar bg-base-100/80 backdrop-blur-lg border-b border-base-300/30 sticky top-0 z-30 px-4 sm:px-6 lg:px-8">
-        <div class="flex-1">
-          <a href="/" class="flex items-center gap-2">
-            <.brand_logo class="h-10 w-auto" />
-          </a>
-        </div>
-        <div class="flex-none">
-          <ul class="flex items-center gap-1 sm:gap-2">
-            <li>
-              <a href="/explore" class="btn btn-ghost btn-sm font-medium">Explore Gyms</a>
-            </li>
-            <li class="hidden sm:block">
-              <a href="/explore/contests" class="btn btn-ghost btn-sm font-medium">Contests</a>
-            </li>
-            <li>
-              <.theme_toggle />
-            </li>
-            <li>
-              <a href="/sign-in" class="btn btn-primary btn-sm rounded-xl">Sign In</a>
-            </li>
-          </ul>
-        </div>
-      </header>
+      <.public_navbar />
 
-      <main class="px-4 py-10 sm:px-6 lg:px-8">
+      <main class="pt-24 px-4 pb-10 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-5xl">
           {render_slot(@inner_block)}
         </div>
@@ -332,6 +312,7 @@ defmodule FitTrackerzWeb.Layouts do
   # ────────────────────────────────────────────────────────
 
   attr :current_user, :map, required: true
+  attr :count, :integer, default: 0
 
   def notification_bell(assigns) do
     ~H"""
@@ -343,11 +324,11 @@ defmodule FitTrackerzWeb.Layouts do
     >
       <.icon name="hero-bell" class="size-5" />
       <span
+        :if={@count > 0}
         id="notification-badge"
-        class="badge badge-xs badge-error absolute -top-0.5 -right-0.5 hidden"
-        phx-hook="NotificationBadge"
-        data-user-id={@current_user.id}
+        class="badge badge-xs badge-error absolute -top-0.5 -right-0.5"
       >
+        {if @count > 9, do: "9+", else: @count}
       </span>
     </a>
     """
@@ -456,17 +437,178 @@ defmodule FitTrackerzWeb.Layouts do
   end
 
   # ────────────────────────────────────────────────────────
+  # Public Navbar (shared across all public pages)
+  # ────────────────────────────────────────────────────────
+
+  def public_navbar(assigns) do
+    ~H"""
+    <nav class="navbar bg-base-100/90 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 border-b border-base-300/50 px-4 sm:px-6 lg:px-8">
+      <div class="flex-1">
+        <a href="/">
+          <.brand_logo class="h-10 w-auto" />
+        </a>
+      </div>
+
+      <%!-- Desktop Menu --%>
+      <div class="flex-none hidden lg:flex items-center gap-3">
+        <%!-- Solutions Dropdown --%>
+        <div class="dropdown dropdown-hover">
+          <label tabindex="0" class="btn btn-ghost btn-sm font-semibold">
+            Solutions
+            <.icon name="hero-chevron-down" class="size-4 ml-1" />
+          </label>
+          <ul
+            tabindex="0"
+            class="dropdown-content menu p-2 shadow-lg bg-base-200 rounded-box w-56 mt-1 border border-base-300/50"
+          >
+            <li>
+              <a href="/solutions/members" class="flex items-center gap-3 py-3">
+                <.icon name="hero-user-solid" class="size-5 text-accent" />
+                <div>
+                  <div class="font-semibold">For Members</div>
+                  <div class="text-xs text-base-content/60">Find your perfect gym</div>
+                </div>
+              </a>
+            </li>
+            <li>
+              <a href="/solutions/trainers" class="flex items-center gap-3 py-3">
+                <.icon name="hero-academic-cap-solid" class="size-5 text-secondary" />
+                <div>
+                  <div class="font-semibold">For Trainers</div>
+                  <div class="text-xs text-base-content/60">Grow your training business</div>
+                </div>
+              </a>
+            </li>
+            <li>
+              <a href="/solutions/operators" class="flex items-center gap-3 py-3">
+                <.icon name="hero-building-office-2-solid" class="size-5 text-primary" />
+                <div>
+                  <div class="font-semibold">For Gym Operators</div>
+                  <div class="text-xs text-base-content/60">Manage your gym efficiently</div>
+                </div>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <a href="/about" class="btn btn-ghost btn-sm font-semibold">About Us</a>
+        <a href="/explore" class="btn btn-ghost btn-sm font-semibold">Explore Gyms</a>
+        <a href="/explore/contests" class="btn btn-ghost btn-sm font-semibold">Contests</a>
+        <.theme_toggle />
+        <a href="/sign-in" class="btn btn-ghost btn-sm font-semibold">Sign In</a>
+        <a href="/register" class="btn btn-primary btn-sm font-bold">Get Started</a>
+      </div>
+
+      <%!-- Mobile Menu Button --%>
+      <div class="flex-none lg:hidden">
+        <button
+          id="mobile-menu-btn"
+          class="btn btn-ghost btn-square btn-sm"
+          aria-label="Open menu"
+        >
+          <.icon name="hero-bars-3" class="size-6" />
+        </button>
+      </div>
+    </nav>
+
+    <%!-- Mobile Menu Overlay --%>
+    <div
+      id="mobile-menu"
+      class="fixed inset-0 z-40 bg-base-100 transform translate-x-full transition-transform duration-300 lg:hidden"
+    >
+      <div class="flex flex-col h-full">
+        <%!-- Mobile Menu Header --%>
+        <div class="flex items-center justify-between p-4 border-b border-base-300">
+          <a href="/">
+            <.brand_logo class="h-10 w-auto" />
+          </a>
+          <button
+            id="mobile-menu-close"
+            class="btn btn-ghost btn-square btn-sm"
+            aria-label="Close menu"
+          >
+            <.icon name="hero-x-mark" class="size-6" />
+          </button>
+        </div>
+
+        <%!-- Mobile Menu Links --%>
+        <div class="flex-1 overflow-y-auto p-4">
+          <div class="space-y-2">
+            <%!-- Solutions Expandable --%>
+            <details class="collapse collapse-arrow bg-base-200 rounded-box">
+              <summary class="collapse-title font-semibold">Solutions</summary>
+              <div class="collapse-content space-y-2">
+                <a
+                  href="/solutions/members"
+                  class="flex items-center gap-3 p-3 hover:bg-base-300 rounded-lg"
+                >
+                  <.icon name="hero-user-solid" class="size-5 text-accent" />
+                  <div>
+                    <div class="font-semibold text-sm">For Members</div>
+                    <div class="text-xs text-base-content/60">Find your perfect gym</div>
+                  </div>
+                </a>
+                <a
+                  href="/solutions/trainers"
+                  class="flex items-center gap-3 p-3 hover:bg-base-300 rounded-lg"
+                >
+                  <.icon name="hero-academic-cap-solid" class="size-5 text-secondary" />
+                  <div>
+                    <div class="font-semibold text-sm">For Trainers</div>
+                    <div class="text-xs text-base-content/60">Grow your training business</div>
+                  </div>
+                </a>
+                <a
+                  href="/solutions/operators"
+                  class="flex items-center gap-3 p-3 hover:bg-base-300 rounded-lg"
+                >
+                  <.icon name="hero-building-office-2-solid" class="size-5 text-primary" />
+                  <div>
+                    <div class="font-semibold text-sm">For Gym Operators</div>
+                    <div class="text-xs text-base-content/60">Manage your gym efficiently</div>
+                  </div>
+                </a>
+              </div>
+            </details>
+
+            <a href="/about" class="btn btn-ghost btn-block justify-start font-semibold">
+              About Us
+            </a>
+            <a href="/explore" class="btn btn-ghost btn-block justify-start font-semibold">
+              Explore Gyms
+            </a>
+            <a href="/explore/contests" class="btn btn-ghost btn-block justify-start font-semibold">
+              Contests
+            </a>
+            <a href="/sign-in" class="btn btn-ghost btn-block justify-start font-semibold">
+              Sign In
+            </a>
+            <a href="/register" class="btn btn-primary btn-block font-bold">Get Started</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
+  # ────────────────────────────────────────────────────────
   # Helpers
   # ────────────────────────────────────────────────────────
 
-  defp notification_path(%{role: :gym_operator}), do: "/gym/notifications"
-  defp notification_path(%{role: :trainer}), do: "/trainer/notifications"
-  defp notification_path(%{role: :platform_admin}), do: "/admin/notifications"
-  defp notification_path(_), do: "/member/notifications"
+  defp notification_path(user) do
+    case get_user_role(user) do
+      :gym_operator -> "/gym/notifications"
+      :trainer -> "/trainer/notifications"
+      :platform_admin -> "/admin/notifications"
+      _ -> "/member/notifications"
+    end
+  end
 
   defp get_user_role(nil), do: :member
   defp get_user_role(%{role: role}) when is_atom(role), do: role
   defp get_user_role(%{role: role}) when is_binary(role), do: String.to_existing_atom(role)
+  defp get_user_role(%{"role" => role}) when is_binary(role), do: String.to_existing_atom(role)
+  defp get_user_role(%{"role" => role}) when is_atom(role), do: role
   defp get_user_role(_), do: :member
 
   defp format_role(:platform_admin), do: "Platform Admin"

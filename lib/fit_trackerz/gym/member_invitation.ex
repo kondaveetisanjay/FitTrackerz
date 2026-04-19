@@ -35,7 +35,25 @@ defmodule FitTrackerz.Gym.MemberInvitation do
       authorize_if always()
     end
 
-    policy action_type([:create, :update, :destroy]) do
+    policy action_type([:create, :destroy]) do
+      authorize_if actor_attribute_equals(:role, :gym_operator)
+    end
+
+    policy action(:accept) do
+      authorize_if actor_attribute_equals(:role, :member)
+      authorize_if actor_attribute_equals(:role, :gym_operator)
+    end
+
+    policy action(:reject) do
+      authorize_if actor_attribute_equals(:role, :member)
+      authorize_if actor_attribute_equals(:role, :gym_operator)
+    end
+
+    policy action(:expire) do
+      authorize_if actor_attribute_equals(:role, :gym_operator)
+    end
+
+    policy action(:update) do
       authorize_if actor_attribute_equals(:role, :gym_operator)
     end
   end

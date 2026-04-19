@@ -74,6 +74,22 @@ defmodule FitTrackerzWeb.GymOperator.SetupLive do
     end
   end
 
+  @impl true
+  def handle_params(params, _uri, socket) do
+    step =
+      case Integer.parse(params["step"] || "") do
+        {n, _} when n in 1..3 -> n
+        _ -> socket.assigns.current_step
+      end
+
+    edit_photos = params["edit_photos"] == "1" and socket.assigns.branch != nil
+
+    {:noreply,
+     socket
+     |> assign(:current_step, step)
+     |> assign(:editing_location, edit_photos or socket.assigns.editing_location)}
+  end
+
   # ── Step Navigation Events ──
 
   @impl true
@@ -121,11 +137,11 @@ defmodule FitTrackerzWeb.GymOperator.SetupLive do
            %{equipment: socket.assigns.selected_equipment, services: socket.assigns.selected_services},
            actor: actor
          ) do
-      {:ok, updated_gym} ->
+      {:ok, _updated_gym} ->
         {:noreply,
          socket
-         |> put_flash(:info, "Equipment and services saved!")
-         |> assign(gym: updated_gym)}
+         |> put_flash(:info, "Gym setup complete!")
+         |> push_navigate(to: ~p"/gym/dashboard")}
 
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Failed to save equipment and services.")}
@@ -414,12 +430,12 @@ defmodule FitTrackerzWeb.GymOperator.SetupLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
       <div class="space-y-8">
         <.page_header
           title={if @gym, do: "My Gym", else: "Setup Your Gym"}
           subtitle={if @gym, do: "Manage your gym profile and location.", else: "Create your gym to get started."}
-          back_path="/gym"
+          back_path="/gym/dashboard"
         />
 
         <%= if @gym do %>
@@ -455,13 +471,11 @@ defmodule FitTrackerzWeb.GymOperator.SetupLive do
                     field={@form[:name]}
                     label="Gym Name"
                     placeholder="Enter gym name"
-                    required
                   />
                   <.input
                     field={@form[:slug]}
                     label="Slug (URL-friendly)"
                     placeholder="e.g. iron-paradise"
-                    required
                   />
                 </div>
                 <.input
@@ -545,25 +559,21 @@ defmodule FitTrackerzWeb.GymOperator.SetupLive do
                     field={@location_form[:address]}
                     label="Address"
                     placeholder="123 Main St"
-                    required
                   />
                   <.input
                     field={@location_form[:city]}
                     label="City"
                     placeholder="Mumbai"
-                    required
                   />
                   <.input
                     field={@location_form[:state]}
                     label="State"
                     placeholder="Maharashtra"
-                    required
                   />
                   <.input
                     field={@location_form[:postal_code]}
                     label="Postal Code"
                     placeholder="400001"
-                    required
                   />
                 </div>
 
@@ -867,13 +877,11 @@ defmodule FitTrackerzWeb.GymOperator.SetupLive do
                   field={@form[:name]}
                   label="Gym Name"
                   placeholder="e.g. Iron Paradise Fitness"
-                  required
                 />
                 <.input
                   field={@form[:slug]}
                   label="Slug (URL-friendly)"
                   placeholder="e.g. iron-paradise"
-                  required
                 />
               </div>
               <.input

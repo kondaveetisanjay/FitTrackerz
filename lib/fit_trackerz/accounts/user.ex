@@ -29,7 +29,7 @@ defmodule FitTrackerz.Accounts.User do
         hash_provider(AshAuthentication.BcryptProvider)
         confirmation_required?(true)
 
-        register_action_accept([:name])
+        register_action_accept([:name, :role])
       end
     end
   end

@@ -57,8 +57,15 @@ defmodule FitTrackerz.Gym.ClientAssignmentRequest do
       prepare build(load: [:gym, :requested_by, member: [:user]])
     end
 
+    read :list_pending_by_gym do
+      argument :gym_id, :uuid, allow_nil?: false
+      filter expr(gym_id == ^arg(:gym_id) and status == :pending)
+      prepare build(load: [:gym, :requested_by, member: [:user], trainer: [:user]])
+    end
+
     create :create do
       accept([:gym_id, :member_id, :trainer_id, :requested_by_id])
+      change(FitTrackerz.Gym.Changes.NotifyTrainerOnAssignmentRequest)
     end
 
     update :accept do

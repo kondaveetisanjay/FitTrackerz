@@ -121,8 +121,8 @@ defmodule FitTrackerzWeb.Trainer.AttendanceLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
-      <.page_header title="Attendance" subtitle="Track and manage client attendance records." back_path="/trainer">
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
+      <.page_header title="Attendance" subtitle="Track and manage client attendance records." back_path="/trainer/dashboard">
         <:actions>
           <%= unless @no_gym do %>
             <.button variant="primary" size="sm" icon="hero-plus" phx-click="toggle_form" id="toggle-attendance-form-btn">

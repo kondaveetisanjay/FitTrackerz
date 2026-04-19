@@ -51,24 +51,6 @@ defmodule FitTrackerzWeb.Admin.GymsLive do
   end
 
   @impl true
-  def handle_event("toggle_tier", %{"id" => gym_id}, socket) do
-    actor = socket.assigns.current_user
-
-    case FitTrackerz.Gym.get_gym(gym_id, actor: actor) do
-      {:ok, gym} ->
-        new_tier = if gym.tier == :free, do: :premium, else: :free
-
-        case Ash.update(gym, %{tier: new_tier}, action: :upgrade_tier, authorize?: false) do
-          {:ok, _} -> {:noreply, reload_gyms(socket)}
-          {:error, _} -> {:noreply, put_flash(socket, :error, "Failed to update tier.")}
-        end
-
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Gym not found.")}
-    end
-  end
-
-  @impl true
   def handle_event("toggle_promoted", %{"id" => gym_id}, socket) do
     actor = socket.assigns.current_user
 
@@ -118,7 +100,7 @@ defmodule FitTrackerzWeb.Admin.GymsLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
       <.page_header title="Gyms" subtitle={"#{length(@gyms)} total gyms on the platform"} back_path="/admin/dashboard" />
 
       <%= if Enum.empty?(@gyms) do %>
@@ -154,11 +136,6 @@ defmodule FitTrackerzWeb.Admin.GymsLive do
                 </.badge>
               </div>
             </:col>
-            <:col :let={gym} label="Tier">
-              <.badge variant={if(gym.tier == :premium, do: "primary", else: "neutral")} size="sm">
-                {if gym.tier == :premium, do: "Premium", else: "Free"}
-              </.badge>
-            </:col>
             <:col :let={gym} label="Locations">
               <span class="font-semibold" id={"gym-location-#{gym.id}"}>{count_loaded(gym.branches)}</span>
             </:col>
@@ -176,9 +153,6 @@ defmodule FitTrackerzWeb.Admin.GymsLive do
                   <span>{count_loaded(gym.branches)} locations</span>
                   <span>{count_loaded(gym.gym_members)} members</span>
                   <.badge :if={gym.is_promoted} variant="warning" size="sm">Promoted</.badge>
-                  <.badge variant={if(gym.tier == :premium, do: "primary", else: "neutral")} size="sm">
-                    {if gym.tier == :premium, do: "Premium", else: "Free"}
-                  </.badge>
                 </div>
               </div>
             </:mobile_card>
@@ -191,7 +165,6 @@ defmodule FitTrackerzWeb.Admin.GymsLive do
                     icon="hero-shield-check-mini"
                     phx-click="verify_gym"
                     phx-value-id={gym.id}
-                    id={"verify-gym-#{gym.id}"}
                   >
                     Verify
                   </.button>
@@ -204,7 +177,6 @@ defmodule FitTrackerzWeb.Admin.GymsLive do
                     icon="hero-no-symbol-mini"
                     phx-click="suspend_gym"
                     phx-value-id={gym.id}
-                    id={"suspend-gym-#{gym.id}"}
                   >
                     Suspend
                   </.button>
@@ -217,7 +189,6 @@ defmodule FitTrackerzWeb.Admin.GymsLive do
                     icon="hero-arrow-path-mini"
                     phx-click="verify_gym"
                     phx-value-id={gym.id}
-                    id={"unsuspend-gym-#{gym.id}"}
                   >
                     Reinstate
                   </.button>
@@ -229,25 +200,12 @@ defmodule FitTrackerzWeb.Admin.GymsLive do
                   icon={if(gym.is_promoted, do: "hero-star-solid", else: "hero-star")}
                   phx-click="toggle_promoted"
                   phx-value-id={gym.id}
-                  id={"toggle-promoted-#{gym.id}"}
                 >
                   <%= if gym.is_promoted do %>
                     Unpromote
                   <% else %>
                     Promote
                   <% end %>
-                </.button>
-
-                <.button
-                  variant={if(gym.tier == :free, do: "primary", else: "ghost")}
-                  size="sm"
-                  icon={if(gym.tier == :free, do: "hero-arrow-up-circle", else: "hero-arrow-down-circle")}
-                  phx-click="toggle_tier"
-                  phx-value-id={gym.id}
-                  data-confirm={if(gym.tier == :free, do: "Upgrade this gym to Premium?", else: "Downgrade this gym to Free tier?")}
-                  id={"toggle-tier-#{gym.id}"}
-                >
-                  {if gym.tier == :free, do: "Upgrade", else: "Downgrade"}
                 </.button>
               </div>
             </:actions>

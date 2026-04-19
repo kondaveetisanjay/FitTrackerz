@@ -504,7 +504,7 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
       <div class="space-y-8">
         <.page_header
           title={case @view do
@@ -517,7 +517,7 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
             :wizard -> "Step #{@wizard_step} of 3"
             _ -> "Manage subscription plans for your gym."
           end}
-          back_path={if @view == :detail, do: nil, else: "/gym"}
+          back_path={if @view == :detail, do: nil, else: "/gym/dashboard"}
         >
           <:actions>
             <%= if @view == :detail do %>
@@ -752,7 +752,7 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
     <div>
       <h2 class="text-lg font-bold mb-1">Set Prices</h2>
       <p class="text-base-content/50 text-sm mb-6">
-        Enter the price (in &#8377;) for each combination.
+        Enter the price (in ₹) for each combination.
       </p>
 
       <div class="space-y-8">
@@ -766,7 +766,7 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
               <thead>
                 <tr class="text-base-content/40 text-xs">
                   <th>Duration</th>
-                  <th :for={{_v, label} <- @wiz_selected_types}>{label} (&#8377;)</th>
+                  <th :for={{_v, label} <- @wiz_selected_types}>{label} (₹)</th>
                 </tr>
               </thead>
               <tbody>
@@ -834,7 +834,7 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
           phx-submit="update_plan"
         >
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <.input field={@edit_form[:name]} label="Plan Name" required />
+            <.input field={@edit_form[:name]} label="Plan Name" />
             <.input field={@edit_form[:category]} label="Category" />
             <.input
               field={@edit_form[:plan_type]}
@@ -845,7 +845,6 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
                 {"General", "general"},
                 {"Personal Training", "personal_training"}
               ]}
-              required
             />
             <.input
               field={@edit_form[:duration]}
@@ -860,13 +859,11 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
                 {"12 Months", "annual"},
                 {"24 Months", "two_year"}
               ]}
-              required
             />
             <.input
               field={@edit_form[:price_in_rupees]}
               type="number"
               label="Price (in Rupees)"
-              required
             />
           </div>
           <div class="flex gap-2 mt-4">
@@ -897,7 +894,7 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
               <p class="font-semibold text-sm">{format_duration(plan.duration)}</p>
               <div class="flex items-center gap-2">
                 <span class="font-black text-primary text-lg">
-                  &#8377;{format_price(plan.price_in_paise)}
+                  ₹{format_price(plan.price_in_paise)}
                 </span>
                 <div class="flex gap-0.5">
                   <.button variant="ghost" size="sm" phx-click="edit_plan" phx-value-id={plan.id} id={"edit-#{plan.id}"} class="text-info">
@@ -928,7 +925,7 @@ defmodule FitTrackerzWeb.GymOperator.PlansLive do
               <p class="font-semibold text-sm">{format_duration(plan.duration)}</p>
               <div class="flex items-center gap-2">
                 <span class="font-black text-primary text-lg">
-                  &#8377;{format_price(plan.price_in_paise)}
+                  ₹{format_price(plan.price_in_paise)}
                 </span>
                 <div class="flex gap-0.5">
                   <.button variant="ghost" size="sm" phx-click="edit_plan" phx-value-id={plan.id} id={"edit-#{plan.id}"} class="text-info">

@@ -24,9 +24,9 @@ defmodule FitTrackerzWeb.Trainer.ReportsLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
       <div class="space-y-6">
-        <.page_header title="Reports" subtitle="Generate and export detailed reports" back_path="/trainer" />
+        <.page_header title="Reports" subtitle="Generate and export detailed reports" back_path="/trainer/dashboard" />
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <.link

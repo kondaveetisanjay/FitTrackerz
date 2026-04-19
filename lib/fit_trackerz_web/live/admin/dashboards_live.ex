@@ -480,7 +480,7 @@ defmodule FitTrackerzWeb.Admin.DashboardsLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
       <.page_header title="Platform Dashboards" subtitle="Platform-wide performance metrics" back_path="/admin/dashboard" />
 
       <%!-- Date Range Controls --%>

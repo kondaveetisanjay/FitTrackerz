@@ -19,7 +19,6 @@ defmodule FitTrackerzWeb.Member.LeaderboardLive do
          assign(socket,
            page_title: "Leaderboard",
            no_gym: true,
-           is_premium: false,
            leaders: [],
            active_tab: :attendance,
            period: :month
@@ -28,12 +27,8 @@ defmodule FitTrackerzWeb.Member.LeaderboardLive do
       memberships ->
         membership = List.first(memberships)
         gym = membership.gym
-        is_premium = gym.tier == :premium
 
-        leaders =
-          if is_premium,
-            do: Leaderboard.attendance_leaders(gym.id, :month),
-            else: []
+        leaders = Leaderboard.attendance_leaders(gym.id, :month)
 
         {:ok,
          assign(socket,
@@ -41,7 +36,6 @@ defmodule FitTrackerzWeb.Member.LeaderboardLive do
            no_gym: false,
            membership: membership,
            gym: gym,
-           is_premium: is_premium,
            leaders: leaders,
            active_tab: :attendance,
            period: :month
@@ -96,22 +90,13 @@ defmodule FitTrackerzWeb.Member.LeaderboardLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
       <.page_header title="Leaderboard" subtitle={"Rankings for #{if assigns[:gym], do: @gym.name, else: "your gym"}"} back_path="/member/dashboard" />
 
       <%= if @no_gym do %>
         <.empty_state icon="hero-building-office-2" title="No Gym Membership" subtitle="Join a gym to see leaderboards." />
       <% else %>
-        <%= if !@is_premium do %>
-          <.card>
-            <.empty_state
-              icon="hero-lock-closed"
-              title="Premium Feature"
-              subtitle="Leaderboards are available for Premium gyms. Ask your gym operator to upgrade."
-            />
-          </.card>
-        <% else %>
-          <div class="space-y-4">
+        <div class="space-y-4">
             <%!-- Tab buttons --%>
             <div class="flex gap-2">
               <%= for tab <- [:attendance, :workouts, :streaks] do %>
@@ -181,8 +166,7 @@ defmodule FitTrackerzWeb.Member.LeaderboardLive do
                 </div>
               <% end %>
             </.card>
-          </div>
-        <% end %>
+        </div>
       <% end %>
     </Layouts.app>
     """

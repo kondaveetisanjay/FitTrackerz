@@ -52,7 +52,7 @@ defmodule FitTrackerzWeb.ChooseRoleLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
       <div class="min-h-[70vh] flex items-center justify-center">
         <div class="max-w-4xl w-full space-y-8">
           <%!-- Welcome Header --%>

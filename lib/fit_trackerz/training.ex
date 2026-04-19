@@ -56,12 +56,5 @@ defmodule FitTrackerz.Training do
       define :get_exercise_pr, args: [:member_id, :exercise_name], action: :list_by_member_exercise
       define :create_workout_log_entry, action: :create
     end
-
-    resource FitTrackerz.Training.QrCheckIn do
-      define :generate_qr_check_in, action: :generate
-      define :get_qr_check_in_by_token, args: [:token], action: :get_by_token
-      define :list_qr_check_ins_by_member, args: [:gym_member_id], action: :list_by_member
-      define :redeem_qr_check_in, action: :redeem
-    end
   end
 end

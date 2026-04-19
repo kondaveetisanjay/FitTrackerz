@@ -281,7 +281,7 @@ defmodule FitTrackerzWeb.Member.DietLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
       <div class="space-y-8">
         <.page_header
           title="My Diet Plans"

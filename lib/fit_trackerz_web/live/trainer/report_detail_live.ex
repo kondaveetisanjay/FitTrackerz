@@ -217,7 +217,7 @@ defmodule FitTrackerzWeb.Trainer.ReportDetailLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
       <div class="space-y-6" id="report-detail" phx-hook="CsvDownload">
         <.page_header title={@report_name} subtitle={@gym.name} back_path="/trainer/reports">
           <:actions>

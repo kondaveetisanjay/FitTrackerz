@@ -127,8 +127,8 @@ defmodule FitTrackerzWeb.Trainer.ClientsLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
-      <.page_header title="My Clients" subtitle="View and manage your assigned members." back_path="/trainer" />
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
+      <.page_header title="My Clients" subtitle="View and manage your assigned members." back_path="/trainer/dashboard" />
 
       <%= if @no_gym do %>
         <.empty_state

@@ -521,10 +521,10 @@ defmodule FitTrackerzWeb.GymOperator.DashboardsLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
       <div class="space-y-6">
         <%= if @gym do %>
-          <.page_header title="Dashboards" subtitle={"Performance metrics for #{@gym.name}"} back_path="/gym" />
+          <.page_header title="Dashboards" subtitle={"Performance metrics for #{@gym.name}"} back_path="/gym/dashboard" />
 
           <%!-- Date Range Card --%>
           <.card>
@@ -578,7 +578,7 @@ defmodule FitTrackerzWeb.GymOperator.DashboardsLive do
             />
             <.stat_card
               label="Revenue"
-              value={"&#8377;#{format_currency(@revenue_total)}"}
+              value={"₹#{format_currency(@revenue_total)}"}
               icon="hero-currency-rupee-solid"
               color="success"
             />
@@ -623,7 +623,7 @@ defmodule FitTrackerzWeb.GymOperator.DashboardsLive do
             />
           </div>
         <% else %>
-          <.page_header title="Dashboards" subtitle="Performance metrics" back_path="/gym" />
+          <.page_header title="Dashboards" subtitle="Performance metrics" back_path="/gym/dashboard" />
           <.empty_state
             icon="hero-building-office"
             title="No Gym Found"

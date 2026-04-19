@@ -181,7 +181,7 @@ defmodule FitTrackerzWeb.Member.PhotosLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
       <.page_header title="Progress Photos" subtitle="Track your transformation visually." back_path="/member/progress" />
 
       <%= if @no_gym do %>
@@ -213,7 +213,7 @@ defmodule FitTrackerzWeb.Member.PhotosLive do
 
                 <div class="flex flex-wrap gap-4 items-end">
                   <div>
-                    <.input field={@form[:taken_on]} type="date" label="Date" required />
+                    <.input field={@form[:taken_on]} type="date" label="Date" />
                   </div>
                   <div>
                     <.input field={@form[:category]} type="select" label="Category" options={[

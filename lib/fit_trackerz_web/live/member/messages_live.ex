@@ -231,6 +231,8 @@ defmodule FitTrackerzWeb.Member.MessagesLive do
     {:noreply, assign(socket, conversations: conversations)}
   end
 
+  def handle_info(_msg, socket), do: {:noreply, socket}
+
   # Private helpers
 
   defp open_conversation(socket, conversation, actor) do
@@ -250,12 +252,14 @@ defmodule FitTrackerzWeb.Member.MessagesLive do
 
     messages = load_messages(conversation, actor)
     mark_conversation_read(conversation, actor)
+    conversations = load_conversations(actor, socket.assigns.tab)
 
     {:noreply,
      socket
      |> assign(
        active_conversation: conversation,
        active_messages: messages,
+       conversations: conversations,
        message_body: "",
        show_new_direct: false
      )
@@ -277,11 +281,13 @@ defmodule FitTrackerzWeb.Member.MessagesLive do
 
     messages = load_messages(conversation, actor)
     mark_conversation_read(conversation, actor)
+    conversations = load_conversations(actor, socket.assigns.tab)
 
     socket
     |> assign(
       active_conversation: conversation,
       active_messages: messages,
+      conversations: conversations,
       message_body: ""
     )
     |> push_event("scroll_to_bottom", %{})
@@ -364,7 +370,16 @@ defmodule FitTrackerzWeb.Member.MessagesLive do
       {:ok, participants} ->
         case Enum.find(participants, &(&1.user_id == actor.id)) do
           nil -> :ok
-          participant -> Messaging.mark_participant_read(participant, actor: actor)
+          participant ->
+            result = Messaging.mark_participant_read(participant, actor: actor)
+
+            Phoenix.PubSub.broadcast(
+              FitTrackerz.PubSub,
+              "messaging:user:#{actor.id}",
+              {:conversation_read, conversation.id}
+            )
+
+            result
         end
 
       _ ->
@@ -499,7 +514,7 @@ defmodule FitTrackerzWeb.Member.MessagesLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
       <div class="flex flex-col h-[calc(100vh-8rem)]">
         <.page_header title="Messages" subtitle="Chat with your trainer and gym." back_path="/member" />
 
