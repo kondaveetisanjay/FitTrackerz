@@ -38,8 +38,7 @@ defmodule FitTrackerzWeb.Member.DashboardLive do
         calorie_target: nil,
         workout_streak: 0,
         attendance_streak: 0,
-        milestones: [],
-        gym_tier: :free
+        milestones: []
       )
     else
       member_ids = Enum.map(memberships, & &1.id)
@@ -112,25 +111,34 @@ defmodule FitTrackerzWeb.Member.DashboardLive do
           _ -> []
         end
 
-      workout_streak_val =
+      stored_workout_streak =
         case Enum.find(streaks, &(&1.streak_type == :workout)) do
           %{current_streak: s} -> s
           _ -> 0
         end
 
-      attendance_streak_val =
+      stored_attendance_streak =
         case Enum.find(streaks, &(&1.streak_type == :attendance)) do
           %{current_streak: s} -> s
           _ -> 0
         end
+
+      attendance_streak_live =
+        attendance_records
+        |> Enum.map(&DateTime.to_date(&1.attended_at))
+        |> Enum.uniq()
+        |> Enum.sort(Date)
+        |> Enum.reverse()
+        |> count_streak(Date.utc_today(), 0)
+
+      workout_streak_val = max(streak_count, stored_workout_streak)
+      attendance_streak_val = max(attendance_streak_live, stored_attendance_streak)
 
       milestones =
         case FitTrackerz.Gamification.list_milestones_by_member(membership.id, actor: actor) do
           {:ok, m} -> m
           _ -> []
         end
-
-      gym_tier = membership.gym.tier
 
       socket
       |> assign(
@@ -148,8 +156,7 @@ defmodule FitTrackerzWeb.Member.DashboardLive do
         calorie_target: calorie_target,
         workout_streak: workout_streak_val,
         attendance_streak: attendance_streak_val,
-        milestones: milestones,
-        gym_tier: gym_tier
+        milestones: milestones
       )
     end
   end
@@ -221,7 +228,7 @@ defmodule FitTrackerzWeb.Member.DashboardLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
       <div class="space-y-8">
         <%!-- Welcome Header --%>
         <.card>
@@ -241,14 +248,9 @@ defmodule FitTrackerzWeb.Member.DashboardLive do
               <.button variant="ghost" size="sm" icon="hero-arrow-trending-up" navigate="/member/progress">
                 Progress
               </.button>
-              <.button variant="ghost" size="sm" icon="hero-qr-code" navigate="/member/qr-code">
-                My QR Code
+              <.button variant="ghost" size="sm" icon="hero-trophy" navigate="/member/leaderboard">
+                Leaderboard
               </.button>
-              <%= if @gym_tier == :premium do %>
-                <.button variant="ghost" size="sm" icon="hero-trophy" navigate="/member/leaderboard">
-                  Leaderboard
-                </.button>
-              <% end %>
             </div>
           </div>
         </.card>

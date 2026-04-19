@@ -262,9 +262,9 @@ defmodule FitTrackerzWeb.GymOperator.ContestsLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
       <div class="space-y-6">
-        <.page_header title="Contests" subtitle="Create and manage fitness contests for your gym." back_path="/gym">
+        <.page_header title="Contests" subtitle="Create and manage fitness contests for your gym." back_path="/gym/dashboard">
           <:actions>
             <%= if @gym do %>
               <.button variant="primary" size="sm" icon="hero-plus-mini" phx-click="toggle_form" id="toggle-contest-form">New Contest</.button>

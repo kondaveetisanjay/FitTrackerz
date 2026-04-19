@@ -14,6 +14,7 @@ defmodule FitTrackerzWeb.GymOperator.MembersLive do
         subscriptions = load_subscriptions(gym.id, actor)
         sub_map = build_sub_map(subscriptions)
         trainers = load_trainers(gym.id, actor)
+        pending_assignments = load_pending_assignments(gym.id, actor)
 
         invite_form = to_form(%{"email" => ""}, as: "invite")
 
@@ -27,13 +28,15 @@ defmodule FitTrackerzWeb.GymOperator.MembersLive do
            subscriptions: subscriptions,
            sub_map: sub_map,
            trainers: trainers,
+           pending_assignments: pending_assignments,
            invite_form: invite_form,
            show_invite: false,
            assigning_member_id: nil,
            assigning_trainer_member_id: nil,
            search: "",
            filter_status: "all",
-           filter_trainer: "all"
+           filter_trainer: "all",
+           filter_payment: "all"
          )}
 
       _ ->
@@ -46,6 +49,7 @@ defmodule FitTrackerzWeb.GymOperator.MembersLive do
            subscriptions: [],
            sub_map: %{},
            trainers: [],
+           pending_assignments: %{},
            invite_form: nil,
            show_invite: false,
            assigning_member_id: nil,
@@ -53,6 +57,7 @@ defmodule FitTrackerzWeb.GymOperator.MembersLive do
            search: "",
            filter_status: "all",
            filter_trainer: "all",
+           filter_payment: "all",
            all_members: []
          )}
     end
@@ -79,6 +84,13 @@ defmodule FitTrackerzWeb.GymOperator.MembersLive do
     {:noreply,
      socket
      |> assign(filter_trainer: trainer_id)
+     |> apply_member_filters()}
+  end
+
+  def handle_event("filter_payment", %{"payment" => payment}, socket) do
+    {:noreply,
+     socket
+     |> assign(filter_payment: payment)
      |> apply_member_filters()}
   end
 
@@ -169,11 +181,12 @@ defmodule FitTrackerzWeb.GymOperator.MembersLive do
       }, actor: actor) do
         {:ok, _request} ->
           members = load_members(gym.id, actor)
+          pending_assignments = load_pending_assignments(gym.id, actor)
 
           {:noreply,
            socket
            |> put_flash(:info, "Trainer assignment request sent! The trainer needs to accept.")
-           |> assign(all_members: members, assigning_trainer_member_id: nil)
+           |> assign(all_members: members, pending_assignments: pending_assignments, assigning_trainer_member_id: nil)
            |> apply_member_filters()}
 
         {:error, error} ->
@@ -311,8 +324,42 @@ defmodule FitTrackerzWeb.GymOperator.MembersLive do
       |> filter_members_by_search(socket.assigns.search)
       |> filter_members_by_status(socket.assigns.filter_status)
       |> filter_members_by_trainer(socket.assigns.filter_trainer)
+      |> filter_members_by_payment(socket.assigns.filter_payment, socket.assigns.sub_map)
 
     assign(socket, members: members)
+  end
+
+  defp filter_members_by_payment(members, "all", _sub_map), do: members
+  defp filter_members_by_payment(members, "paid", sub_map) do
+    Enum.filter(members, fn m ->
+      case Map.get(sub_map, m.id) do
+        %{payment_status: :paid} -> true
+        _ -> false
+      end
+    end)
+  end
+  defp filter_members_by_payment(members, "pending", sub_map) do
+    Enum.filter(members, fn m ->
+      case Map.get(sub_map, m.id) do
+        %{payment_status: :pending} -> true
+        _ -> false
+      end
+    end)
+  end
+  defp filter_members_by_payment(members, "no_plan", sub_map) do
+    Enum.filter(members, fn m -> Map.get(sub_map, m.id) == nil end)
+  end
+  defp filter_members_by_payment(members, _, _sub_map), do: members
+
+  defp payment_counts(members, sub_map) do
+    Enum.reduce(members, %{paid: 0, pending: 0, no_plan: 0}, fn m, acc ->
+      case Map.get(sub_map, m.id) do
+        %{payment_status: :paid} -> Map.update!(acc, :paid, &(&1 + 1))
+        %{payment_status: :pending} -> Map.update!(acc, :pending, &(&1 + 1))
+        nil -> Map.update!(acc, :no_plan, &(&1 + 1))
+        _ -> acc
+      end
+    end)
   end
 
   defp filter_members_by_search(members, ""), do: members
@@ -348,6 +395,13 @@ defmodule FitTrackerzWeb.GymOperator.MembersLive do
     case FitTrackerz.Billing.list_plans_by_gym(gym_id, actor: actor) do
       {:ok, plans} -> plans
       _ -> []
+    end
+  end
+
+  defp load_pending_assignments(gym_id, actor) do
+    case FitTrackerz.Gym.list_pending_assignments_by_gym(gym_id, actor: actor) do
+      {:ok, requests} -> Map.new(requests, &{&1.member_id, &1})
+      _ -> %{}
     end
   end
 
@@ -470,9 +524,9 @@ defmodule FitTrackerzWeb.GymOperator.MembersLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
       <div class="space-y-6">
-        <.page_header title="Members" subtitle="Manage gym memberships, plans, and payments." back_path="/gym">
+        <.page_header title="Members" subtitle="Manage gym memberships, plans, and payments." back_path="/gym/dashboard">
           <:actions>
             <%= if @gym do %>
               <.button variant="primary" size="sm" icon="hero-user-plus-mini" phx-click="toggle_invite" id="toggle-invite-btn">Invite Member</.button>
@@ -512,6 +566,8 @@ defmodule FitTrackerzWeb.GymOperator.MembersLive do
               </.form>
             </.card>
           <% end %>
+
+          <% pay_counts = payment_counts(@all_members, @sub_map) %>
 
           <%!-- Search & Filter --%>
           <.filter_bar search_placeholder="Search by name or email..." search_value={@search} on_search="search">
@@ -558,6 +614,47 @@ defmodule FitTrackerzWeb.GymOperator.MembersLive do
               </div>
             </:filter>
           </.filter_bar>
+
+          <%!-- Payment Filter --%>
+          <div class="flex flex-wrap items-center gap-2 -mt-2">
+            <span class="text-xs text-base-content/50 uppercase font-semibold mr-1">Payment:</span>
+            <.button
+              variant={if(@filter_payment == "all", do: "primary", else: "ghost")}
+              size="sm"
+              phx-click="filter_payment"
+              phx-value-payment="all"
+              id="filter-payment-all"
+            >
+              All <.badge variant="neutral" size="sm">{length(@all_members)}</.badge>
+            </.button>
+            <.button
+              variant={if(@filter_payment == "paid", do: "primary", else: "ghost")}
+              size="sm"
+              phx-click="filter_payment"
+              phx-value-payment="paid"
+              id="filter-payment-paid"
+            >
+              Paid <.badge variant="success" size="sm">{pay_counts.paid}</.badge>
+            </.button>
+            <.button
+              variant={if(@filter_payment == "pending", do: "primary", else: "ghost")}
+              size="sm"
+              phx-click="filter_payment"
+              phx-value-payment="pending"
+              id="filter-payment-pending"
+            >
+              Pending <.badge variant="warning" size="sm">{pay_counts.pending}</.badge>
+            </.button>
+            <.button
+              variant={if(@filter_payment == "no_plan", do: "primary", else: "ghost")}
+              size="sm"
+              phx-click="filter_payment"
+              phx-value-payment="no_plan"
+              id="filter-payment-no-plan"
+            >
+              No Plan <.badge variant="neutral" size="sm">{pay_counts.no_plan}</.badge>
+            </.button>
+          </div>
 
           <%!-- Members Table --%>
           <.card title="All Members" subtitle={"#{length(@members)} members"}>
@@ -608,13 +705,23 @@ defmodule FitTrackerzWeb.GymOperator.MembersLive do
                           <% end %>
                         </td>
                         <td>
-                          <%= if member.assigned_trainer && member.assigned_trainer.user do %>
-                            <div class="flex items-center gap-2">
-                              <.avatar name={member.assigned_trainer.user.name || "T"} size="sm" />
-                              <span class="text-sm">{member.assigned_trainer.user.name}</span>
-                            </div>
-                          <% else %>
-                            <%= if @assigning_trainer_member_id == member.id do %>
+                          <% pending_req = Map.get(@pending_assignments, member.id) %>
+                          <%= cond do %>
+                            <% member.assigned_trainer && member.assigned_trainer.user -> %>
+                              <div class="flex items-center gap-2">
+                                <.avatar name={member.assigned_trainer.user.name || "T"} size="sm" />
+                                <span class="text-sm">{member.assigned_trainer.user.name}</span>
+                              </div>
+                            <% pending_req && pending_req.trainer && pending_req.trainer.user -> %>
+                              <div class="flex items-center gap-2">
+                                <.avatar name={pending_req.trainer.user.name || "T"} size="sm" />
+                                <div class="flex flex-col leading-tight">
+                                  <span class="text-sm">{pending_req.trainer.user.name}</span>
+                                  <.badge variant="warning" size="sm">Pending</.badge>
+                                </div>
+                              </div>
+                            <% true -> %>
+                              <%= if @assigning_trainer_member_id == member.id do %>
                               <form phx-submit="assign_trainer" class="flex items-center gap-1" id={"trainer-form-#{member.id}"}>
                                 <input type="hidden" name="member_id" value={member.id} />
                                 <select

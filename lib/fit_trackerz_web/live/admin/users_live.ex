@@ -97,7 +97,7 @@ defmodule FitTrackerzWeb.Admin.UsersLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
       <.page_header title="Users" subtitle={"#{length(@users)} total users on the platform"} back_path="/admin/dashboard" />
 
       <%= if Enum.empty?(@users) do %>

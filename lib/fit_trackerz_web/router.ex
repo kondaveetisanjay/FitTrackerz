@@ -26,6 +26,11 @@ defmodule FitTrackerzWeb.Router do
     get "/solutions/members", PageController, :solutions_members
     get "/solutions/trainers", PageController, :solutions_trainers
     get "/solutions/operators", PageController, :solutions_operators
+
+    get "/member", PageController, :redirect_to_dashboard
+    get "/trainer", PageController, :redirect_to_dashboard
+    get "/gym", PageController, :redirect_to_dashboard
+    get "/admin", PageController, :redirect_to_dashboard
   end
 
   # Auth routes - custom sign in / register pages
@@ -116,7 +121,6 @@ defmodule FitTrackerzWeb.Router do
       live "/plans", PlansLive
       live "/invitations", InvitationsLive
       live "/attendance", AttendanceLive
-      live "/checkin/:token", CheckinLive
       live "/contests", ContestsLive
       live "/notifications", NotificationsLive
       live "/messages", MessagesLive
@@ -148,6 +152,7 @@ defmodule FitTrackerzWeb.Router do
       live "/messages", MessagesLive
       live "/reports", ReportsLive
       live "/reports/:report_type", ReportDetailLive
+      live "/notifications", NotificationsLive
     end
   end
 
@@ -176,7 +181,6 @@ defmodule FitTrackerzWeb.Router do
       live "/progress", ProgressLive
       live "/notifications", NotificationsLive
       live "/messages", MessagesLive
-      live "/qr-code", QrCodeLive
       live "/leaderboard", LeaderboardLive
       live "/photos", PhotosLive
     end

@@ -33,18 +33,10 @@ defmodule FitTrackerzWeb.GymOperator.DashboardLive do
                 {:error, _} -> []
               end
 
-            gym_tier = gym.tier
-            is_premium = gym_tier == :premium
-
-            leaderboard_data =
-              if is_premium do
-                %{
-                  attendance: FitTrackerz.Gamification.Leaderboard.attendance_leaders(gym.id, :month) |> Enum.take(5),
-                  workouts: FitTrackerz.Gamification.Leaderboard.workout_leaders(gym.id, :month) |> Enum.take(5)
-                }
-              else
-                %{attendance: [], workouts: []}
-              end
+            leaderboard_data = %{
+              attendance: FitTrackerz.Gamification.Leaderboard.attendance_leaders(gym.id, :month) |> Enum.take(5),
+              workouts: FitTrackerz.Gamification.Leaderboard.workout_leaders(gym.id, :month) |> Enum.take(5)
+            }
 
             {:ok,
              assign(socket,
@@ -56,8 +48,6 @@ defmodule FitTrackerzWeb.GymOperator.DashboardLive do
                scheduled_classes: scheduled_classes,
                active_tab: "details",
                plans: plans,
-               gym_tier: gym_tier,
-               is_premium: is_premium,
                leaderboard_data: leaderboard_data
              )}
 
@@ -70,8 +60,6 @@ defmodule FitTrackerzWeb.GymOperator.DashboardLive do
                member_count: 0,
                pending_member_invites: 0,
                scheduled_classes: [],
-               gym_tier: :free,
-               is_premium: false,
                leaderboard_data: %{attendance: [], workouts: []}
              )}
         end
@@ -85,8 +73,6 @@ defmodule FitTrackerzWeb.GymOperator.DashboardLive do
            member_count: 0,
            pending_member_invites: 0,
            scheduled_classes: [],
-           gym_tier: :free,
-           is_premium: false,
            leaderboard_data: %{attendance: [], workouts: []}
          )}
     end
@@ -100,15 +86,12 @@ defmodule FitTrackerzWeb.GymOperator.DashboardLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
       <div class="space-y-6">
         <%= if @has_gym do %>
           <.page_header title={@gym.name} subtitle="Manage your gym and members.">
             <:actions>
               <.badge variant={status_variant(@gym.status)}>{Phoenix.Naming.humanize(@gym.status)}</.badge>
-              <.badge variant={if(@gym_tier == :premium, do: "primary", else: "neutral")} size="sm">
-                {if @gym_tier == :premium, do: "Premium", else: "Free"}
-              </.badge>
               <.button variant="primary" size="sm" icon="hero-user-plus-mini" navigate="/gym/members">Members</.button>
             </:actions>
           </.page_header>
@@ -144,28 +127,31 @@ defmodule FitTrackerzWeb.GymOperator.DashboardLive do
                 <:header_actions>
                   <.button variant="primary" size="sm" icon="hero-plus" navigate="/gym/plans">Add Plan</.button>
                 </:header_actions>
-                <%= for plan_type <- [:general, :personal_training] do %>
-                  <% type_plans = Enum.filter(@plans, &(&1.plan_type == plan_type)) %>
-                  <%= if type_plans != [] do %>
-                    <h4 class="font-medium mt-4 mb-2 capitalize">{plan_type |> to_string() |> String.replace("_", " ")}</h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                      <%= for plan <- Enum.sort_by(type_plans, & &1.price_in_paise) do %>
-                        <div class="card bg-base-100 border border-base-300 shadow-sm">
-                          <div class="card-body p-4 text-center">
-                            <h5 class="font-semibold">{FitTrackerz.Billing.PricingHelpers.duration_label(plan.duration)}</h5>
-                            <p class="text-2xl font-bold text-primary">
-                              Rs{FitTrackerz.Billing.PricingHelpers.format_price(plan.price_in_paise)}
-                            </p>
-                            <% months = FitTrackerz.Billing.PricingHelpers.duration_months(plan.duration) %>
-                            <%= if months && months > 1 do %>
-                              <p class="text-sm text-base-content/60">
-                                Rs{FitTrackerz.Billing.PricingHelpers.format_price(FitTrackerz.Billing.PricingHelpers.per_month_price(plan.price_in_paise, plan.duration))}/mo
+                <%= for {category, cat_plans} <- Enum.sort_by(Enum.group_by(@plans, &(&1.category || "Uncategorized")), &elem(&1, 0)) do %>
+                  <h4 class="font-semibold mt-6 mb-2 text-base">{category}</h4>
+                  <%= for plan_type <- [:general, :personal_training] do %>
+                    <% type_plans = Enum.filter(cat_plans, &(&1.plan_type == plan_type)) %>
+                    <%= if type_plans != [] do %>
+                      <h5 class="font-medium mt-3 mb-2 text-sm text-base-content/60 capitalize">{plan_type |> to_string() |> String.replace("_", " ")}</h5>
+                      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <%= for plan <- Enum.sort_by(type_plans, & &1.price_in_paise) do %>
+                          <div class="card bg-base-100 border border-base-300 shadow-sm">
+                            <div class="card-body p-4 text-center">
+                              <h5 class="font-semibold">{FitTrackerz.Billing.PricingHelpers.duration_label(plan.duration)}</h5>
+                              <p class="text-2xl font-bold text-primary">
+                                Rs{FitTrackerz.Billing.PricingHelpers.format_price(plan.price_in_paise)}
                               </p>
-                            <% end %>
+                              <% months = FitTrackerz.Billing.PricingHelpers.duration_months(plan.duration) %>
+                              <%= if months && months > 1 do %>
+                                <p class="text-sm text-base-content/60">
+                                  Rs{FitTrackerz.Billing.PricingHelpers.format_price(FitTrackerz.Billing.PricingHelpers.per_month_price(plan.price_in_paise, plan.duration))}/mo
+                                </p>
+                              <% end %>
+                            </div>
                           </div>
-                        </div>
-                      <% end %>
-                    </div>
+                        <% end %>
+                      </div>
+                    <% end %>
                   <% end %>
                 <% end %>
                 <%= if @plans == [] do %>
@@ -181,7 +167,7 @@ defmodule FitTrackerzWeb.GymOperator.DashboardLive do
             <:tab id="gallery" label="Gallery" icon="hero-photo">
               <.card title="Photo Gallery">
                 <:header_actions>
-                  <.button variant="outline" size="sm" icon="hero-photo" navigate="/gym/setup">Manage Photos</.button>
+                  <.button variant="outline" size="sm" icon="hero-photo" navigate="/gym/setup?step=2&edit_photos=1">Manage Photos</.button>
                 </:header_actions>
                 <% all_gallery = Enum.flat_map(@gym.branches, fn b -> b.gallery_urls || [] end) %>
                 <%= if all_gallery != [] do %>
@@ -199,7 +185,7 @@ defmodule FitTrackerzWeb.GymOperator.DashboardLive do
             <:tab id="equipment" label="Equipment" icon="hero-wrench-screwdriver">
               <.card title="Equipment & Services">
                 <:header_actions>
-                  <.button variant="outline" size="sm" icon="hero-pencil-square" navigate="/gym/setup">Edit Equipment</.button>
+                  <.button variant="outline" size="sm" icon="hero-pencil-square" navigate="/gym/setup?step=3">Edit Equipment</.button>
                 </:header_actions>
                 <%= if (@gym.equipment && @gym.equipment != []) || (@gym.services && @gym.services != []) do %>
                   <%= if @gym.equipment && @gym.equipment != [] do %>
@@ -255,58 +241,48 @@ defmodule FitTrackerzWeb.GymOperator.DashboardLive do
             </:tab>
           </.tab_group>
 
-          <%= if @is_premium do %>
-            <.card title="Top Members This Month" id="leaderboard-card">
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h4 class="text-sm font-semibold text-base-content/50 mb-3">Attendance</h4>
-                  <%= if @leaderboard_data.attendance == [] do %>
-                    <p class="text-sm text-base-content/30">No activity yet</p>
-                  <% else %>
-                    <div class="space-y-2">
-                      <%= for leader <- @leaderboard_data.attendance do %>
-                        <div class="flex items-center justify-between">
-                          <div class="flex items-center gap-2">
-                            <span class="text-sm font-bold text-base-content/40 w-6">{leader.rank}</span>
-                            <.avatar name={leader.member_name} size="sm" />
-                            <span class="text-sm">{leader.member_name}</span>
-                          </div>
-                          <span class="text-sm font-bold">{leader.value}</span>
+          <.card title="Top Members This Month" id="leaderboard-card">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h4 class="text-sm font-semibold text-base-content/50 mb-3">Attendance</h4>
+                <%= if @leaderboard_data.attendance == [] do %>
+                  <p class="text-sm text-base-content/30">No activity yet</p>
+                <% else %>
+                  <div class="space-y-2">
+                    <%= for leader <- @leaderboard_data.attendance do %>
+                      <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                          <span class="text-sm font-bold text-base-content/40 w-6">{leader.rank}</span>
+                          <.avatar name={leader.member_name} size="sm" />
+                          <span class="text-sm">{leader.member_name}</span>
                         </div>
-                      <% end %>
-                    </div>
-                  <% end %>
-                </div>
-                <div>
-                  <h4 class="text-sm font-semibold text-base-content/50 mb-3">Workouts</h4>
-                  <%= if @leaderboard_data.workouts == [] do %>
-                    <p class="text-sm text-base-content/30">No activity yet</p>
-                  <% else %>
-                    <div class="space-y-2">
-                      <%= for leader <- @leaderboard_data.workouts do %>
-                        <div class="flex items-center justify-between">
-                          <div class="flex items-center gap-2">
-                            <span class="text-sm font-bold text-base-content/40 w-6">{leader.rank}</span>
-                            <.avatar name={leader.member_name} size="sm" />
-                            <span class="text-sm">{leader.member_name}</span>
-                          </div>
-                          <span class="text-sm font-bold">{leader.value}</span>
-                        </div>
-                      <% end %>
-                    </div>
-                  <% end %>
-                </div>
+                        <span class="text-sm font-bold">{leader.value}</span>
+                      </div>
+                    <% end %>
+                  </div>
+                <% end %>
               </div>
-            </.card>
-          <% else %>
-            <.card id="upgrade-prompt">
-              <.empty_state
-                icon="hero-arrow-trending-up"
-                title="Unlock Premium Features"
-                subtitle="Upgrade to Premium for leaderboards, QR check-in, unlimited members, and more. Contact the platform admin to upgrade."
-              />
-            </.card>
-          <% end %>
+              <div>
+                <h4 class="text-sm font-semibold text-base-content/50 mb-3">Workouts</h4>
+                <%= if @leaderboard_data.workouts == [] do %>
+                  <p class="text-sm text-base-content/30">No activity yet</p>
+                <% else %>
+                  <div class="space-y-2">
+                    <%= for leader <- @leaderboard_data.workouts do %>
+                      <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                          <span class="text-sm font-bold text-base-content/40 w-6">{leader.rank}</span>
+                          <.avatar name={leader.member_name} size="sm" />
+                          <span class="text-sm">{leader.member_name}</span>
+                        </div>
+                        <span class="text-sm font-bold">{leader.value}</span>
+                      </div>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          </.card>
         <% else %>
           <%!-- No Gym Setup --%>
           <.empty_state icon="hero-building-office-2-solid" title="Set Up Your Gym" subtitle="You haven't created a gym yet. Get started by setting up your gym profile and adding your first branch.">

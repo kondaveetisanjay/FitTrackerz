@@ -18,6 +18,8 @@ defmodule FitTrackerzWeb.Layouts do
 
   attr :current_user, :map, default: nil, doc: "the current authenticated user"
 
+  attr :unread_notification_count, :integer, default: 0
+
   slot :inner_block, required: true
 
   def app(assigns) do
@@ -54,7 +56,7 @@ defmodule FitTrackerzWeb.Layouts do
               </button>
             </div>
             <div class="flex-none flex items-center gap-3">
-              <.notification_bell current_user={@current_user} />
+              <.notification_bell current_user={@current_user} count={@unread_notification_count} />
               <.theme_toggle />
               <.user_menu current_user={@current_user} user_role={@user_role} />
             </div>
@@ -310,6 +312,7 @@ defmodule FitTrackerzWeb.Layouts do
   # ────────────────────────────────────────────────────────
 
   attr :current_user, :map, required: true
+  attr :count, :integer, default: 0
 
   def notification_bell(assigns) do
     ~H"""
@@ -321,11 +324,11 @@ defmodule FitTrackerzWeb.Layouts do
     >
       <.icon name="hero-bell" class="size-5" />
       <span
+        :if={@count > 0}
         id="notification-badge"
-        class="badge badge-xs badge-error absolute -top-0.5 -right-0.5 hidden"
-        phx-hook="NotificationBadge"
-        data-user-id={@current_user.id}
+        class="badge badge-xs badge-error absolute -top-0.5 -right-0.5"
       >
+        {if @count > 9, do: "9+", else: @count}
       </span>
     </a>
     """

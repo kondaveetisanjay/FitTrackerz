@@ -173,6 +173,21 @@ defmodule FitTrackerzWeb.Member.HealthLive do
       notes: params["notes"]
     }
 
+    has_measurement? =
+      Enum.any?(
+        [:chest_cm, :waist_cm, :hips_cm, :bicep_cm, :thigh_cm, :muscle_mass_kg],
+        &(not is_nil(Map.get(attrs, &1)))
+      )
+
+    if not has_measurement? do
+      {:noreply,
+       put_flash(socket, :error, "Enter at least one measurement before saving.")}
+    else
+      save_measurement_continue(socket, attrs, actor, membership)
+    end
+  end
+
+  defp save_measurement_continue(socket, attrs, actor, membership) do
     case FitTrackerz.Health.log_body_measurement(attrs, actor: actor) do
       {:ok, _} ->
         measurements =
@@ -274,7 +289,7 @@ defmodule FitTrackerzWeb.Member.HealthLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
       <.page_header title="Health Log" subtitle="Track your weight, BMI, and body composition." back_path="/member" />
 
       <%= if @no_gym do %>

@@ -45,7 +45,8 @@
       "Bash(timeout 15 mix phx.server)",
       "Bash(mix:*)",
       "WebFetch(domain:www.rockstargames.com)",
-      "Bash(xargs -I {} basename {})"
+      "Bash(xargs -I {} basename {})",
+      "mcp__tidewave__execute_sql_query"
     ]
   }
 }

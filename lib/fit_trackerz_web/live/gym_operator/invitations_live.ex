@@ -44,9 +44,9 @@ defmodule FitTrackerzWeb.GymOperator.InvitationsLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
       <div class="space-y-6">
-        <.page_header title="Invitations" subtitle="Track all member invitations." back_path="/gym" />
+        <.page_header title="Invitations" subtitle="Track all member invitations." back_path="/gym/dashboard" />
 
         <%= if @gym == nil do %>
           <.empty_state icon="hero-building-office-solid" title="No Gym Found" subtitle="You need to create a gym first before viewing invitations.">

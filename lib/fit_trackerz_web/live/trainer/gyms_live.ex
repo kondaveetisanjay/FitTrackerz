@@ -29,7 +29,7 @@ defmodule FitTrackerzWeb.Trainer.GymsLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
       <.page_header title="My Gyms" subtitle="Gyms you are associated with as a trainer." />
 
       <%= if @gyms == [] do %>

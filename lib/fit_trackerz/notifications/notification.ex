@@ -60,6 +60,7 @@ defmodule FitTrackerz.Notifications.Notification do
     end
 
     create :create do
+      primary?(true)
       accept([:type, :title, :message, :user_id, :gym_id, :metadata])
     end
 
@@ -85,6 +86,7 @@ defmodule FitTrackerz.Notifications.Notification do
           :payment_received,
           :invitation_received,
           :plan_assigned,
+          :assignment_request,
           :streak_milestone,
           :inactivity_reminder,
           :general

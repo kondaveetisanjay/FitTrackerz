@@ -37,6 +37,11 @@ defmodule FitTrackerzWeb.GymOperator.NotificationsLive do
     if notification do
       case FitTrackerz.Notifications.mark_notification_read(notification, actor: actor) do
         {:ok, _} ->
+          Phoenix.PubSub.broadcast(
+            FitTrackerz.PubSub,
+            "notifications:#{actor.id}",
+            {:notification_read, id}
+          )
           notifications = load_notifications(actor)
           {:noreply, assign(socket, notifications: notifications)}
 
@@ -51,10 +56,19 @@ defmodule FitTrackerzWeb.GymOperator.NotificationsLive do
   def handle_event("mark_all_read", _params, socket) do
     actor = socket.assigns.current_user
 
-    Enum.filter(socket.assigns.notifications, &(!&1.is_read))
-    |> Enum.each(fn n ->
+    unread = Enum.filter(socket.assigns.notifications, &(!&1.is_read))
+
+    Enum.each(unread, fn n ->
       FitTrackerz.Notifications.mark_notification_read(n, actor: actor)
     end)
+
+    if unread != [] do
+      Phoenix.PubSub.broadcast(
+        FitTrackerz.PubSub,
+        "notifications:#{actor.id}",
+        {:notification_read, :all}
+      )
+    end
 
     notifications = load_notifications(actor)
     {:noreply, assign(socket, notifications: notifications)}
@@ -135,9 +149,9 @@ defmodule FitTrackerzWeb.GymOperator.NotificationsLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
       <div class="space-y-6">
-        <.page_header title="Notifications" subtitle="Subscription alerts and gym updates." back_path="/gym">
+        <.page_header title="Notifications" subtitle="Subscription alerts and gym updates." back_path="/gym/dashboard">
           <:actions>
             <%= if Enum.any?(@notifications, &(!&1.is_read)) do %>
               <.button variant="ghost" size="sm" icon="hero-check" phx-click="mark_all_read" id="mark-all-read-btn">

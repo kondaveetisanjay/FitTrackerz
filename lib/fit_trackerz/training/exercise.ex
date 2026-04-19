@@ -33,6 +33,11 @@ defmodule FitTrackerz.Training.Exercise do
       constraints(min: 0)
     end
 
+    attribute :weight, :float do
+      public?(true)
+      constraints(min: 0.0)
+    end
+
     attribute :order, :integer do
       allow_nil?(false)
       public?(true)

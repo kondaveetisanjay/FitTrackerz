@@ -74,6 +74,22 @@ defmodule FitTrackerzWeb.GymOperator.SetupLive do
     end
   end
 
+  @impl true
+  def handle_params(params, _uri, socket) do
+    step =
+      case Integer.parse(params["step"] || "") do
+        {n, _} when n in 1..3 -> n
+        _ -> socket.assigns.current_step
+      end
+
+    edit_photos = params["edit_photos"] == "1" and socket.assigns.branch != nil
+
+    {:noreply,
+     socket
+     |> assign(:current_step, step)
+     |> assign(:editing_location, edit_photos or socket.assigns.editing_location)}
+  end
+
   # ── Step Navigation Events ──
 
   @impl true
@@ -414,12 +430,12 @@ defmodule FitTrackerzWeb.GymOperator.SetupLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
       <div class="space-y-8">
         <.page_header
           title={if @gym, do: "My Gym", else: "Setup Your Gym"}
           subtitle={if @gym, do: "Manage your gym profile and location.", else: "Create your gym to get started."}
-          back_path="/gym"
+          back_path="/gym/dashboard"
         />
 
         <%= if @gym do %>

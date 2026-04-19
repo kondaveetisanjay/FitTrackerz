@@ -93,7 +93,7 @@ defmodule FitTrackerzWeb.Explore.GymDetailLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
       <%= if assigns[:gym] do %>
         <div class="max-w-6xl mx-auto">
           <.page_header title={@gym.name} back_path="/explore">

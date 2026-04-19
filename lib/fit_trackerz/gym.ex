@@ -68,6 +68,7 @@ defmodule FitTrackerz.Gym do
     resource FitTrackerz.Gym.ClientAssignmentRequest do
       define :get_assignment_request, args: [:id], action: :get_by_id
       define :list_pending_assignments_by_trainer, args: [:trainer_ids], action: :list_pending_by_trainer
+      define :list_pending_assignments_by_gym, args: [:gym_id], action: :list_pending_by_gym
       define :create_assignment_request, action: :create
       define :accept_assignment_request, action: :accept
       define :reject_assignment_request, action: :reject

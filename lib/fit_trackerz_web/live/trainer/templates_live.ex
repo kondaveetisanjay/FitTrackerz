@@ -24,7 +24,9 @@ defmodule FitTrackerzWeb.Trainer.TemplatesLive do
          workout_form: nil,
          diet_form: nil,
          show_workout_form: false,
-         show_diet_form: false
+         show_diet_form: false,
+         editing_workout_id: nil,
+         editing_diet_id: nil
        )}
     else
       gyms = Enum.map(gym_trainers, & &1.gym)
@@ -70,6 +72,8 @@ defmodule FitTrackerzWeb.Trainer.TemplatesLive do
          diet_form: diet_form,
          show_workout_form: false,
          show_diet_form: false,
+         editing_workout_id: nil,
+         editing_diet_id: nil,
          active_tab: "workouts"
        )}
     end
@@ -82,12 +86,92 @@ defmodule FitTrackerzWeb.Trainer.TemplatesLive do
 
   @impl true
   def handle_event("toggle_workout_form", _params, socket) do
-    {:noreply, assign(socket, show_workout_form: !socket.assigns.show_workout_form)}
+    show = !socket.assigns.show_workout_form
+
+    workout_form =
+      if show,
+        do: to_form(%{"name" => "", "difficulty_level" => "", "gym_id" => ""}, as: "workout_template"),
+        else: socket.assigns.workout_form
+
+    {:noreply,
+     assign(socket,
+       show_workout_form: show,
+       editing_workout_id: nil,
+       workout_form: workout_form
+     )}
   end
 
   @impl true
   def handle_event("toggle_diet_form", _params, socket) do
-    {:noreply, assign(socket, show_diet_form: !socket.assigns.show_diet_form)}
+    show = !socket.assigns.show_diet_form
+
+    diet_form =
+      if show,
+        do:
+          to_form(%{"name" => "", "calorie_target" => "", "dietary_type" => "", "gym_id" => ""},
+            as: "diet_template"
+          ),
+        else: socket.assigns.diet_form
+
+    {:noreply,
+     assign(socket,
+       show_diet_form: show,
+       editing_diet_id: nil,
+       diet_form: diet_form
+     )}
+  end
+
+  @impl true
+  def handle_event("edit_workout_template", %{"id" => id}, socket) do
+    case Enum.find(socket.assigns.workout_templates, &(&1.id == id)) do
+      nil ->
+        {:noreply, put_flash(socket, :error, "Template not found.")}
+
+      template ->
+        form =
+          to_form(
+            %{
+              "name" => template.name || "",
+              "difficulty_level" => to_string(template.difficulty_level || ""),
+              "gym_id" => template.gym_id || ""
+            },
+            as: "workout_template"
+          )
+
+        {:noreply,
+         assign(socket,
+           show_workout_form: true,
+           editing_workout_id: template.id,
+           workout_form: form
+         )}
+    end
+  end
+
+  @impl true
+  def handle_event("edit_diet_template", %{"id" => id}, socket) do
+    case Enum.find(socket.assigns.diet_templates, &(&1.id == id)) do
+      nil ->
+        {:noreply, put_flash(socket, :error, "Template not found.")}
+
+      template ->
+        form =
+          to_form(
+            %{
+              "name" => template.name || "",
+              "calorie_target" => to_string(template.calorie_target || ""),
+              "dietary_type" => to_string(template.dietary_type || ""),
+              "gym_id" => template.gym_id || ""
+            },
+            as: "diet_template"
+          )
+
+        {:noreply,
+         assign(socket,
+           show_diet_form: true,
+           editing_diet_id: template.id,
+           diet_form: form
+         )}
+    end
   end
 
   @impl true
@@ -112,12 +196,34 @@ defmodule FitTrackerzWeb.Trainer.TemplatesLive do
         val -> String.to_existing_atom(val)
       end
 
-    case FitTrackerz.Training.create_workout_template(%{
-      name: params["name"],
-      difficulty_level: difficulty_level,
-      gym_id: params["gym_id"],
-      created_by_id: actor.id
-    }, actor: actor) do
+    result =
+      case socket.assigns.editing_workout_id do
+        nil ->
+          FitTrackerz.Training.create_workout_template(
+            %{
+              name: params["name"],
+              difficulty_level: difficulty_level,
+              gym_id: params["gym_id"],
+              created_by_id: actor.id
+            },
+            actor: actor
+          )
+
+        id ->
+          case Enum.find(socket.assigns.workout_templates, &(&1.id == id)) do
+            nil ->
+              {:error, "Template not found."}
+
+            template ->
+              FitTrackerz.Training.update_workout_template(
+                template,
+                %{name: params["name"], difficulty_level: difficulty_level},
+                actor: actor
+              )
+          end
+      end
+
+    case result do
       {:ok, _template} ->
         workout_templates = reload_workout_templates(socket.assigns.gyms, actor)
 
@@ -126,14 +232,20 @@ defmodule FitTrackerzWeb.Trainer.TemplatesLive do
             as: "workout_template"
           )
 
+        flash_msg =
+          if socket.assigns.editing_workout_id,
+            do: "Workout template updated successfully.",
+            else: "Workout template created successfully."
+
         {:noreply,
          socket
          |> assign(
            workout_templates: workout_templates,
            workout_form: workout_form,
-           show_workout_form: false
+           show_workout_form: false,
+           editing_workout_id: nil
          )
-         |> put_flash(:info, "Workout template created successfully.")}
+         |> put_flash(:info, flash_msg)}
 
       {:error, error} ->
         {:noreply, put_flash(socket, :error, AshErrorHelpers.user_friendly_message(error))}
@@ -156,13 +268,35 @@ defmodule FitTrackerzWeb.Trainer.TemplatesLive do
         val -> String.to_existing_atom(val)
       end
 
-    case FitTrackerz.Training.create_diet_template(%{
-      name: params["name"],
-      calorie_target: calorie_target,
-      dietary_type: dietary_type,
-      gym_id: params["gym_id"],
-      created_by_id: actor.id
-    }, actor: actor) do
+    result =
+      case socket.assigns.editing_diet_id do
+        nil ->
+          FitTrackerz.Training.create_diet_template(
+            %{
+              name: params["name"],
+              calorie_target: calorie_target,
+              dietary_type: dietary_type,
+              gym_id: params["gym_id"],
+              created_by_id: actor.id
+            },
+            actor: actor
+          )
+
+        id ->
+          case Enum.find(socket.assigns.diet_templates, &(&1.id == id)) do
+            nil ->
+              {:error, "Template not found."}
+
+            template ->
+              FitTrackerz.Training.update_diet_template(
+                template,
+                %{name: params["name"], calorie_target: calorie_target, dietary_type: dietary_type},
+                actor: actor
+              )
+          end
+      end
+
+    case result do
       {:ok, _template} ->
         diet_templates = reload_diet_templates(socket.assigns.gyms, actor)
 
@@ -171,10 +305,20 @@ defmodule FitTrackerzWeb.Trainer.TemplatesLive do
             as: "diet_template"
           )
 
+        flash_msg =
+          if socket.assigns.editing_diet_id,
+            do: "Diet template updated successfully.",
+            else: "Diet template created successfully."
+
         {:noreply,
          socket
-         |> assign(diet_templates: diet_templates, diet_form: diet_form, show_diet_form: false)
-         |> put_flash(:info, "Diet template created successfully.")}
+         |> assign(
+           diet_templates: diet_templates,
+           diet_form: diet_form,
+           show_diet_form: false,
+           editing_diet_id: nil
+         )
+         |> put_flash(:info, flash_msg)}
 
       {:error, error} ->
         {:noreply, put_flash(socket, :error, AshErrorHelpers.user_friendly_message(error))}
@@ -294,8 +438,8 @@ defmodule FitTrackerzWeb.Trainer.TemplatesLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
-      <.page_header title="Templates" subtitle="Reusable workout and diet plan templates." back_path="/trainer" />
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
+      <.page_header title="Templates" subtitle="Reusable workout and diet plan templates." back_path="/trainer/dashboard" />
 
       <%= if @no_gym do %>
         <.empty_state
@@ -317,7 +461,7 @@ defmodule FitTrackerzWeb.Trainer.TemplatesLive do
               <%!-- Workout Template Form --%>
               <%= if @show_workout_form do %>
                 <div class="mb-6">
-                  <.card title="New Workout Template">
+                  <.card title={if @editing_workout_id, do: "Edit Workout Template", else: "New Workout Template"}>
                     <.form
                       for={@workout_form}
                       id="workout-template-form"
@@ -375,7 +519,7 @@ defmodule FitTrackerzWeb.Trainer.TemplatesLive do
                           Cancel
                         </.button>
                         <.button type="submit" variant="primary" size="sm" icon="hero-check" id="submit-workout-template-btn">
-                          Create Template
+                          {if @editing_workout_id, do: "Update Template", else: "Create Template"}
                         </.button>
                       </div>
                     </.form>
@@ -413,16 +557,28 @@ defmodule FitTrackerzWeb.Trainer.TemplatesLive do
                     <% end %>
                   </:col>
                   <:actions :let={template}>
-                    <.button
-                      variant="danger"
-                      size="sm"
-                      icon="hero-trash"
-                      phx-click="delete_workout_template"
-                      phx-value-id={template.id}
-                      data-confirm="Are you sure you want to delete this template?"
-                    >
-                      <span class="sr-only">Delete</span>
-                    </.button>
+                    <div class="flex gap-1">
+                      <.button
+                        variant="ghost"
+                        size="sm"
+                        icon="hero-pencil-square"
+                        phx-click="edit_workout_template"
+                        phx-value-id={template.id}
+                        id={"edit-workout-#{template.id}"}
+                      >
+                        <span class="sr-only">Edit</span>
+                      </.button>
+                      <.button
+                        variant="danger"
+                        size="sm"
+                        icon="hero-trash"
+                        phx-click="delete_workout_template"
+                        phx-value-id={template.id}
+                        data-confirm="Are you sure you want to delete this template?"
+                      >
+                        <span class="sr-only">Delete</span>
+                      </.button>
+                    </div>
                   </:actions>
                 </.data_table>
               <% end %>
@@ -441,7 +597,7 @@ defmodule FitTrackerzWeb.Trainer.TemplatesLive do
               <%!-- Diet Template Form --%>
               <%= if @show_diet_form do %>
                 <div class="mb-6">
-                  <.card title="New Diet Template">
+                  <.card title={if @editing_diet_id, do: "Edit Diet Template", else: "New Diet Template"}>
                     <.form
                       for={@diet_form}
                       id="diet-template-form"
@@ -511,7 +667,7 @@ defmodule FitTrackerzWeb.Trainer.TemplatesLive do
                           Cancel
                         </.button>
                         <.button type="submit" variant="primary" size="sm" icon="hero-check" id="submit-diet-template-btn">
-                          Create Template
+                          {if @editing_diet_id, do: "Update Template", else: "Create Template"}
                         </.button>
                       </div>
                     </.form>
@@ -549,16 +705,28 @@ defmodule FitTrackerzWeb.Trainer.TemplatesLive do
                     <% end %>
                   </:col>
                   <:actions :let={template}>
-                    <.button
-                      variant="danger"
-                      size="sm"
-                      icon="hero-trash"
-                      phx-click="delete_diet_template"
-                      phx-value-id={template.id}
-                      data-confirm="Are you sure you want to delete this template?"
-                    >
-                      <span class="sr-only">Delete</span>
-                    </.button>
+                    <div class="flex gap-1">
+                      <.button
+                        variant="ghost"
+                        size="sm"
+                        icon="hero-pencil-square"
+                        phx-click="edit_diet_template"
+                        phx-value-id={template.id}
+                        id={"edit-diet-#{template.id}"}
+                      >
+                        <span class="sr-only">Edit</span>
+                      </.button>
+                      <.button
+                        variant="danger"
+                        size="sm"
+                        icon="hero-trash"
+                        phx-click="delete_diet_template"
+                        phx-value-id={template.id}
+                        data-confirm="Are you sure you want to delete this template?"
+                      >
+                        <span class="sr-only">Delete</span>
+                      </.button>
+                    </div>
                   </:actions>
                 </.data_table>
               <% end %>

@@ -1,4 +1,4 @@
-defmodule FitTrackerzWeb.Member.NotificationsLive do
+defmodule FitTrackerzWeb.Trainer.NotificationsLive do
   use FitTrackerzWeb, :live_view
 
   @impl true
@@ -77,18 +77,12 @@ defmodule FitTrackerzWeb.Member.NotificationsLive do
     end
   end
 
-  defp notification_icon(:subscription_expiring), do: "hero-clock-solid"
-  defp notification_icon(:subscription_expired), do: "hero-exclamation-triangle-solid"
-  defp notification_icon(:payment_due), do: "hero-currency-rupee-solid"
-  defp notification_icon(:payment_received), do: "hero-check-circle-solid"
+  defp notification_icon(:assignment_request), do: "hero-user-plus-solid"
   defp notification_icon(:invitation_received), do: "hero-envelope-solid"
   defp notification_icon(:plan_assigned), do: "hero-credit-card-solid"
   defp notification_icon(_), do: "hero-bell-solid"
 
-  defp notification_color(:subscription_expiring), do: "text-warning"
-  defp notification_color(:subscription_expired), do: "text-error"
-  defp notification_color(:payment_due), do: "text-warning"
-  defp notification_color(:payment_received), do: "text-success"
+  defp notification_color(:assignment_request), do: "text-primary"
   defp notification_color(:invitation_received), do: "text-info"
   defp notification_color(:plan_assigned), do: "text-primary"
   defp notification_color(_), do: "text-base-content/50"
@@ -101,7 +95,7 @@ defmodule FitTrackerzWeb.Member.NotificationsLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
-      <.page_header title="Notifications" subtitle="Stay updated on your subscriptions and gym activity." back_path="/member">
+      <.page_header title="Notifications" subtitle="Client assignment requests and activity updates." back_path="/trainer/dashboard">
         <:actions>
           <%= if Enum.any?(@notifications, &(!&1.is_read)) do %>
             <.button variant="ghost" size="sm" icon="hero-check" phx-click="mark_all_read" id="mark-all-read-btn">
@@ -115,7 +109,7 @@ defmodule FitTrackerzWeb.Member.NotificationsLive do
         <.empty_state
           icon="hero-bell-slash"
           title="No Notifications"
-          subtitle="You're all caught up! We'll notify you about subscription updates and gym activity."
+          subtitle="You're all caught up! We'll notify you when you get new client assignment requests or updates."
         />
       <% else %>
         <div class="space-y-3" id="notifications-list">

@@ -5,6 +5,8 @@ defmodule FitTrackerzWeb.Member.SubscriptionLive do
   def mount(_params, _session, socket) do
     actor = socket.assigns.current_user
 
+    auto_expire_past_due()
+
     memberships = case FitTrackerz.Gym.list_active_memberships(actor.id, actor: actor, load: [:gym]) do
       {:ok, memberships} -> memberships
       _ -> []
@@ -82,6 +84,17 @@ defmodule FitTrackerzWeb.Member.SubscriptionLive do
 
   defp format_status(status), do: status |> to_string() |> String.capitalize()
 
+  defp auto_expire_past_due do
+    import Ecto.Query
+
+    now = DateTime.utc_now()
+
+    from(s in FitTrackerz.Billing.MemberSubscription,
+      where: s.status == :active and s.ends_at <= ^now
+    )
+    |> FitTrackerz.Repo.update_all(set: [status: :expired, updated_at: now])
+  end
+
   defp time_remaining_pct(sub) do
     starts = sub.starts_at
     ends = sub.ends_at
@@ -94,7 +107,7 @@ defmodule FitTrackerzWeb.Member.SubscriptionLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
       <.page_header title="My Subscriptions" subtitle="Manage your gym subscriptions and billing." back_path="/member" />
 
       <%= if @no_gym do %>

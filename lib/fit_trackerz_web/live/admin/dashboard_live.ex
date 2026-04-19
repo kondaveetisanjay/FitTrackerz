@@ -67,7 +67,7 @@ defmodule FitTrackerzWeb.Admin.DashboardLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
       <.page_header title="Platform Admin" subtitle={"Welcome back, #{@current_user.name}. Here's your platform overview."}>
         <:actions>
           <.button variant="ghost" size="sm" icon="hero-chart-bar" navigate="/admin/dashboards">Dashboards</.button>

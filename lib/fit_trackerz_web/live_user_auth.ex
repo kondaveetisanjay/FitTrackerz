@@ -33,7 +33,10 @@ defmodule FitTrackerzWeb.LiveUserAuth do
     current_user = get_current_user(socket, session)
 
     if current_user do
-      {:cont, assign(socket, :current_user, current_user)}
+      {:cont,
+       socket
+       |> assign(:current_user, current_user)
+       |> maybe_track_notifications(current_user)}
     else
       {:halt, redirect(socket, to: "/sign-in")}
     end
@@ -104,6 +107,86 @@ defmodule FitTrackerzWeb.LiveUserAuth do
        socket
        |> put_flash(:error, "You must be a member to access this page.")
        |> redirect(to: "/dashboard")}
+    end
+  end
+
+  defp maybe_track_notifications(socket, user) do
+    socket = assign(socket, :unread_notification_count, bell_count(user))
+
+    if Phoenix.LiveView.connected?(socket) do
+      Phoenix.PubSub.subscribe(FitTrackerz.PubSub, "notifications:#{user.id}")
+      Phoenix.PubSub.subscribe(FitTrackerz.PubSub, "messaging:user:#{user.id}")
+
+      Phoenix.LiveView.attach_hook(
+        socket,
+        :notification_bell_count,
+        :handle_info,
+        &notification_bell_handle_info/2
+      )
+    else
+      socket
+    end
+  end
+
+  defp notification_bell_handle_info({:new_notification, _}, socket), do: {:cont, refresh_bell(socket)}
+  defp notification_bell_handle_info({:notification_read, _}, socket), do: {:halt, refresh_bell(socket)}
+  defp notification_bell_handle_info({:conversation_read, _}, socket), do: {:halt, refresh_bell(socket)}
+  defp notification_bell_handle_info({:conversation_updated, _}, socket), do: {:cont, refresh_bell(socket)}
+  defp notification_bell_handle_info({:new_message, _}, socket), do: {:cont, refresh_bell(socket)}
+  defp notification_bell_handle_info(_msg, socket), do: {:cont, socket}
+
+  defp refresh_bell(socket) do
+    user = socket.assigns.current_user
+    Phoenix.Component.assign(socket, :unread_notification_count, bell_count(user))
+  end
+
+  defp bell_count(user) do
+    unread_notification_count(user) + unread_message_count(user)
+  end
+
+  defp unread_notification_count(user) do
+    case FitTrackerz.Notifications.list_unread_notifications(user.id, actor: user) do
+      {:ok, list} -> length(list)
+      _ -> 0
+    end
+  end
+
+  defp unread_message_count(user) do
+    case FitTrackerz.Messaging.list_conversations(user.id, actor: user) do
+      {:ok, conversations} ->
+        Enum.reduce(conversations, 0, fn conv, acc ->
+          acc + conversation_unread(conv, user.id)
+        end)
+
+      _ ->
+        0
+    end
+  end
+
+  defp conversation_unread(conversation, user_id) do
+    participant =
+      case conversation.participants do
+        participants when is_list(participants) ->
+          Enum.find(participants, &(&1.user_id == user_id))
+
+        _ ->
+          nil
+      end
+
+    last_read = participant && participant.last_read_at
+
+    case conversation.messages do
+      messages when is_list(messages) ->
+        if last_read do
+          Enum.count(messages, fn m ->
+            DateTime.compare(m.inserted_at, last_read) == :gt and m.sender_id != user_id
+          end)
+        else
+          Enum.count(messages, &(&1.sender_id != user_id))
+        end
+
+      _ ->
+        0
     end
   end
 end

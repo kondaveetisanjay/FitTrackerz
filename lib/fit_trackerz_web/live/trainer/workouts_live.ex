@@ -24,7 +24,9 @@ defmodule FitTrackerzWeb.Trainer.WorkoutsLive do
          gym_trainers: [],
          form: nil,
          show_form: false,
-         exercises: []
+         exercises: [],
+         editing_workout_id: nil,
+         viewing_workout_id: nil
        )}
     else
       gyms = Enum.map(gym_trainers, & &1.gym)
@@ -53,7 +55,9 @@ defmodule FitTrackerzWeb.Trainer.WorkoutsLive do
          gym_trainers: gym_trainers,
          form: form,
          show_form: false,
-         exercises: [blank_exercise(1)]
+         exercises: [blank_exercise(1)],
+         editing_workout_id: nil,
+         viewing_workout_id: nil
        )}
     end
   end
@@ -65,13 +69,83 @@ defmodule FitTrackerzWeb.Trainer.WorkoutsLive do
       "reps" => "",
       "duration_seconds" => "",
       "rest_seconds" => "",
+      "weight" => "",
       "order" => order
     }
   end
 
   @impl true
   def handle_event("toggle_form", _params, socket) do
-    {:noreply, assign(socket, show_form: !socket.assigns.show_form)}
+    show = !socket.assigns.show_form
+
+    socket =
+      if show do
+        form = to_form(%{"name" => "", "member_id" => "", "gym_id" => ""}, as: "workout")
+
+        assign(socket,
+          show_form: true,
+          editing_workout_id: nil,
+          form: form,
+          exercises: [blank_exercise(1)]
+        )
+      else
+        assign(socket, show_form: false, editing_workout_id: nil)
+      end
+
+    {:noreply, socket}
+  end
+
+  def handle_event("view_workout", %{"id" => id}, socket) do
+    {:noreply, assign(socket, viewing_workout_id: id)}
+  end
+
+  def handle_event("close_view", _params, socket) do
+    {:noreply, assign(socket, viewing_workout_id: nil)}
+  end
+
+  def handle_event("edit_workout", %{"id" => id}, socket) do
+    case Enum.find(socket.assigns.workouts, &(&1.id == id)) do
+      nil ->
+        {:noreply, put_flash(socket, :error, "Workout plan not found.")}
+
+      workout ->
+        form =
+          to_form(
+            %{
+              "name" => workout.name || "",
+              "member_id" => workout.member_id || "",
+              "gym_id" => workout.gym_id || ""
+            },
+            as: "workout"
+          )
+
+        exercises =
+          (workout.exercises || [])
+          |> Enum.sort_by(& &1.order)
+          |> Enum.with_index(1)
+          |> Enum.map(fn {ex, order} ->
+            %{
+              "name" => ex.name || "",
+              "sets" => to_string(ex.sets || ""),
+              "reps" => to_string(ex.reps || ""),
+              "duration_seconds" => to_string(ex.duration_seconds || ""),
+              "rest_seconds" => to_string(ex.rest_seconds || ""),
+              "weight" => to_string(ex.weight || ""),
+              "order" => order
+            }
+          end)
+
+        exercises = if exercises == [], do: [blank_exercise(1)], else: exercises
+
+        {:noreply,
+         assign(socket,
+           show_form: true,
+           editing_workout_id: workout.id,
+           viewing_workout_id: nil,
+           form: form,
+           exercises: exercises
+         )}
+    end
   end
 
   @impl true
@@ -129,6 +203,7 @@ defmodule FitTrackerzWeb.Trainer.WorkoutsLive do
           reps: parse_int(ex["reps"]),
           duration_seconds: parse_int(ex["duration_seconds"]),
           rest_seconds: parse_int(ex["rest_seconds"]),
+          weight: parse_float(ex["weight"]),
           order: ex["order"]
         }
       end)
@@ -136,13 +211,35 @@ defmodule FitTrackerzWeb.Trainer.WorkoutsLive do
 
     actor = socket.assigns.current_user
 
-    case FitTrackerz.Training.create_workout(%{
-      name: params["name"],
-      exercises: exercises,
-      member_id: params["member_id"],
-      gym_id: params["gym_id"],
-      trainer_id: gym_trainer && gym_trainer.id
-    }, actor: actor) do
+    result =
+      case socket.assigns.editing_workout_id do
+        nil ->
+          FitTrackerz.Training.create_workout(
+            %{
+              name: params["name"],
+              exercises: exercises,
+              member_id: params["member_id"],
+              gym_id: params["gym_id"],
+              trainer_id: gym_trainer && gym_trainer.id
+            },
+            actor: actor
+          )
+
+        id ->
+          case Enum.find(socket.assigns.workouts, &(&1.id == id)) do
+            nil ->
+              {:error, "Workout plan not found."}
+
+            workout ->
+              FitTrackerz.Training.update_workout(
+                workout,
+                %{name: params["name"], exercises: exercises},
+                actor: actor
+              )
+          end
+      end
+
+    case result do
       {:ok, _plan} ->
         workouts = case FitTrackerz.Training.list_workouts_by_trainer(trainer_ids, actor: actor, load: [:gym, member: [:user]]) do
           {:ok, workouts} -> workouts
@@ -151,15 +248,21 @@ defmodule FitTrackerzWeb.Trainer.WorkoutsLive do
 
         form = to_form(%{"name" => "", "member_id" => "", "gym_id" => ""}, as: "workout")
 
+        flash_msg =
+          if socket.assigns.editing_workout_id,
+            do: "Workout plan updated successfully.",
+            else: "Workout plan created successfully."
+
         {:noreply,
          socket
          |> assign(
            workouts: workouts,
            form: form,
            show_form: false,
-           exercises: [blank_exercise(1)]
+           exercises: [blank_exercise(1)],
+           editing_workout_id: nil
          )
-         |> put_flash(:info, "Workout plan created successfully.")}
+         |> put_flash(:info, flash_msg)}
 
       {:error, error} ->
         {:noreply, put_flash(socket, :error, AshErrorHelpers.user_friendly_message(error))}
@@ -213,11 +316,22 @@ defmodule FitTrackerzWeb.Trainer.WorkoutsLive do
 
   defp parse_int(val) when is_integer(val), do: val
 
+  defp parse_float(""), do: nil
+  defp parse_float(nil), do: nil
+  defp parse_float(val) when is_binary(val) do
+    case Float.parse(val) do
+      {f, _} -> f
+      :error -> nil
+    end
+  end
+  defp parse_float(val) when is_float(val), do: val
+  defp parse_float(val) when is_integer(val), do: val * 1.0
+
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
-      <.page_header title="Workout Plans" subtitle="Create and manage workout plans for your clients." back_path="/trainer">
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
+      <.page_header title="Workout Plans" subtitle="Create and manage workout plans for your clients." back_path="/trainer/dashboard">
         <:actions>
           <%= unless @no_gym do %>
             <.button variant="primary" size="sm" icon="hero-plus" phx-click="toggle_form" id="toggle-workout-form-btn">
@@ -234,10 +348,89 @@ defmodule FitTrackerzWeb.Trainer.WorkoutsLive do
           subtitle="You haven't been added to any gym yet. Ask a gym operator to invite you."
         />
       <% else %>
-        <%!-- Create Form --%>
+        <%!-- View / Detail Card --%>
+        <% viewing_workout = if @viewing_workout_id, do: Enum.find(@workouts, &(&1.id == @viewing_workout_id)) %>
+        <%= if viewing_workout do %>
+          <% workout = viewing_workout %>
+          <div class="mb-8">
+            <.card id={"workout-detail-#{workout.id}"}>
+              <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                <div>
+                  <h2 class="text-lg font-bold flex items-center gap-2">
+                    <.icon name="hero-fire-solid" class="size-5 text-warning" />
+                    {workout.name}
+                  </h2>
+                  <div class="flex flex-wrap items-center gap-3 mt-2 text-xs text-base-content/50">
+                    <%= if workout.member do %>
+                      <span class="flex items-center gap-1">
+                        <.icon name="hero-user-mini" class="size-3" />
+                        {workout.member.user.name}
+                      </span>
+                    <% end %>
+                    <%= if workout.gym do %>
+                      <span class="flex items-center gap-1">
+                        <.icon name="hero-building-office-2-mini" class="size-3" />
+                        {workout.gym.name}
+                      </span>
+                    <% end %>
+                  </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="badge badge-neutral">{length(workout.exercises || [])} exercise(s)</span>
+                  <.button variant="ghost" size="sm" icon="hero-pencil-square" phx-click="edit_workout" phx-value-id={workout.id} id={"edit-detail-workout-#{workout.id}"}>
+                    Edit
+                  </.button>
+                  <.button variant="ghost" size="sm" icon="hero-x-mark" phx-click="close_view" id={"close-detail-workout-#{workout.id}"}>
+                    Close
+                  </.button>
+                </div>
+              </div>
+
+              <div class="mt-5 space-y-3">
+                <%= if (workout.exercises || []) == [] do %>
+                  <p class="text-sm text-base-content/50">No exercises added to this plan.</p>
+                <% else %>
+                  <div
+                    :for={ex <- Enum.sort_by(workout.exercises || [], & &1.order)}
+                    class="p-4 rounded-xl bg-base-300/20"
+                    id={"detail-exercise-#{workout.id}-#{ex.order}"}
+                  >
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-warning/10 flex items-center justify-center shrink-0">
+                          <span class="text-xs font-bold text-warning">{ex.order}</span>
+                        </div>
+                        <p class="text-sm font-semibold">{ex.name}</p>
+                      </div>
+                      <div class="flex flex-wrap items-center gap-3 text-xs">
+                        <%= if ex.sets do %>
+                          <span class="text-info font-medium">{ex.sets} sets</span>
+                        <% end %>
+                        <%= if ex.reps do %>
+                          <span class="text-accent font-medium">{ex.reps} reps</span>
+                        <% end %>
+                        <%= if ex.duration_seconds do %>
+                          <span class="text-primary font-medium">{ex.duration_seconds}s</span>
+                        <% end %>
+                        <%= if ex.rest_seconds do %>
+                          <span class="text-base-content/60 font-medium">Rest: {ex.rest_seconds}s</span>
+                        <% end %>
+                        <%= if ex.weight do %>
+                          <span class="text-success font-medium">{ex.weight} kg</span>
+                        <% end %>
+                      </div>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            </.card>
+          </div>
+        <% end %>
+
+        <%!-- Create/Edit Form --%>
         <%= if @show_form do %>
           <div class="mb-8">
-            <.card title="New Workout Plan">
+            <.card title={if @editing_workout_id, do: "Edit Workout Plan", else: "New Workout Plan"}>
               <.form
                 for={@form}
                 id="workout-form"
@@ -257,6 +450,7 @@ defmodule FitTrackerzWeb.Trainer.WorkoutsLive do
                       name="workout[member_id]"
                       class="select select-bordered w-full"
                       id="workout-member-select"
+                      disabled={@editing_workout_id != nil}
                     >
                       <option value="" selected={@form[:member_id].value in [nil, ""]}>Select a client...</option>
                       <option
@@ -267,6 +461,9 @@ defmodule FitTrackerzWeb.Trainer.WorkoutsLive do
                         {client.user.name}
                       </option>
                     </select>
+                    <%= if @editing_workout_id do %>
+                      <input type="hidden" name="workout[member_id]" value={@form[:member_id].value || ""} />
+                    <% end %>
                   </div>
                   <div>
                     <label class="label"><span class="label-text font-medium">Gym</span></label>
@@ -274,6 +471,7 @@ defmodule FitTrackerzWeb.Trainer.WorkoutsLive do
                       name="workout[gym_id]"
                       class="select select-bordered w-full"
                       id="workout-gym-select"
+                      disabled={@editing_workout_id != nil}
                     >
                       <option value="" selected={@form[:gym_id].value in [nil, ""]}>Select a gym...</option>
                       <option
@@ -284,6 +482,9 @@ defmodule FitTrackerzWeb.Trainer.WorkoutsLive do
                         {gym.name}
                       </option>
                     </select>
+                    <%= if @editing_workout_id do %>
+                      <input type="hidden" name="workout[gym_id]" value={@form[:gym_id].value || ""} />
+                    <% end %>
                   </div>
                 </div>
 
@@ -319,7 +520,7 @@ defmodule FitTrackerzWeb.Trainer.WorkoutsLive do
                         </.button>
                       <% end %>
                     </div>
-                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                    <div class="grid grid-cols-2 sm:grid-cols-6 gap-3">
                       <div class="col-span-2 sm:col-span-1">
                         <label class="label"><span class="label-text text-xs">Name</span></label>
                         <input
@@ -385,6 +586,20 @@ defmodule FitTrackerzWeb.Trainer.WorkoutsLive do
                           id={"exercise-rest-#{idx}"}
                         />
                       </div>
+                      <div>
+                        <label class="label"><span class="label-text text-xs">Weight (kg)</span></label>
+                        <input
+                          type="number"
+                          step="0.5"
+                          value={exercise["weight"]}
+                          placeholder="20"
+                          class="input input-bordered input-sm w-full"
+                          phx-blur="update_exercise"
+                          phx-value-index={idx}
+                          phx-value-field="weight"
+                          id={"exercise-weight-#{idx}"}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -394,7 +609,7 @@ defmodule FitTrackerzWeb.Trainer.WorkoutsLive do
                     Cancel
                   </.button>
                   <.button type="submit" variant="primary" size="sm" icon="hero-check" id="submit-workout-btn">
-                    Create Plan
+                    {if @editing_workout_id, do: "Update Plan", else: "Create Plan"}
                   </.button>
                 </div>
               </.form>
@@ -418,7 +633,9 @@ defmodule FitTrackerzWeb.Trainer.WorkoutsLive do
         <% else %>
           <.data_table id="workouts-table" rows={@workouts} row_id={fn w -> "workout-#{w.id}" end}>
             <:col :let={workout} label="Plan Name">
-              <span class="font-bold">{workout.name}</span>
+              <button type="button" phx-click="view_workout" phx-value-id={workout.id} class="font-bold text-left hover:text-primary transition-colors">
+                {workout.name}
+              </button>
             </:col>
             <:col :let={workout} label="Client">
               <div class="flex items-center gap-2">
@@ -437,16 +654,38 @@ defmodule FitTrackerzWeb.Trainer.WorkoutsLive do
               <.badge variant="neutral">{length(workout.exercises || [])} exercise(s)</.badge>
             </:col>
             <:actions :let={workout}>
-              <.button
-                variant="danger"
-                size="sm"
-                icon="hero-trash"
-                phx-click="delete_workout"
-                phx-value-id={workout.id}
-                data-confirm="Are you sure you want to delete this workout plan?"
-              >
-                <span class="sr-only">Delete</span>
-              </.button>
+              <div class="flex gap-1">
+                <.button
+                  variant="ghost"
+                  size="sm"
+                  icon="hero-eye"
+                  phx-click="view_workout"
+                  phx-value-id={workout.id}
+                  id={"view-workout-#{workout.id}"}
+                >
+                  <span class="sr-only">View</span>
+                </.button>
+                <.button
+                  variant="ghost"
+                  size="sm"
+                  icon="hero-pencil-square"
+                  phx-click="edit_workout"
+                  phx-value-id={workout.id}
+                  id={"edit-workout-#{workout.id}"}
+                >
+                  <span class="sr-only">Edit</span>
+                </.button>
+                <.button
+                  variant="danger"
+                  size="sm"
+                  icon="hero-trash"
+                  phx-click="delete_workout"
+                  phx-value-id={workout.id}
+                  data-confirm="Are you sure you want to delete this workout plan?"
+                >
+                  <span class="sr-only">Delete</span>
+                </.button>
+              </div>
             </:actions>
             <:mobile_card :let={workout}>
               <div>

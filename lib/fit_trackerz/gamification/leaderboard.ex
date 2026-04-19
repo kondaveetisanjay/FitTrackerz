@@ -5,9 +5,6 @@ defmodule FitTrackerz.Gamification.Leaderboard do
 
   All functions return a list of maps with keys:
     %{rank: integer, gym_member_id: uuid_string, member_name: string, value: integer}
-
-  Leaderboard access is gated to premium gyms — callers must check gym.tier
-  before calling these functions.
   """
 
   import Ecto.Query

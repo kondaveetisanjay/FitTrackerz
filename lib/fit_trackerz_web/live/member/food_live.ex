@@ -178,7 +178,7 @@ defmodule FitTrackerzWeb.Member.FoodLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
       <.page_header title="Food Log" subtitle="Track your daily meals and calories." back_path="/member" />
 
       <%= if @no_gym do %>

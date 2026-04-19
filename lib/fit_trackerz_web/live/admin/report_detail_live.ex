@@ -189,7 +189,7 @@ defmodule FitTrackerzWeb.Admin.ReportDetailLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} unread_notification_count={assigns[:unread_notification_count] || 0}>
       <.page_header title={@report_name} subtitle="Platform-wide report" back_path="/admin/reports">
         <:actions>
           <.button variant="primary" size="sm" icon="hero-arrow-down-tray" phx-click="export_csv">
